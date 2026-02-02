@@ -1,13 +1,30 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { AppLayout } from "@/components/layout/AppLayout";
+import { SearchBar } from "@/components/home/SearchBar";
+import { FilterChips } from "@/components/home/FilterChips";
+import { SurpriseButton } from "@/components/home/SurpriseButton";
+import { FeaturedSection } from "@/components/home/FeaturedSection";
+import { RecommendedSection } from "@/components/home/RecommendedSection";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <AppLayout>
+      <div className="px-4 py-4 space-y-6 max-w-lg mx-auto">
+        {/* Search */}
+        <SearchBar />
+        
+        {/* Filters */}
+        <FilterChips />
+        
+        {/* Surprise Me Button */}
+        <SurpriseButton />
+        
+        {/* What's On Today */}
+        <FeaturedSection />
+        
+        {/* Recommended Activities */}
+        <RecommendedSection />
       </div>
-    </div>
+    </AppLayout>
   );
 };
 
