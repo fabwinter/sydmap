@@ -544,6 +544,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bulk_import_activities: {
+        Args: { activities_json: Json }
+        Returns: number
+      }
       chat_message_limit_exceeded: { Args: never; Returns: boolean }
       check_in_limit_exceeded: { Args: never; Returns: boolean }
       get_profile_id_from_auth: { Args: never; Returns: string }
