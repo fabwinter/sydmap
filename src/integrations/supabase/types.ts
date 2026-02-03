@@ -548,6 +548,10 @@ export type Database = {
         Args: { activities_json: Json }
         Returns: number
       }
+      bulk_import_activities_v2: {
+        Args: { activities_json: Json }
+        Returns: number
+      }
       chat_message_limit_exceeded: { Args: never; Returns: boolean }
       check_in_limit_exceeded: { Args: never; Returns: boolean }
       get_profile_id_from_auth: { Args: never; Returns: string }

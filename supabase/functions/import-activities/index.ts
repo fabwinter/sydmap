@@ -39,8 +39,8 @@ serve(async (req) => {
       );
     }
 
-    // Call the bulk import function
-    const { data, error } = await supabase.rpc('bulk_import_activities', {
+    // Call the bulk import function (v2 handles JSON format with amenities arrays)
+    const { data, error } = await supabase.rpc('bulk_import_activities_v2', {
       activities_json: activities
     });
 
