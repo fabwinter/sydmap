@@ -145,9 +145,9 @@ export default function Login() {
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop')] bg-cover bg-center opacity-30" />
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <div className="w-16 h-16 rounded-2xl bg-background/20 backdrop-blur-sm flex items-center justify-center mb-3">
-            <span className="text-3xl font-bold text-primary-foreground">S</span>
+            <span className="text-3xl font-bold text-primary-foreground">SP</span>
           </div>
-          <h1 className="text-3xl font-bold text-primary-foreground tracking-tight">SYDMAP</h1>
+          <h1 className="text-3xl font-bold text-primary-foreground tracking-tight">Sydney Planner</h1>
           <p className="text-primary-foreground/80 text-sm mt-1">Discover Sydney</p>
         </div>
       </div>
