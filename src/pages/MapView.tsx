@@ -5,8 +5,7 @@ import { MapPin, Navigation, Coffee, Waves, TreePine, Utensils, Music, Camera } 
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import "mapbox-gl/dist/mapbox-gl.css";
-
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+import { MAPBOX_TOKEN } from "@/config/mapbox";
 
 // Sample activities with coordinates around Sydney
 const sampleActivities = [
