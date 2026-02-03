@@ -1,13 +1,16 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import Map, { Marker, Popup, GeolocateControl, NavigationControl } from "react-map-gl/mapbox";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star } from "lucide-react";
+import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MAPBOX_TOKEN } from "@/config/mapbox";
 import { useAllActivities, type Activity } from "@/hooks/useActivities";
+import { useSearchFilters } from "@/hooks/useSearchFilters";
+import { FilterChips } from "@/components/home/FilterChips";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const categoryIcons: Record<string, any> = {
   Cafe: Coffee,
@@ -36,8 +39,8 @@ const categoryColors: Record<string, string> = {
 export default function MapView() {
   const navigate = useNavigate();
   const { data: activities, isLoading } = useAllActivities(200);
+  const { filters, setQuery, setIsOpen, clearFilters } = useSearchFilters();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [viewState, setViewState] = useState({
     latitude: -33.8688,
     longitude: 151.2093,
@@ -79,20 +82,41 @@ export default function MapView() {
     }
   };
 
+  // Apply all filters from shared state
   const filteredActivities = useMemo(() => {
     if (!activities) return [];
-    return activities.filter((activity) =>
-      activity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      activity.category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [activities, searchQuery]);
+    
+    return activities.filter((activity) => {
+      // Search query filter
+      if (filters.query) {
+        const query = filters.query.toLowerCase();
+        const matchesQuery = 
+          activity.name.toLowerCase().includes(query) ||
+          activity.category.toLowerCase().includes(query) ||
+          (activity.description?.toLowerCase().includes(query) ?? false);
+        if (!matchesQuery) return false;
+      }
 
-  // Get unique categories from data
-  const uniqueCategories = useMemo(() => {
-    if (!activities) return [];
-    const categories = [...new Set(activities.map(a => a.category))];
-    return categories.filter(c => categoryColors[c]);
-  }, [activities]);
+      // Category filter
+      if (filters.category && activity.category !== filters.category) {
+        return false;
+      }
+
+      // Open now filter
+      if (filters.isOpen && !activity.is_open) {
+        return false;
+      }
+
+      // Minimum rating filter
+      if (filters.minRating !== null && (activity.rating ?? 0) < filters.minRating) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [activities, filters]);
+
+  const hasActiveFilters = filters.query || filters.category || filters.isOpen || filters.minRating !== null;
 
   if (!MAPBOX_TOKEN) {
     return (
@@ -207,30 +231,40 @@ export default function MapView() {
         </Map>
 
         {/* Search Bar Overlay */}
-        <div className="absolute top-4 left-4 right-4 safe-top z-10">
+        <div className="absolute top-4 left-4 right-4 safe-top z-10 space-y-3">
           <div className="bg-card rounded-xl shadow-lg p-3 flex items-center gap-3">
             <MapPin className="w-5 h-5 text-primary shrink-0" />
             <input
               type="text"
               placeholder="Search locations..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={filters.query}
+              onChange={(e) => setQuery(e.target.value)}
               className="flex-1 bg-transparent focus:outline-none text-sm"
             />
+            {filters.query && (
+              <button onClick={() => setQuery("")}>
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            )}
           </div>
-        </div>
-
-        {/* Legend */}
-        <div className="absolute top-20 left-4 safe-top z-10">
-          <div className="bg-card rounded-xl shadow-lg p-3 space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Categories</p>
-            <div className="grid grid-cols-2 gap-2">
-              {uniqueCategories.slice(0, 6).map((category) => (
-                <div key={category} className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${categoryColors[category]}`} />
-                  <span className="text-xs">{category}</span>
-                </div>
-              ))}
+          
+          {/* Filter Chips */}
+          <div className="bg-card rounded-xl shadow-lg p-3">
+            <FilterChips />
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="map-open-now"
+                  checked={filters.isOpen}
+                  onCheckedChange={setIsOpen}
+                />
+                <Label htmlFor="map-open-now" className="text-sm">Open Now</Label>
+              </div>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              )}
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { useSearchFilters, type SearchFilters } from "@/hooks/useSearchFilters";
 
 export type Activity = Tables<"activities">;
 
@@ -44,14 +45,49 @@ export function transformActivity(activity: Activity): ActivityDisplay {
   };
 }
 
+// Apply filters to query builder
+function applyFilters(queryBuilder: any, filters: SearchFilters) {
+  let query = queryBuilder;
+
+  if (filters.query) {
+    query = query.or(`name.ilike.%${filters.query}%,description.ilike.%${filters.query}%,category.ilike.%${filters.query}%`);
+  }
+
+  if (filters.category) {
+    query = query.eq("category", filters.category);
+  }
+
+  if (filters.isOpen) {
+    query = query.eq("is_open", true);
+  }
+
+  if (filters.minRating !== null) {
+    query = query.gte("rating", filters.minRating);
+  }
+
+  return query;
+}
+
 export function useFeaturedActivities(limit = 10) {
+  const { filters } = useSearchFilters();
+  
   return useQuery({
-    queryKey: ["activities", "featured", limit],
+    queryKey: ["activities", "featured", limit, filters],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let queryBuilder = supabase
         .from("activities")
         .select("*")
-        .eq("is_open", true)
+        .eq("is_open", true);
+
+      // Apply category and rating filters (not search query for featured)
+      if (filters.category) {
+        queryBuilder = queryBuilder.eq("category", filters.category);
+      }
+      if (filters.minRating !== null) {
+        queryBuilder = queryBuilder.gte("rating", filters.minRating);
+      }
+
+      const { data, error } = await queryBuilder
         .order("rating", { ascending: false })
         .limit(limit);
 
@@ -62,12 +98,19 @@ export function useFeaturedActivities(limit = 10) {
 }
 
 export function useRecommendedActivities(limit = 12) {
+  const { filters } = useSearchFilters();
+  
   return useQuery({
-    queryKey: ["activities", "recommended", limit],
+    queryKey: ["activities", "recommended", limit, filters],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let queryBuilder = supabase
         .from("activities")
-        .select("*")
+        .select("*");
+
+      // Apply all filters including search query
+      queryBuilder = applyFilters(queryBuilder, filters);
+
+      const { data, error } = await queryBuilder
         .order("review_count", { ascending: false })
         .limit(limit);
 

@@ -23,9 +23,9 @@ export function Header() {
       <div className="flex items-center justify-between px-4 py-3 max-w-lg mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">S</span>
+            <span className="text-primary-foreground font-bold text-sm">SP</span>
           </div>
-          <span className="text-xl font-bold tracking-tight gradient-text">SYDMAP</span>
+          <span className="text-xl font-bold tracking-tight gradient-text">Sydney Planner</span>
         </Link>
         
         <div className="flex items-center gap-3">
