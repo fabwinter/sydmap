@@ -14,13 +14,541 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          address: string | null
+          category: string
+          created_at: string
+          description: string | null
+          hero_image_url: string | null
+          hours_close: string | null
+          hours_open: string | null
+          id: string
+          is_open: boolean
+          latitude: number
+          longitude: number
+          name: string
+          outdoor_seating: boolean
+          parking: boolean
+          pet_friendly: boolean
+          phone: string | null
+          rating: number | null
+          review_count: number
+          updated_at: string
+          website: string | null
+          wheelchair_accessible: boolean
+          wifi: boolean
+        }
+        Insert: {
+          address?: string | null
+          category: string
+          created_at?: string
+          description?: string | null
+          hero_image_url?: string | null
+          hours_close?: string | null
+          hours_open?: string | null
+          id?: string
+          is_open?: boolean
+          latitude: number
+          longitude: number
+          name: string
+          outdoor_seating?: boolean
+          parking?: boolean
+          pet_friendly?: boolean
+          phone?: string | null
+          rating?: number | null
+          review_count?: number
+          updated_at?: string
+          website?: string | null
+          wheelchair_accessible?: boolean
+          wifi?: boolean
+        }
+        Update: {
+          address?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          hero_image_url?: string | null
+          hours_close?: string | null
+          hours_open?: string | null
+          id?: string
+          is_open?: boolean
+          latitude?: number
+          longitude?: number
+          name?: string
+          outdoor_seating?: boolean
+          parking?: boolean
+          pet_friendly?: boolean
+          phone?: string | null
+          rating?: number | null
+          review_count?: number
+          updated_at?: string
+          website?: string | null
+          wheelchair_accessible?: boolean
+          wifi?: boolean
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          message_type: string
+          tokens_used: number | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          message_type: string
+          tokens_used?: number | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          tokens_used?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      check_ins: {
+        Row: {
+          activity_id: string
+          add_to_public_feed: boolean
+          comment: string | null
+          created_at: string
+          id: string
+          photo_url: string | null
+          rating: number
+          share_with_friends: boolean
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          add_to_public_feed?: boolean
+          comment?: string | null
+          created_at?: string
+          id?: string
+          photo_url?: string | null
+          rating: number
+          share_with_friends?: boolean
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          add_to_public_feed?: boolean
+          comment?: string | null
+          created_at?: string
+          id?: string
+          photo_url?: string | null
+          rating?: number
+          share_with_friends?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "check_ins_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "check_ins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      friends: {
+        Row: {
+          created_at: string
+          friend_id: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          friend_id: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          friend_id?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friends_friend_id_fkey"
+            columns: ["friend_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friends_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partners: {
+        Row: {
+          active: boolean
+          category: string | null
+          created_at: string
+          discount_code: string | null
+          discount_percentage: number | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          partnership_tier: string | null
+          redemption_count: number
+        }
+        Insert: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          discount_code?: string | null
+          discount_percentage?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          partnership_tier?: string | null
+          redemption_count?: number
+        }
+        Update: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          discount_code?: string | null
+          discount_percentage?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          partnership_tier?: string | null
+          redemption_count?: number
+        }
+        Relationships: []
+      }
+      photos: {
+        Row: {
+          activity_id: string
+          id: string
+          photo_url: string
+          uploaded_at: string
+          user_id: string | null
+        }
+        Insert: {
+          activity_id: string
+          id?: string
+          photo_url: string
+          uploaded_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          activity_id?: string
+          id?: string
+          photo_url?: string
+          uploaded_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photos_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlist_items: {
+        Row: {
+          activity_id: string
+          added_at: string
+          id: string
+          playlist_id: string
+        }
+        Insert: {
+          activity_id: string
+          added_at?: string
+          id?: string
+          playlist_id: string
+        }
+        Update: {
+          activity_id?: string
+          added_at?: string
+          id?: string
+          playlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_items_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_items_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlists: {
+        Row: {
+          created_at: string
+          description: string | null
+          emoji: string | null
+          id: string
+          is_public: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlists_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_premium: boolean
+          marketing_opt_in: boolean
+          name: string | null
+          newsletter_opt_in: boolean
+          premium_expires_at: string | null
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_premium?: boolean
+          marketing_opt_in?: boolean
+          name?: string | null
+          newsletter_opt_in?: boolean
+          premium_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_premium?: boolean
+          marketing_opt_in?: boolean
+          name?: string | null
+          newsletter_opt_in?: boolean
+          premium_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          activity_id: string
+          created_at: string
+          id: string
+          rating: number
+          review_text: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          id?: string
+          rating: number
+          review_text?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          review_text?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_items: {
+        Row: {
+          activity_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_items_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_badges: {
+        Row: {
+          badge_icon_url: string | null
+          badge_name: string
+          description: string | null
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          badge_icon_url?: string | null
+          badge_name: string
+          description?: string | null
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          badge_icon_url?: string | null
+          badge_name?: string
+          description?: string | null
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      chat_message_limit_exceeded: { Args: never; Returns: boolean }
+      check_in_limit_exceeded: { Args: never; Returns: boolean }
+      get_profile_id_from_auth: { Args: never; Returns: string }
+      is_premium_user: { Args: never; Returns: boolean }
+      playlist_limit_exceeded: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
