@@ -1,20 +1,12 @@
 import { MapPin, Star, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
+import type { ActivityDisplay } from "@/hooks/useActivities";
 
-export interface Activity {
-  id: string;
-  name: string;
-  category: string;
-  rating: number;
-  reviewCount: number;
-  distance: string;
-  image: string;
-  isOpen?: boolean;
-  closesAt?: string;
-}
+// Re-export for backward compatibility
+export type Activity = ActivityDisplay;
 
 interface ActivityCardProps {
-  activity: Activity;
+  activity: ActivityDisplay;
   variant?: "default" | "featured";
 }
 
