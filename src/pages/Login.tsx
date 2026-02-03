@@ -14,8 +14,8 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
-  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(true);
+  const [marketingOptIn, setMarketingOptIn] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -248,7 +248,7 @@ export default function Login() {
                     disabled={isLoading}
                   />
                   <Label htmlFor="marketing" className="text-sm text-muted-foreground cursor-pointer leading-tight">
-                    Receive special offers and partner discounts
+                    Receive special offers and partner discounts <span className="text-primary">(premium)</span>
                   </Label>
                 </div>
               </div>

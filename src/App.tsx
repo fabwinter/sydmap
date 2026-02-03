@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import MapView from "./pages/MapView";
 import Saved from "./pages/Saved";
 import Chat from "./pages/Chat";
@@ -24,7 +25,9 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/map" element={<MapView />} />
+          <Route path="/saved" element={<Saved />} />
           <Route path="/saved" element={<Saved />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/activity/:id" element={<ActivityDetails />} />
