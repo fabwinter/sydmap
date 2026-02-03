@@ -1,90 +1,43 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import Map, { Marker, Popup, GeolocateControl, NavigationControl } from "react-map-gl/mapbox";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { MapPin, Navigation, Coffee, Waves, TreePine, Utensils, Music, Camera } from "lucide-react";
+import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MAPBOX_TOKEN } from "@/config/mapbox";
+import { useAllActivities, type Activity } from "@/hooks/useActivities";
 
-// Sample activities with coordinates around Sydney
-const sampleActivities = [
-  {
-    id: "1",
-    name: "Bondi Beach",
-    category: "Beach",
-    icon: Waves,
-    latitude: -33.8908,
-    longitude: 151.2743,
-    rating: 4.8,
-    isOpen: true,
-  },
-  {
-    id: "2",
-    name: "The Grounds of Alexandria",
-    category: "Cafe",
-    icon: Coffee,
-    latitude: -33.9105,
-    longitude: 151.1957,
-    rating: 4.6,
-    isOpen: true,
-  },
-  {
-    id: "3",
-    name: "Royal Botanic Garden",
-    category: "Park",
-    icon: TreePine,
-    latitude: -33.8642,
-    longitude: 151.2166,
-    rating: 4.7,
-    isOpen: true,
-  },
-  {
-    id: "4",
-    name: "Quay Restaurant",
-    category: "Restaurant",
-    icon: Utensils,
-    latitude: -33.8568,
-    longitude: 151.2093,
-    rating: 4.9,
-    isOpen: false,
-  },
-  {
-    id: "5",
-    name: "Sydney Opera House",
-    category: "Entertainment",
-    icon: Music,
-    latitude: -33.8568,
-    longitude: 151.2153,
-    rating: 4.8,
-    isOpen: true,
-  },
-  {
-    id: "6",
-    name: "Taronga Zoo",
-    category: "Attraction",
-    icon: Camera,
-    latitude: -33.8436,
-    longitude: 151.2411,
-    rating: 4.5,
-    isOpen: true,
-  },
-];
+const categoryIcons: Record<string, any> = {
+  Cafe: Coffee,
+  Beach: Waves,
+  Park: TreePine,
+  Restaurant: Utensils,
+  Bar: Wine,
+  Shopping: ShoppingBag,
+  Gym: Dumbbell,
+  Museum: Landmark,
+  Bakery: Cake,
+};
 
 const categoryColors: Record<string, string> = {
-  Beach: "bg-secondary",
   Cafe: "bg-accent",
+  Beach: "bg-secondary",
   Park: "bg-green-500",
   Restaurant: "bg-red-500",
-  Entertainment: "bg-purple-500",
-  Attraction: "bg-yellow-500",
+  Bar: "bg-purple-500",
+  Shopping: "bg-pink-500",
+  Gym: "bg-orange-500",
+  Museum: "bg-indigo-500",
+  Bakery: "bg-amber-500",
 };
 
 export default function MapView() {
   const navigate = useNavigate();
-  const [selectedActivity, setSelectedActivity] = useState<typeof sampleActivities[0] | null>(null);
+  const { data: activities, isLoading } = useAllActivities(200);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [viewState, setViewState] = useState({
     latitude: -33.8688,
     longitude: 151.2093,
@@ -97,7 +50,6 @@ export default function MapView() {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setUserLocation({ latitude, longitude });
           setViewState((prev) => ({
             ...prev,
             latitude,
@@ -111,7 +63,7 @@ export default function MapView() {
     }
   }, []);
 
-  const handleMarkerClick = useCallback((activity: typeof sampleActivities[0]) => {
+  const handleMarkerClick = useCallback((activity: Activity) => {
     setSelectedActivity(activity);
     setViewState((prev) => ({
       ...prev,
@@ -127,10 +79,20 @@ export default function MapView() {
     }
   };
 
-  const filteredActivities = sampleActivities.filter((activity) =>
-    activity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    activity.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredActivities = useMemo(() => {
+    if (!activities) return [];
+    return activities.filter((activity) =>
+      activity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [activities, searchQuery]);
+
+  // Get unique categories from data
+  const uniqueCategories = useMemo(() => {
+    if (!activities) return [];
+    const categories = [...new Set(activities.map(a => a.category))];
+    return categories.filter(c => categoryColors[c]);
+  }, [activities]);
 
   if (!MAPBOX_TOKEN) {
     return (
@@ -176,7 +138,8 @@ export default function MapView() {
 
           {/* Activity Markers */}
           {filteredActivities.map((activity) => {
-            const IconComponent = activity.icon;
+            const IconComponent = categoryIcons[activity.category] || MapPin;
+            const colorClass = categoryColors[activity.category] || "bg-primary";
             return (
               <Marker
                 key={activity.id}
@@ -189,7 +152,7 @@ export default function MapView() {
                 }}
               >
                 <div
-                  className={`w-10 h-10 rounded-full ${categoryColors[activity.category]} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110`}
+                  className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110`}
                 >
                   <IconComponent className="w-5 h-5 text-white" />
                 </div>
@@ -211,11 +174,11 @@ export default function MapView() {
               <div className="p-2 min-w-[200px]">
                 <div className="flex items-center gap-2 mb-2">
                   <span
-                    className={`px-2 py-0.5 rounded-full text-xs text-white ${categoryColors[selectedActivity.category]}`}
+                    className={`px-2 py-0.5 rounded-full text-xs text-white ${categoryColors[selectedActivity.category] || "bg-primary"}`}
                   >
                     {selectedActivity.category}
                   </span>
-                  {selectedActivity.isOpen ? (
+                  {selectedActivity.is_open ? (
                     <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
                       Open
                     </span>
@@ -227,8 +190,9 @@ export default function MapView() {
                 </div>
                 <h3 className="font-bold text-foreground">{selectedActivity.name}</h3>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                  <span className="text-yellow-500">★</span>
-                  <span>{selectedActivity.rating}</span>
+                  <Star className="w-3 h-3 fill-warning text-warning" />
+                  <span>{selectedActivity.rating?.toFixed(1) || "N/A"}</span>
+                  <span className="text-xs">({selectedActivity.review_count} reviews)</span>
                 </div>
                 <Button
                   size="sm"
@@ -261,9 +225,9 @@ export default function MapView() {
           <div className="bg-card rounded-xl shadow-lg p-3 space-y-2">
             <p className="text-xs font-medium text-muted-foreground">Categories</p>
             <div className="grid grid-cols-2 gap-2">
-              {Object.entries(categoryColors).map(([category, color]) => (
+              {uniqueCategories.slice(0, 6).map((category) => (
                 <div key={category} className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${color}`} />
+                  <div className={`w-3 h-3 rounded-full ${categoryColors[category]}`} />
                   <span className="text-xs">{category}</span>
                 </div>
               ))}
@@ -275,7 +239,9 @@ export default function MapView() {
         <div className="absolute bottom-24 left-4 z-10">
           <div className="bg-card rounded-full shadow-lg px-4 py-2 flex items-center gap-2">
             <MapPin className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">{filteredActivities.length} places</span>
+            <span className="text-sm font-medium">
+              {isLoading ? "Loading..." : `${filteredActivities.length} places`}
+            </span>
           </div>
         </div>
       </div>

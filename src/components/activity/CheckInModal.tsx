@@ -3,21 +3,78 @@ import { X, Star, Camera, ImagePlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CheckInModalProps {
+  activityId: string;
   activityName: string;
   onClose: () => void;
 }
 
-export function CheckInModal({ activityName, onClose }: CheckInModalProps) {
+export function CheckInModal({ activityId, activityName, onClose }: CheckInModalProps) {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
   const [shareWithFriends, setShareWithFriends] = useState(true);
   const [addToPublic, setAddToPublic] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const checkInMutation = useMutation({
+    mutationFn: async () => {
+      // Get profile id first
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user!.id)
+        .single();
+
+      if (!profile) throw new Error("Profile not found");
+
+      const { error } = await supabase
+        .from("check_ins")
+        .insert({
+          user_id: profile.id,
+          activity_id: activityId,
+          rating,
+          comment: comment || null,
+          photo_url: photo || null,
+          share_with_friends: shareWithFriends,
+          add_to_public_feed: addToPublic,
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["check-ins"] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({
+        title: "🎉 Check-in complete!",
+        description: "Thanks for sharing your experience",
+      });
+      onClose();
+    },
+    onError: (error: any) => {
+      console.error("Check-in error:", error);
+      if (error.message?.includes("limit")) {
+        toast({
+          title: "Daily limit reached",
+          description: "Free users can check in 3 times per day. Upgrade to Premium for unlimited check-ins!",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Check-in failed",
+          description: "Please try again",
+          variant: "destructive",
+        });
+      }
+    },
+  });
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -29,17 +86,7 @@ export function CheckInModal({ activityName, onClose }: CheckInModalProps) {
       return;
     }
     
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    toast({
-      title: "🎉 Check-in complete!",
-      description: "Thanks for sharing your experience",
-    });
-    
-    onClose();
+    checkInMutation.mutate();
   };
 
   return (
@@ -171,9 +218,9 @@ export function CheckInModal({ activityName, onClose }: CheckInModalProps) {
             <Button
               className="flex-1 bg-primary hover:bg-primary/90"
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={checkInMutation.isPending}
             >
-              {isSubmitting ? (
+              {checkInMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Posting...
