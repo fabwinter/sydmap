@@ -185,7 +185,7 @@ export default function Profile() {
               <Award className="w-4 h-4 mr-2" />
               {profile?.is_premium ? "Premium" : "Upgrade"}
             </Button>
-            <Button variant="outline" size="icon" onClick={handleSignOut} title="Sign out">
+            <Button variant="outline" size="icon" onClick={() => navigate("/settings")} title="Settings">
               <Settings className="w-5 h-5" />
             </Button>
           </div>
