@@ -8,7 +8,6 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { MAPBOX_TOKEN } from "@/config/mapbox";
 import { useAllActivities, type Activity } from "@/hooks/useActivities";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { VenueList } from "@/components/map/VenueList";
 import { MapFilters } from "@/components/map/MapFilters";
 
@@ -38,7 +37,6 @@ const categoryColors: Record<string, string> = {
 
 export default function MapView() {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const { data: activities, isLoading } = useAllActivities(200);
   const { filters } = useSearchFilters();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
@@ -143,13 +141,13 @@ export default function MapView() {
       mapStyle="mapbox://styles/mapbox/streets-v12"
       mapboxAccessToken={MAPBOX_TOKEN}
     >
-      {/* Navigation Controls */}
-      <NavigationControl position="bottom-right" style={{ marginBottom: isMobile ? "120px" : "20px" }} />
+      {/* Navigation Controls - Position adjusted with CSS for mobile bottom nav */}
+      <NavigationControl position="bottom-right" style={{ marginBottom: "20px" }} />
       
       {/* Geolocate Control */}
       <GeolocateControl
         position="bottom-right"
-        style={{ marginBottom: isMobile ? "180px" : "80px" }}
+        style={{ marginBottom: "80px" }}
         trackUserLocation
         showUserHeading
       />
@@ -225,35 +223,18 @@ export default function MapView() {
     </Map>
   );
 
-  // Mobile Layout - Full screen map with floating filters
-  if (isMobile) {
-    return (
-      <AppLayout showHeader={false} fullHeight>
-        <div className="relative h-screen">
-          {mapContent}
-          
-          {/* Floating Filters */}
-          <div className="absolute top-4 left-4 right-4 safe-top z-10">
-            <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
-          </div>
-        </div>
-      </AppLayout>
-    );
-  }
-
-  // Desktop Layout - Split screen with venue list
   return (
     <AppLayout showHeader={false} fullHeight>
-      <div className="h-screen grid grid-cols-[350px_1fr]">
-        {/* Left Column - Venue List */}
-        <div className="h-full border-r border-border bg-background flex flex-col">
-          {/* Filters in sidebar on desktop */}
-          <div className="p-4 border-b border-border shrink-0">
+      <div className="flex h-screen overflow-hidden">
+        {/* LEFT COLUMN: SCROLLABLE LIST - Hidden on mobile, visible on desktop */}
+        <div className="hidden md:flex flex-col w-[400px] border-r border-border bg-background h-full">
+          {/* Search Bar & Filters - Sticky header */}
+          <div className="p-4 sticky top-0 bg-background z-10 border-b border-border shrink-0">
             <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
           </div>
           
-          {/* Scrollable Venue List */}
-          <div className="flex-1 overflow-hidden">
+          {/* Venue List Cards - Scrollable */}
+          <div className="flex-1 overflow-y-auto">
             <VenueList
               activities={filteredActivities}
               isLoading={isLoading}
@@ -264,9 +245,14 @@ export default function MapView() {
           </div>
         </div>
 
-        {/* Right Column - Map */}
-        <div className="h-full relative">
+        {/* RIGHT COLUMN: MAP */}
+        <div className="flex-1 h-full relative">
           {mapContent}
+          
+          {/* Mobile-only floating search bar */}
+          <div className="absolute top-4 left-4 right-4 safe-top z-10 md:hidden">
+            <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
+          </div>
         </div>
       </div>
     </AppLayout>

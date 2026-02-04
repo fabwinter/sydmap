@@ -16,7 +16,7 @@ const heroImages = [
 const Index = () => {
   return (
     <AppLayout>
-      <div className="px-4 py-4 space-y-6 max-w-lg mx-auto md:max-w-3xl lg:max-w-4xl">
+      <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8 py-4 md:py-6 space-y-6">
         {/* Hero Slideshow */}
         <HeroSlideshow 
           images={heroImages}
@@ -25,13 +25,17 @@ const Index = () => {
         />
         
         {/* Search */}
-        <SearchBar />
+        <div className="max-w-2xl">
+          <SearchBar />
+        </div>
         
         {/* Filters */}
         <FilterChips />
         
         {/* Surprise Me Button */}
-        <SurpriseButton />
+        <div className="max-w-md mx-auto md:mx-0">
+          <SurpriseButton />
+        </div>
         
         {/* What's On Today */}
         <FeaturedSection />

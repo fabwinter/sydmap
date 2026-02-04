@@ -27,7 +27,7 @@ export function HeroSlideshow({
   }, [images.length, interval]);
 
   return (
-    <div className="relative h-48 md:h-64 lg:h-80 rounded-2xl overflow-hidden">
+    <div className="relative h-48 md:h-64 lg:h-80 max-h-[400px] rounded-2xl overflow-hidden">
       <AnimatePresence mode="popLayout">
         <motion.div
           key={currentIndex}
