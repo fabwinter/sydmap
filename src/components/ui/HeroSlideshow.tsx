@@ -1,18 +1,24 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Star, MapPin } from "lucide-react";
+import { Button } from "./button";
 
 interface HeroSlideshowProps {
   images: string[];
   title?: string;
   subtitle?: string;
   interval?: number;
+  ctaText?: string;
+  onCtaClick?: () => void;
 }
 
 export function HeroSlideshow({ 
   images, 
-  title = "Welcome to Sydney",
-  subtitle,
-  interval = 5000 
+  title = "Discover Sydney",
+  subtitle = "Join thousands exploring the best spots in Australia's most vibrant city.",
+  interval = 6000,
+  ctaText = "Start Exploring",
+  onCtaClick
 }: HeroSlideshowProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -27,7 +33,7 @@ export function HeroSlideshow({
   }, [images.length, interval]);
 
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-slate-900 text-white h-64 md:h-72 lg:h-80">
+    <section className="relative overflow-hidden rounded-3xl bg-slate-900 text-white min-h-[420px] md:min-h-[480px] lg:min-h-[540px]">
       {/* Image layer - absolute positioned to fill container */}
       <div className="absolute inset-0">
         <AnimatePresence mode="popLayout">
@@ -36,62 +42,130 @@ export function HeroSlideshow({
             src={images[currentIndex]}
             alt="Sydney"
             className="w-full h-full object-cover"
-            initial={{ opacity: 0, scale: 1 }}
+            initial={{ opacity: 0, scale: 1.05 }}
             animate={{ 
               opacity: 1,
-              scale: 1.1,
+              scale: 1.15,
             }}
             exit={{ opacity: 0 }}
             transition={{
-              opacity: { duration: 1, ease: "easeInOut" },
-              scale: { duration: 10, ease: "easeOut" },
+              opacity: { duration: 1.2, ease: "easeInOut" },
+              scale: { duration: 12, ease: "easeOut" },
             }}
           />
         </AnimatePresence>
       </div>
 
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+      {/* Multi-layer gradient overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/60" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
 
-      {/* Text content - centered */}
-      <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center space-y-3">
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="text-3xl md:text-4xl lg:text-5xl font-bold drop-shadow-lg"
-        >
-          {title}
-        </motion.h1>
-        {subtitle && (
+      {/* Award badges - top center */}
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.6 }}
+        className="absolute top-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-6"
+      >
+        <div className="flex items-center gap-2 text-white/80 text-xs md:text-sm">
+          <span className="text-amber-400">🏆</span>
+          <span className="font-medium">Top Rated</span>
+        </div>
+        <div className="hidden md:flex items-center gap-2 text-white/80 text-xs md:text-sm">
+          <span className="text-amber-400">⭐</span>
+          <span className="font-medium">Editor's Choice</span>
+        </div>
+      </motion.div>
+
+      {/* Main content - centered */}
+      <div className="relative z-10 flex h-full min-h-[420px] md:min-h-[480px] lg:min-h-[540px] flex-col items-center justify-center px-6 text-center">
+        <div className="space-y-6 max-w-3xl">
+          {/* Headline with italic styling like Polarsteps */}
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
+            className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold italic leading-tight drop-shadow-2xl"
+            style={{ 
+              textShadow: '0 4px 30px rgba(0,0,0,0.5)',
+              fontFamily: 'Georgia, serif'
+            }}
+          >
+            {title}
+          </motion.h1>
+          
+          {/* Subtitle */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.6 }}
-            className="text-base md:text-lg text-slate-100/90 drop-shadow-md"
+            className="text-lg md:text-xl lg:text-2xl text-white/90 max-w-2xl mx-auto font-light drop-shadow-lg"
           >
             {subtitle}
           </motion.p>
-        )}
+
+          {/* CTA Button + Rating */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.6 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+          >
+            <Button 
+              size="lg"
+              onClick={onCtaClick}
+              className="bg-white text-foreground hover:bg-white/90 font-semibold px-8 py-6 text-base rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            >
+              <MapPin className="w-5 h-5 mr-2 text-primary" />
+              {ctaText}
+            </Button>
+            
+            {/* Rating badge */}
+            <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm rounded-full px-4 py-2">
+              <div className="flex">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                ))}
+              </div>
+              <span className="text-white/90 text-sm font-medium">4.8 (2.5K ratings)</span>
+            </div>
+          </motion.div>
+        </div>
       </div>
 
-      {/* Slide indicators */}
+      {/* Slide indicators - bottom */}
       {images.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
           {images.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              className={`h-2 rounded-full transition-all duration-300 ${
                 index === currentIndex 
-                  ? "bg-white w-6" 
-                  : "bg-white/50 hover:bg-white/70"
+                  ? "bg-white w-8" 
+                  : "bg-white/40 w-2 hover:bg-white/60"
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
         </div>
       )}
+
+      {/* Scroll indicator */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2, duration: 0.6 }}
+        className="absolute bottom-16 left-1/2 -translate-x-1/2 z-10"
+      >
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          className="w-6 h-10 rounded-full border-2 border-white/40 flex items-start justify-center p-2"
+        >
+          <div className="w-1 h-2 bg-white/60 rounded-full" />
+        </motion.div>
+      </motion.div>
     </section>
   );
 }
