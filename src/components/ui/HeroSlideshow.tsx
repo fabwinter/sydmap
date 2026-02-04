@@ -27,41 +27,39 @@ export function HeroSlideshow({
   }, [images.length, interval]);
 
   return (
-    <div className="relative h-48 md:h-64 lg:h-80 max-h-[400px] rounded-2xl overflow-hidden">
-      <AnimatePresence mode="popLayout">
-        <motion.div
-          key={currentIndex}
-          initial={{ opacity: 0 }}
-          animate={{ 
-            opacity: 1,
-            scale: [1, 1.1],
-          }}
-          exit={{ opacity: 0 }}
-          transition={{
-            opacity: { duration: 1, ease: "easeInOut" },
-            scale: { duration: 10, ease: "easeOut" },
-          }}
-          className="absolute inset-0"
-        >
-          <img
+    <section className="relative overflow-hidden rounded-3xl bg-slate-900 text-white h-64 md:h-72 lg:h-80">
+      {/* Image layer - absolute positioned to fill container */}
+      <div className="absolute inset-0">
+        <AnimatePresence mode="popLayout">
+          <motion.img
+            key={currentIndex}
             src={images[currentIndex]}
             alt="Sydney"
             className="w-full h-full object-cover"
+            initial={{ opacity: 0, scale: 1 }}
+            animate={{ 
+              opacity: 1,
+              scale: 1.1,
+            }}
+            exit={{ opacity: 0 }}
+            transition={{
+              opacity: { duration: 1, ease: "easeInOut" },
+              scale: { duration: 10, ease: "easeOut" },
+            }}
           />
-        </motion.div>
-      </AnimatePresence>
+        </AnimatePresence>
+      </div>
 
       {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
-      {/* Text content */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+      {/* Text content - centered */}
+      <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center space-y-3">
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
-          className="text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-lg"
-          style={{ textShadow: "0 4px 12px rgba(0,0,0,0.5)" }}
+          className="text-3xl md:text-4xl lg:text-5xl font-bold drop-shadow-lg"
         >
           {title}
         </motion.h1>
@@ -70,8 +68,7 @@ export function HeroSlideshow({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.6 }}
-            className="text-white/90 text-lg md:text-xl mt-2 drop-shadow-md"
-            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}
+            className="text-base md:text-lg text-slate-100/90 drop-shadow-md"
           >
             {subtitle}
           </motion.p>
@@ -80,7 +77,7 @@ export function HeroSlideshow({
 
       {/* Slide indicators */}
       {images.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
           {images.map((_, index) => (
             <button
               key={index}
@@ -95,6 +92,6 @@ export function HeroSlideshow({
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }
