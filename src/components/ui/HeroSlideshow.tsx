@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, MapPin } from "lucide-react";
+import { Star, MapPin, ChevronDown } from "lucide-react";
 import { Button } from "./button";
 
 interface HeroSlideshowProps {
@@ -33,7 +33,7 @@ export function HeroSlideshow({
   }, [images.length, interval]);
 
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-slate-900 text-white min-h-[420px] md:min-h-[480px] lg:min-h-[540px]">
+    <section className="relative w-full h-screen overflow-hidden bg-slate-900 text-white">
       {/* Image layer - absolute positioned to fill container */}
       <div className="absolute inset-0">
         <AnimatePresence mode="popLayout">
@@ -57,34 +57,34 @@ export function HeroSlideshow({
       </div>
 
       {/* Multi-layer gradient overlay for depth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/60" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
 
-      {/* Award badges - top center */}
+      {/* Award badges - top center, positioned below header */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.6 }}
-        className="absolute top-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-6"
+        transition={{ delay: 0.4, duration: 0.6 }}
+        className="absolute top-28 md:top-32 left-1/2 -translate-x-1/2 z-10 flex items-center gap-6"
       >
         <div className="flex items-center gap-2 text-white/80 text-xs md:text-sm">
           <span className="text-amber-400">🏆</span>
-          <span className="font-medium">Top Rated</span>
+          <span className="font-medium">Google Play<br />Editor's Choice</span>
         </div>
         <div className="hidden md:flex items-center gap-2 text-white/80 text-xs md:text-sm">
-          <span className="text-amber-400">⭐</span>
-          <span className="font-medium">Editor's Choice</span>
+          <span className="text-amber-400">🍎</span>
+          <span className="font-medium">App Store<br />App of the Day</span>
         </div>
       </motion.div>
 
       {/* Main content - centered */}
-      <div className="relative z-10 flex h-full min-h-[420px] md:min-h-[480px] lg:min-h-[540px] flex-col items-center justify-center px-6 text-center">
+      <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
         <div className="space-y-6 max-w-3xl">
           {/* Headline with italic styling like Polarsteps */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
+            transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
             className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold italic leading-tight drop-shadow-2xl"
             style={{ 
               textShadow: '0 4px 30px rgba(0,0,0,0.5)',
@@ -98,7 +98,7 @@ export function HeroSlideshow({
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
+            transition={{ delay: 0.7, duration: 0.6 }}
             className="text-lg md:text-xl lg:text-2xl text-white/90 max-w-2xl mx-auto font-light drop-shadow-lg"
           >
             {subtitle}
@@ -108,8 +108,8 @@ export function HeroSlideshow({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.6 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+            transition={{ delay: 0.9, duration: 0.6 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6"
           >
             <Button 
               size="lg"
@@ -121,13 +121,13 @@ export function HeroSlideshow({
             </Button>
             
             {/* Rating badge */}
-            <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm rounded-full px-4 py-2">
+            <div className="flex items-center gap-2">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
                 ))}
               </div>
-              <span className="text-white/90 text-sm font-medium">4.8 (2.5K ratings)</span>
+              <span className="text-white/90 text-sm font-medium">4.8 (140K RATINGS)</span>
             </div>
           </motion.div>
         </div>
@@ -135,7 +135,7 @@ export function HeroSlideshow({
 
       {/* Slide indicators - bottom */}
       {images.length > 1 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 flex gap-2">
           {images.map((_, index) => (
             <button
               key={index}
@@ -155,15 +155,15 @@ export function HeroSlideshow({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.6 }}
-        className="absolute bottom-16 left-1/2 -translate-x-1/2 z-10"
+        transition={{ delay: 1.4, duration: 0.6 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2"
       >
+        <span className="text-white/70 text-xs uppercase tracking-widest">Explore</span>
         <motion.div
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-          className="w-6 h-10 rounded-full border-2 border-white/40 flex items-start justify-center p-2"
         >
-          <div className="w-1 h-2 bg-white/60 rounded-full" />
+          <ChevronDown className="w-6 h-6 text-white/70" />
         </motion.div>
       </motion.div>
     </section>
