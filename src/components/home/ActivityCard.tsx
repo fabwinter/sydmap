@@ -1,13 +1,81 @@
-import { MapPin, Star, Clock } from "lucide-react";
+import { useState } from "react";
+import { MapPin, Star, Clock, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake, ImageOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import type { ActivityDisplay } from "@/hooks/useActivities";
 
 // Re-export for backward compatibility
 export type Activity = ActivityDisplay;
 
+// Category icon mapping
+const categoryIcons: Record<string, React.ElementType> = {
+  Cafe: Coffee,
+  Beach: Waves,
+  Park: TreePine,
+  Restaurant: Utensils,
+  Bar: Wine,
+  Museum: Landmark,
+  Shopping: ShoppingBag,
+  Gym: Dumbbell,
+  Bakery: Cake,
+};
+
+// Category gradient colors
+const categoryGradients: Record<string, string> = {
+  Cafe: "from-amber-400 to-orange-500",
+  Beach: "from-cyan-400 to-blue-500",
+  Park: "from-green-400 to-emerald-500",
+  Restaurant: "from-red-400 to-rose-500",
+  Bar: "from-purple-400 to-violet-500",
+  Museum: "from-slate-400 to-slate-600",
+  Shopping: "from-pink-400 to-fuchsia-500",
+  Gym: "from-orange-400 to-red-500",
+  Bakery: "from-yellow-400 to-amber-500",
+};
+
 interface ActivityCardProps {
   activity: ActivityDisplay;
   variant?: "default" | "featured";
+}
+
+function ImageWithFallback({ 
+  src, 
+  alt, 
+  category,
+  className 
+}: { 
+  src: string; 
+  alt: string; 
+  category: string;
+  className?: string;
+}) {
+  const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const Icon = categoryIcons[category] || MapPin;
+  const gradient = categoryGradients[category] || "from-slate-400 to-slate-600";
+
+  if (hasError || !src) {
+    return (
+      <div className={`bg-gradient-to-br ${gradient} flex items-center justify-center ${className}`}>
+        <Icon className="w-12 h-12 text-white/80" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {isLoading && (
+        <div className={`absolute inset-0 bg-muted animate-pulse ${className}`} />
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        onError={() => setHasError(true)}
+        onLoad={() => setIsLoading(false)}
+      />
+    </>
+  );
 }
 
 export function ActivityCard({ activity, variant = "default" }: ActivityCardProps) {
@@ -17,10 +85,11 @@ export function ActivityCard({ activity, variant = "default" }: ActivityCardProp
         to={`/activity/${activity.id}`}
         className="activity-card shrink-0 w-64 overflow-hidden"
       >
-        <div className="relative aspect-[4/3]">
-          <img
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
+          <ImageWithFallback
             src={activity.image}
             alt={activity.name}
+            category={activity.category}
             className="w-full h-full object-cover"
           />
           {activity.isOpen && (
@@ -54,10 +123,11 @@ export function ActivityCard({ activity, variant = "default" }: ActivityCardProp
       to={`/activity/${activity.id}`}
       className="activity-card flex flex-col"
     >
-      <div className="relative aspect-[4/3]">
-        <img
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
+        <ImageWithFallback
           src={activity.image}
           alt={activity.name}
+          category={activity.category}
           className="w-full h-full object-cover"
         />
         {activity.isOpen && (

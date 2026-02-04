@@ -31,9 +31,13 @@ export function FeaturedSection() {
       
       {isLoading ? (
         <div className="flex gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="shrink-0 w-64">
               <Skeleton className="aspect-[4/3] rounded-xl" />
+              <div className="p-3 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
             </div>
           ))}
         </div>
