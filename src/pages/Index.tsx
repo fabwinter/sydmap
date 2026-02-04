@@ -3,7 +3,6 @@ import { ControlPanel } from "@/components/home/ControlPanel";
 import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { RecommendedSection } from "@/components/home/RecommendedSection";
 import { HeroSlideshow } from "@/components/ui/HeroSlideshow";
-import { useNavigate } from "react-router-dom";
 
 const heroImages = [
   "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1600&h=900&fit=crop", // Sydney Opera House
@@ -13,38 +12,38 @@ const heroImages = [
 ];
 
 const Index = () => {
-  const navigate = useNavigate();
-
   const handleCtaClick = () => {
-    // Scroll to featured section or navigate to map
-    const featuredSection = document.getElementById('featured-section');
+    const featuredSection = document.getElementById('content-section');
     if (featuredSection) {
       featuredSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
   return (
-    <AppLayout>
-      <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8 pt-4 md:pt-6 pb-10 space-y-8">
-        {/* Hero Slideshow - Polarsteps style */}
-        <HeroSlideshow 
-          images={heroImages}
-          title="One app for all your Sydney adventures"
-          subtitle="Join thousands exploring the best cafes, beaches, and hidden gems across Australia's most vibrant city."
-          ctaText="Start Exploring"
-          onCtaClick={handleCtaClick}
-        />
-        
-        {/* Control Panel: Search + Filters + Surprise */}
-        <ControlPanel />
-        
-        {/* What's On Today */}
-        <div id="featured-section">
-          <FeaturedSection />
+    <AppLayout showHeader={true} transparentHeader={true}>
+      {/* Full-page Hero */}
+      <HeroSlideshow 
+        images={heroImages}
+        title="One app for all your Sydney adventures"
+        subtitle="Join thousands exploring the best cafes, beaches, and hidden gems across Australia's most vibrant city."
+        ctaText="Start Exploring"
+        onCtaClick={handleCtaClick}
+      />
+      
+      {/* Content Section - appears on scroll */}
+      <div id="content-section" className="bg-background">
+        <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8 py-8 md:py-12 space-y-8">
+          {/* Control Panel: Search + Filters + Surprise */}
+          <ControlPanel />
+          
+          {/* What's On Today */}
+          <div id="featured-section">
+            <FeaturedSection />
+          </div>
+          
+          {/* Recommended Activities */}
+          <RecommendedSection />
         </div>
-        
-        {/* Recommended Activities */}
-        <RecommendedSection />
       </div>
     </AppLayout>
   );
