@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ActivityCard } from "./ActivityCard";
 import { useFeaturedActivities } from "@/hooks/useActivities";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AnimatedList, AnimatedListItem } from "@/components/ui/AnimatedList";
 
 export function FeaturedSection() {
   const { data: activities, isLoading, error } = useFeaturedActivities(8);
@@ -28,26 +29,25 @@ export function FeaturedSection() {
       </div>
       <p className="text-sm text-muted-foreground -mt-1">Right now, close to you</p>
       
-      <div className="flex gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
-        {isLoading ? (
-          // Loading skeletons
-          Array.from({ length: 4 }).map((_, i) => (
+      {isLoading ? (
+        <div className="flex gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
+          {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="shrink-0 w-64">
               <Skeleton className="aspect-[4/3] rounded-xl" />
             </div>
-          ))
-        ) : activities && activities.length > 0 ? (
-          activities.map((activity) => (
-            <ActivityCard
-              key={activity.id}
-              activity={activity}
-              variant="featured"
-            />
-          ))
-        ) : (
-          <p className="text-muted-foreground text-sm">No activities found</p>
-        )}
-      </div>
+          ))}
+        </div>
+      ) : activities && activities.length > 0 ? (
+        <AnimatedList className="flex gap-4 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
+          {activities.map((activity) => (
+            <AnimatedListItem key={activity.id}>
+              <ActivityCard activity={activity} variant="featured" />
+            </AnimatedListItem>
+          ))}
+        </AnimatedList>
+      ) : (
+        <p className="text-muted-foreground text-sm">No activities found</p>
+      )}
     </section>
   );
 }

@@ -23,7 +23,7 @@ export function DesktopSidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-60 bg-card border-r border-border flex flex-col z-50">
+    <aside className="fixed left-0 top-0 h-screen w-60 bg-card/80 backdrop-blur-md border-r border-white/20 flex flex-col z-50">
       {/* Logo */}
       <div className="p-6 border-b border-border">
         <Link to="/" className="flex items-center gap-2">
