@@ -1,16 +1,16 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import Map, { Marker, Popup, GeolocateControl, NavigationControl } from "react-map-gl/mapbox";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, X } from "lucide-react";
+import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MAPBOX_TOKEN } from "@/config/mapbox";
 import { useAllActivities, type Activity } from "@/hooks/useActivities";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
-import { FilterChips } from "@/components/home/FilterChips";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { VenueList } from "@/components/map/VenueList";
+import { MapFilters } from "@/components/map/MapFilters";
 
 const categoryIcons: Record<string, any> = {
   Cafe: Coffee,
@@ -38,8 +38,9 @@ const categoryColors: Record<string, string> = {
 
 export default function MapView() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { data: activities, isLoading } = useAllActivities(200);
-  const { filters, setQuery, setIsOpen, clearFilters } = useSearchFilters();
+  const { filters } = useSearchFilters();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [viewState, setViewState] = useState({
     latitude: -33.8688,
@@ -76,11 +77,9 @@ export default function MapView() {
     }));
   }, []);
 
-  const handleNavigateToDetails = () => {
-    if (selectedActivity) {
-      navigate(`/activity/${selectedActivity.id}`);
-    }
-  };
+  const handleNavigateToDetails = useCallback((activity: Activity) => {
+    navigate(`/activity/${activity.id}`);
+  }, [navigate]);
 
   // Apply all filters from shared state
   const filteredActivities = useMemo(() => {
@@ -116,12 +115,10 @@ export default function MapView() {
     });
   }, [activities, filters]);
 
-  const hasActiveFilters = filters.query || filters.category || filters.isOpen || filters.minRating !== null;
-
   if (!MAPBOX_TOKEN) {
     return (
-      <AppLayout showHeader={false}>
-        <div className="relative h-screen flex items-center justify-center bg-muted">
+      <AppLayout showHeader={false} fullHeight>
+        <div className="h-full flex items-center justify-center bg-muted">
           <div className="text-center space-y-4 p-6">
             <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto">
               <MapPin className="w-10 h-10 text-primary" />
@@ -138,145 +135,138 @@ export default function MapView() {
     );
   }
 
-  return (
-    <AppLayout showHeader={false}>
-      <div className="relative h-screen">
-        {/* Map */}
-        <Map
-          {...viewState}
-          onMove={(evt) => setViewState(evt.viewState)}
-          style={{ width: "100%", height: "100%" }}
-          mapStyle="mapbox://styles/mapbox/streets-v12"
-          mapboxAccessToken={MAPBOX_TOKEN}
-        >
-          {/* Navigation Controls */}
-          <NavigationControl position="bottom-right" style={{ marginBottom: "120px" }} />
-          
-          {/* Geolocate Control */}
-          <GeolocateControl
-            position="bottom-right"
-            style={{ marginBottom: "180px" }}
-            trackUserLocation
-            showUserHeading
-          />
+  const mapContent = (
+    <Map
+      {...viewState}
+      onMove={(evt) => setViewState(evt.viewState)}
+      style={{ width: "100%", height: "100%" }}
+      mapStyle="mapbox://styles/mapbox/streets-v12"
+      mapboxAccessToken={MAPBOX_TOKEN}
+    >
+      {/* Navigation Controls */}
+      <NavigationControl position="bottom-right" style={{ marginBottom: isMobile ? "120px" : "20px" }} />
+      
+      {/* Geolocate Control */}
+      <GeolocateControl
+        position="bottom-right"
+        style={{ marginBottom: isMobile ? "180px" : "80px" }}
+        trackUserLocation
+        showUserHeading
+      />
 
-          {/* Activity Markers */}
-          {filteredActivities.map((activity) => {
-            const IconComponent = categoryIcons[activity.category] || MapPin;
-            const colorClass = categoryColors[activity.category] || "bg-primary";
-            return (
-              <Marker
-                key={activity.id}
-                latitude={activity.latitude}
-                longitude={activity.longitude}
-                anchor="bottom"
-                onClick={(e) => {
-                  e.originalEvent.stopPropagation();
-                  handleMarkerClick(activity);
-                }}
-              >
-                <div
-                  className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110`}
-                >
-                  <IconComponent className="w-5 h-5 text-white" />
-                </div>
-              </Marker>
-            );
-          })}
-
-          {/* Popup for selected activity */}
-          {selectedActivity && (
-            <Popup
-              latitude={selectedActivity.latitude}
-              longitude={selectedActivity.longitude}
-              anchor="bottom"
-              onClose={() => setSelectedActivity(null)}
-              closeButton={true}
-              closeOnClick={false}
-              offset={45}
+      {/* Activity Markers */}
+      {filteredActivities.map((activity) => {
+        const IconComponent = categoryIcons[activity.category] || MapPin;
+        const colorClass = categoryColors[activity.category] || "bg-primary";
+        return (
+          <Marker
+            key={activity.id}
+            latitude={activity.latitude}
+            longitude={activity.longitude}
+            anchor="bottom"
+            onClick={(e) => {
+              e.originalEvent.stopPropagation();
+              handleMarkerClick(activity);
+            }}
+          >
+            <div
+              className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110`}
             >
-              <div className="p-2 min-w-[200px]">
-                <div className="flex items-center gap-2 mb-2">
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs text-white ${categoryColors[selectedActivity.category] || "bg-primary"}`}
-                  >
-                    {selectedActivity.category}
-                  </span>
-                  {selectedActivity.is_open ? (
-                    <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
-                      Open
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700">
-                      Closed
-                    </span>
-                  )}
-                </div>
-                <h3 className="font-bold text-foreground">{selectedActivity.name}</h3>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                  <Star className="w-3 h-3 fill-warning text-warning" />
-                  <span>{selectedActivity.rating?.toFixed(1) || "N/A"}</span>
-                  <span className="text-xs">({selectedActivity.review_count} reviews)</span>
-                </div>
-                <Button
-                  size="sm"
-                  className="w-full mt-3"
-                  onClick={handleNavigateToDetails}
-                >
-                  View Details
-                </Button>
-              </div>
-            </Popup>
-          )}
-        </Map>
+              <IconComponent className="w-5 h-5 text-white" />
+            </div>
+          </Marker>
+        );
+      })}
 
-        {/* Search Bar Overlay */}
-        <div className="absolute top-4 left-4 right-4 safe-top z-10 space-y-3">
-          <div className="bg-card rounded-xl shadow-lg p-3 flex items-center gap-3">
-            <MapPin className="w-5 h-5 text-primary shrink-0" />
-            <input
-              type="text"
-              placeholder="Search locations..."
-              value={filters.query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="flex-1 bg-transparent focus:outline-none text-sm"
-            />
-            {filters.query && (
-              <button onClick={() => setQuery("")}>
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
-            )}
-          </div>
-          
-          {/* Filter Chips */}
-          <div className="bg-card rounded-xl shadow-lg p-3">
-            <FilterChips />
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="map-open-now"
-                  checked={filters.isOpen}
-                  onCheckedChange={setIsOpen}
-                />
-                <Label htmlFor="map-open-now" className="text-sm">Open Now</Label>
-              </div>
-              {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  Clear filters
-                </Button>
+      {/* Popup for selected activity */}
+      {selectedActivity && (
+        <Popup
+          latitude={selectedActivity.latitude}
+          longitude={selectedActivity.longitude}
+          anchor="bottom"
+          onClose={() => setSelectedActivity(null)}
+          closeButton={true}
+          closeOnClick={false}
+          offset={45}
+        >
+          <div className="p-2 min-w-[200px]">
+            <div className="flex items-center gap-2 mb-2">
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs text-white ${categoryColors[selectedActivity.category] || "bg-primary"}`}
+              >
+                {selectedActivity.category}
+              </span>
+              {selectedActivity.is_open ? (
+                <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
+                  Open
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700">
+                  Closed
+                </span>
               )}
             </div>
+            <h3 className="font-bold text-foreground">{selectedActivity.name}</h3>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+              <Star className="w-3 h-3 fill-warning text-warning" />
+              <span>{selectedActivity.rating?.toFixed(1) || "N/A"}</span>
+              <span className="text-xs">({selectedActivity.review_count} reviews)</span>
+            </div>
+            <Button
+              size="sm"
+              className="w-full mt-3"
+              onClick={() => handleNavigateToDetails(selectedActivity)}
+            >
+              View Details
+            </Button>
+          </div>
+        </Popup>
+      )}
+    </Map>
+  );
+
+  // Mobile Layout - Full screen map with floating filters
+  if (isMobile) {
+    return (
+      <AppLayout showHeader={false} fullHeight>
+        <div className="relative h-screen">
+          {mapContent}
+          
+          {/* Floating Filters */}
+          <div className="absolute top-4 left-4 right-4 safe-top z-10">
+            <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // Desktop Layout - Split screen with venue list
+  return (
+    <AppLayout showHeader={false} fullHeight>
+      <div className="h-screen grid grid-cols-[350px_1fr]">
+        {/* Left Column - Venue List */}
+        <div className="h-full border-r border-border bg-background flex flex-col">
+          {/* Filters in sidebar on desktop */}
+          <div className="p-4 border-b border-border shrink-0">
+            <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
+          </div>
+          
+          {/* Scrollable Venue List */}
+          <div className="flex-1 overflow-hidden">
+            <VenueList
+              activities={filteredActivities}
+              isLoading={isLoading}
+              selectedActivity={selectedActivity}
+              onSelectActivity={handleMarkerClick}
+              onNavigateToDetails={handleNavigateToDetails}
+            />
           </div>
         </div>
 
-        {/* Activity Count Badge */}
-        <div className="absolute bottom-24 left-4 z-10">
-          <div className="bg-card rounded-full shadow-lg px-4 py-2 flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">
-              {isLoading ? "Loading..." : `${filteredActivities.length} places`}
-            </span>
-          </div>
+        {/* Right Column - Map */}
+        <div className="h-full relative">
+          {mapContent}
         </div>
       </div>
     </AppLayout>
