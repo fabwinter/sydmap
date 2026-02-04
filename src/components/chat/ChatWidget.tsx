@@ -50,7 +50,7 @@ export function ChatWidget() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fab pulse-glow"
+        className="fab pulse-glow md:hidden"
         aria-label="Open chat"
       >
         <MessageCircle className="w-6 h-6" />

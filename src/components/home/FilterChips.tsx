@@ -17,7 +17,7 @@ export function FilterChips() {
   const { filters: searchFilters, setCategory } = useSearchFilters();
 
   return (
-    <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1 -mx-4 px-4">
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
       {filters.map(({ id, label, icon: Icon }) => (
         <button
           key={id}

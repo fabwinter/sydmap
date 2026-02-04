@@ -1,7 +1,5 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { SearchBar } from "@/components/home/SearchBar";
-import { FilterChips } from "@/components/home/FilterChips";
-import { SurpriseButton } from "@/components/home/SurpriseButton";
+import { ControlPanel } from "@/components/home/ControlPanel";
 import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { RecommendedSection } from "@/components/home/RecommendedSection";
 import { HeroSlideshow } from "@/components/ui/HeroSlideshow";
@@ -24,18 +22,8 @@ const Index = () => {
           subtitle="Discover the best places to explore"
         />
         
-        {/* Search */}
-        <div className="max-w-2xl">
-          <SearchBar />
-        </div>
-        
-        {/* Filters */}
-        <FilterChips />
-        
-        {/* Surprise Me Button */}
-        <div className="max-w-md mx-auto md:mx-0">
-          <SurpriseButton />
-        </div>
+        {/* Control Panel: Search + Filters + Surprise */}
+        <ControlPanel />
         
         {/* What's On Today */}
         <FeaturedSection />
