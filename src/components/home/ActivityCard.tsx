@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { MapPin, Star, Clock, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake, ImageOff } from "lucide-react";
+import { MapPin, Star, Heart, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useIsActivitySaved, useToggleSavedItem } from "@/hooks/useSavedItems";
 import type { ActivityDisplay } from "@/hooks/useActivities";
 
 // Re-export for backward compatibility
@@ -31,6 +33,13 @@ const categoryGradients: Record<string, string> = {
   Gym: "from-orange-400 to-red-500",
   Bakery: "from-yellow-400 to-amber-500",
 };
+
+// Determine tag text based on activity properties
+function getTagInfo(activity: ActivityDisplay): { text: string; variant: "open" | "popular" | "default" } | null {
+  if (activity.isOpen) return { text: "Open", variant: "open" };
+  if (activity.reviewCount > 50) return { text: "Popular", variant: "popular" };
+  return null;
+}
 
 interface ActivityCardProps {
   activity: ActivityDisplay;
@@ -78,76 +87,117 @@ function ImageWithFallback({
   );
 }
 
+function HeartButton({ activityId }: { activityId: string }) {
+  const { isAuthenticated } = useAuth();
+  const { data: isSaved } = useIsActivitySaved(activityId);
+  const toggleSaved = useToggleSavedItem();
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAuthenticated) return;
+    toggleSaved.mutate({ activityId, isSaved: !!isSaved });
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-colors shadow-sm"
+      aria-label={isSaved ? "Remove from saved" : "Save"}
+    >
+      <Heart
+        className={`w-4 h-4 transition-colors ${
+          isSaved 
+            ? "fill-red-500 text-red-500" 
+            : "text-foreground/70 hover:text-foreground"
+        }`}
+      />
+    </button>
+  );
+}
+
 export function ActivityCard({ activity, variant = "default" }: ActivityCardProps) {
+  const tag = getTagInfo(activity);
+
   if (variant === "featured") {
     return (
       <Link
         to={`/activity/${activity.id}`}
-        className="activity-card shrink-0 w-64 overflow-hidden"
+        className="group flex flex-col"
       >
+        {/* Image container */}
         <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
           <ImageWithFallback
             src={activity.image}
             alt={activity.name}
             category={activity.category}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
-          {activity.isOpen && (
-            <div className="absolute top-3 left-3 status-badge open">
-              OPEN NOW
+          
+          {/* Tag badge */}
+          {tag && (
+            <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-white text-xs font-semibold text-foreground shadow-sm">
+              {tag.text}
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-          <div className="absolute bottom-3 left-3 right-3">
-            <h3 className="font-bold text-white text-base line-clamp-1">{activity.name}</h3>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-white/80 text-xs flex items-center gap-1">
-                <MapPin className="w-3 h-3" />
-                {activity.distance}
-              </span>
-              {activity.closesAt && (
-                <span className="text-white/80 text-xs flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  Closes {activity.closesAt}
-                </span>
-              )}
-            </div>
+
+          {/* Heart button */}
+          <HeartButton activityId={activity.id} />
+        </div>
+
+        {/* Info below image */}
+        <div className="pt-2.5 space-y-0.5">
+          <h3 className="font-semibold text-sm text-foreground line-clamp-1">{activity.name}</h3>
+          <p className="text-xs text-muted-foreground">{activity.category}</p>
+          <div className="flex items-center gap-1.5 pt-0.5">
+            <Star className="w-3.5 h-3.5 fill-foreground text-foreground" />
+            <span className="text-xs font-medium text-foreground">{activity.rating}</span>
+            <span className="text-xs text-muted-foreground">({activity.reviewCount})</span>
+            <span className="text-xs text-muted-foreground ml-auto flex items-center gap-0.5">
+              <MapPin className="w-3 h-3" />
+              {activity.distance}
+            </span>
           </div>
         </div>
       </Link>
     );
   }
 
+  // Default card - same Airbnb style
   return (
     <Link
       to={`/activity/${activity.id}`}
-      className="activity-card flex flex-col"
+      className="group flex flex-col"
     >
+      {/* Image container */}
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
         <ImageWithFallback
           src={activity.image}
           alt={activity.name}
           category={activity.category}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        {activity.isOpen && (
-          <div className="absolute top-2 left-2 status-badge open text-[10px]">
-            OPEN
+        
+        {/* Tag badge */}
+        {tag && (
+          <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-white text-xs font-semibold text-foreground shadow-sm">
+            {tag.text}
           </div>
         )}
+
+        {/* Heart button */}
+        <HeartButton activityId={activity.id} />
       </div>
-      <div className="p-3">
-        <h3 className="font-semibold text-sm line-clamp-1">{activity.name}</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">{activity.category}</p>
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex items-center gap-1">
-            <Star className="w-3.5 h-3.5 fill-warning text-warning" />
-            <span className="text-xs font-medium">{activity.rating}</span>
-            <span className="text-xs text-muted-foreground">
-              ({activity.reviewCount})
-            </span>
-          </div>
-          <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+
+      {/* Info below image */}
+      <div className="pt-2.5 space-y-0.5">
+        <h3 className="font-semibold text-sm text-foreground line-clamp-1">{activity.name}</h3>
+        <p className="text-xs text-muted-foreground">{activity.category}</p>
+        <div className="flex items-center gap-1.5 pt-0.5">
+          <Star className="w-3.5 h-3.5 fill-foreground text-foreground" />
+          <span className="text-xs font-medium text-foreground">{activity.rating}</span>
+          <span className="text-xs text-muted-foreground">({activity.reviewCount})</span>
+          <span className="text-xs text-muted-foreground ml-auto flex items-center gap-0.5">
             <MapPin className="w-3 h-3" />
             {activity.distance}
           </span>
