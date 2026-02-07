@@ -45,6 +45,15 @@ export function transformActivity(activity: Activity): ActivityDisplay {
   };
 }
 
+// Map tags to database boolean columns
+const tagToColumn: Record<string, string> = {
+  "pet-friendly": "pet_friendly",
+  "accessible": "wheelchair_accessible",
+  "wifi": "wifi",
+  "parking": "parking",
+  "outdoor-seating": "outdoor_seating",
+};
+
 // Apply filters to query builder
 function applyFilters(queryBuilder: any, filters: SearchFilters) {
   let query = queryBuilder;
@@ -65,6 +74,22 @@ function applyFilters(queryBuilder: any, filters: SearchFilters) {
     query = query.gte("rating", filters.minRating);
   }
 
+  // Apply tag-based boolean filters
+  for (const tag of filters.tags) {
+    const column = tagToColumn[tag];
+    if (column) {
+      query = query.eq(column, true);
+    }
+  }
+
+  // Category-based tag filters (outdoor/indoor mapped to categories)
+  if (filters.tags.includes("outdoor")) {
+    query = query.in("category", ["Beach", "Park"]);
+  }
+  if (filters.tags.includes("indoor")) {
+    query = query.in("category", ["Museum", "Gym", "Shopping"]);
+  }
+
   return query;
 }
 
@@ -74,25 +99,32 @@ export function useFeaturedActivities(limit = 10) {
   return useQuery({
     queryKey: ["activities", "featured", limit, filters],
     queryFn: async () => {
-      let queryBuilder = supabase
+      let query = supabase
         .from("activities")
         .select("*")
-        .eq("is_open", true);
+        .eq("is_open", true) as any;
 
-      // Apply category and rating filters (not search query for featured)
+      // Apply category, rating, and tag filters
       if (filters.category) {
-        queryBuilder = queryBuilder.eq("category", filters.category);
+        query = query.eq("category", filters.category);
       }
       if (filters.minRating !== null) {
-        queryBuilder = queryBuilder.gte("rating", filters.minRating);
+        query = query.gte("rating", filters.minRating);
+      }
+      // Apply tag-based boolean filters
+      for (const tag of filters.tags) {
+        const column = tagToColumn[tag];
+        if (column) {
+          query = query.eq(column, true);
+        }
       }
 
-      const { data, error } = await queryBuilder
+      const { data, error } = await query
         .order("rating", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
-      return data.map(transformActivity);
+      return (data as Activity[]).map(transformActivity);
     },
   });
 }
