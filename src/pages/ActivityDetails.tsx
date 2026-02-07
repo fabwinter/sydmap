@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckInModal } from "@/components/activity/CheckInModal";
+import { LocationMap } from "@/components/activity/LocationMap";
 import { useActivityById } from "@/hooks/useActivities";
 import { useActivityReviews, useActivityPhotos } from "@/hooks/useReviews";
 import { useIsActivitySaved, useToggleSavedItem } from "@/hooks/useSavedItems";
@@ -226,6 +227,16 @@ export default function ActivityDetails() {
             </div>
           </section>
         )}
+        
+        {/* Location Map */}
+        <section>
+          <h2 className="section-header">Location</h2>
+          <LocationMap
+            latitude={activity.latitude}
+            longitude={activity.longitude}
+            name={activity.name}
+          />
+        </section>
         
         {/* Reviews */}
         <section>

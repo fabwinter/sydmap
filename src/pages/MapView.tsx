@@ -3,7 +3,7 @@ import Map, { Marker, Popup, GeolocateControl, NavigationControl } from "react-m
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MAPBOX_TOKEN } from "@/config/mapbox";
 import { useAllActivities, type Activity } from "@/hooks/useActivities";
@@ -37,17 +37,25 @@ const categoryColors: Record<string, string> = {
 
 export default function MapView() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: activities, isLoading } = useAllActivities(200);
   const { filters } = useSearchFilters();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+
+  // Read optional lat/lng/zoom from URL query params (from activity details map click)
+  const urlLat = searchParams.get("lat");
+  const urlLng = searchParams.get("lng");
+  const urlZoom = searchParams.get("zoom");
+
   const [viewState, setViewState] = useState({
-    latitude: -33.8688,
-    longitude: 151.2093,
-    zoom: 12,
+    latitude: urlLat ? parseFloat(urlLat) : -33.8688,
+    longitude: urlLng ? parseFloat(urlLng) : 151.2093,
+    zoom: urlZoom ? parseFloat(urlZoom) : 12,
   });
 
-  // Get user's location on mount
+  // Get user's location on mount (only if no URL params)
   useEffect(() => {
+    if (urlLat && urlLng) return; // Skip if navigated from activity details
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -63,7 +71,7 @@ export default function MapView() {
         }
       );
     }
-  }, []);
+  }, [urlLat, urlLng]);
 
   const handleMarkerClick = useCallback((activity: Activity) => {
     setSelectedActivity(activity);
