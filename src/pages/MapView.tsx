@@ -283,10 +283,10 @@ export default function MapView() {
           {mapContent}
 
           {/* Mobile-only floating controls */}
-          <div className="md:hidden">
+          <div className="md:hidden" onClick={(e) => e.stopPropagation()}>
             {/* Collapsible filter area */}
             {filtersVisible ? (
-              <div className="absolute top-4 left-3 right-3 safe-top z-10 space-y-2">
+              <div className="absolute top-4 left-3 right-3 safe-top z-10 space-y-2 max-w-[calc(100vw-1.5rem)]">
                 <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
                 {/* Collapse + View switch buttons */}
                 <div className="flex items-center gap-2">
@@ -297,13 +297,13 @@ export default function MapView() {
                     <ChevronUp className="w-3.5 h-3.5" />
                     Hide filters
                   </button>
-                  <Link
-                    to="/"
+                  <button
+                    onClick={() => navigate("/")}
                     className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-1.5 text-xs font-medium text-primary"
                   >
                     <LayoutList className="w-3.5 h-3.5" />
                     List View
-                  </Link>
+                  </button>
                 </div>
               </div>
             ) : (
@@ -316,12 +316,12 @@ export default function MapView() {
                   <Search className="w-4 h-4 text-primary" />
                   Search & Filters
                 </button>
-                <Link
-                  to="/"
+                <button
+                  onClick={() => navigate("/")}
                   className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-2 text-sm font-medium text-primary"
                 >
                   <LayoutList className="w-4 h-4" />
-                </Link>
+                </button>
               </div>
             )}
           </div>
