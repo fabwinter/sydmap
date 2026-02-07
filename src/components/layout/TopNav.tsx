@@ -23,12 +23,12 @@ export function TopNav({ variant = "transparent" }: TopNavProps) {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-              <span className="text-white font-bold text-sm">SM</span>
+              <span className="text-white font-bold text-sm">SP</span>
             </div>
             <span className={`text-xl font-bold tracking-tight ${
               variant === "solid" ? "text-foreground" : "text-white"
             }`}>
-              SYDMAP
+              Sydney Planner
             </span>
           </Link>
 

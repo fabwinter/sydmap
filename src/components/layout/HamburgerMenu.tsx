@@ -68,7 +68,7 @@ export function HamburgerMenu() {
               <div className="flex flex-col h-full">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-border">
-                  <span className="text-xl font-bold text-foreground">SYDMAP</span>
+                  <span className="text-xl font-bold text-foreground">Sydney Planner</span>
                   <button
                     onClick={() => setIsOpen(false)}
                     className="p-2 rounded-lg hover:bg-muted transition-colors"
