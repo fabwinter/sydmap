@@ -104,6 +104,11 @@ export function useFeaturedActivities(limit = 10) {
         .select("*")
         .eq("is_open", true) as any;
 
+      // Apply search query filter
+      if (filters.query) {
+        query = query.or(`name.ilike.%${filters.query}%,description.ilike.%${filters.query}%,category.ilike.%${filters.query}%`);
+      }
+
       // Apply category, rating, and tag filters
       if (filters.category) {
         query = query.eq("category", filters.category);
