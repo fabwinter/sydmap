@@ -31,7 +31,7 @@ export function MobileVenueCard({ activity, onClose, onNavigate }: MobileVenueCa
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed bottom-20 left-3 right-3 z-30 bg-card rounded-xl shadow-xl border border-border p-4 md:hidden"
+          className="fixed bottom-20 left-3 right-3 z-30 bg-card rounded-xl shadow-xl border border-border p-4 md:hidden max-w-[calc(100vw-1.5rem)]"
         >
           <button
             onClick={onClose}
