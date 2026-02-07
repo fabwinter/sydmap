@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Search, X, SlidersHorizontal, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake, Sun, Home, DollarSign, Baby, Dog, Accessibility, Wifi, Car, Mountain, Heart, Users, Moon, Palette } from "lucide-react";
+import { Search, X, SlidersHorizontal, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake, Sun, Home, DollarSign, Baby, Dog, Accessibility, Wifi, Car, Mountain, Heart, Users, Moon, Palette, Map } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { SurpriseButton } from "./SurpriseButton";
 import { Slider } from "@/components/ui/slider";
@@ -235,6 +236,15 @@ export function ControlPanel() {
             </span>
           )}
         </button>
+
+        {/* Map view switch */}
+        <Link
+          to="/map"
+          className="filter-chip flex items-center gap-1.5 shrink-0 border-primary/30 text-primary"
+        >
+          <Map className="w-3.5 h-3.5" />
+          Map
+        </Link>
       </div>
 
       {/* Surprise Button */}

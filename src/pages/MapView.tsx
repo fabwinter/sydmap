@@ -1,15 +1,18 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
-import Map, { Marker, Popup, GeolocateControl, NavigationControl } from "react-map-gl/mapbox";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import Map, { Marker, Popup, GeolocateControl, NavigationControl, MapRef } from "react-map-gl/mapbox";
+import { LngLatBounds } from "mapbox-gl";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star } from "lucide-react";
+import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, Search, ChevronUp, LayoutList } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MAPBOX_TOKEN } from "@/config/mapbox";
 import { useAllActivities, type Activity } from "@/hooks/useActivities";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { VenueList } from "@/components/map/VenueList";
 import { MapFilters } from "@/components/map/MapFilters";
+import { MobileVenueCard } from "@/components/map/MobileVenueCard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const categoryIcons: Record<string, any> = {
   Cafe: Coffee,
@@ -41,6 +44,9 @@ export default function MapView() {
   const { data: activities, isLoading } = useAllActivities(200);
   const { filters } = useSearchFilters();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [filtersVisible, setFiltersVisible] = useState(true);
+  const mapRef = useRef<MapRef>(null);
+  const isMobile = useIsMobile();
 
   // Read optional lat/lng/zoom from URL query params (from activity details map click)
   const urlLat = searchParams.get("lat");
@@ -55,16 +61,12 @@ export default function MapView() {
 
   // Get user's location on mount (only if no URL params)
   useEffect(() => {
-    if (urlLat && urlLng) return; // Skip if navigated from activity details
+    if (urlLat && urlLng) return;
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setViewState((prev) => ({
-            ...prev,
-            latitude,
-            longitude,
-          }));
+          setViewState((prev) => ({ ...prev, latitude, longitude }));
         },
         (error) => {
           console.log("Geolocation error:", error.message);
@@ -72,6 +74,48 @@ export default function MapView() {
       );
     }
   }, [urlLat, urlLng]);
+
+  // Auto-fit map bounds when filters change
+  const filterKey = JSON.stringify(filters);
+  const prevFilterKey = useRef(filterKey);
+  const isInitialRender = useRef(true);
+
+  // Apply all filters from shared state
+  const filteredActivities = useMemo(() => {
+    if (!activities) return [];
+
+    return activities.filter((activity) => {
+      if (filters.query) {
+        const query = filters.query.toLowerCase();
+        const matchesQuery =
+          activity.name.toLowerCase().includes(query) ||
+          activity.category.toLowerCase().includes(query) ||
+          (activity.description?.toLowerCase().includes(query) ?? false);
+        if (!matchesQuery) return false;
+      }
+      if (filters.category && activity.category !== filters.category) return false;
+      if (filters.isOpen && !activity.is_open) return false;
+      if (filters.minRating !== null && (activity.rating ?? 0) < filters.minRating) return false;
+      return true;
+    });
+  }, [activities, filters]);
+
+  useEffect(() => {
+    // Skip initial render and URL-param navigations
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      prevFilterKey.current = filterKey;
+      return;
+    }
+    if (filterKey === prevFilterKey.current) return;
+    prevFilterKey.current = filterKey;
+    if (urlLat && urlLng) return;
+    if (!mapRef.current || filteredActivities.length === 0) return;
+
+    const bounds = new LngLatBounds();
+    filteredActivities.forEach((a) => bounds.extend([a.longitude, a.latitude]));
+    mapRef.current.fitBounds(bounds, { padding: 80, maxZoom: 15, duration: 1000 });
+  }, [filterKey, filteredActivities, urlLat, urlLng]);
 
   const handleMarkerClick = useCallback((activity: Activity) => {
     setSelectedActivity(activity);
@@ -81,45 +125,13 @@ export default function MapView() {
       longitude: activity.longitude,
       zoom: 15,
     }));
-  }, []);
+    // On mobile, hide filters when a venue is selected
+    if (isMobile) setFiltersVisible(false);
+  }, [isMobile]);
 
   const handleNavigateToDetails = useCallback((activity: Activity) => {
     navigate(`/activity/${activity.id}`);
   }, [navigate]);
-
-  // Apply all filters from shared state
-  const filteredActivities = useMemo(() => {
-    if (!activities) return [];
-    
-    return activities.filter((activity) => {
-      // Search query filter
-      if (filters.query) {
-        const query = filters.query.toLowerCase();
-        const matchesQuery = 
-          activity.name.toLowerCase().includes(query) ||
-          activity.category.toLowerCase().includes(query) ||
-          (activity.description?.toLowerCase().includes(query) ?? false);
-        if (!matchesQuery) return false;
-      }
-
-      // Category filter
-      if (filters.category && activity.category !== filters.category) {
-        return false;
-      }
-
-      // Open now filter
-      if (filters.isOpen && !activity.is_open) {
-        return false;
-      }
-
-      // Minimum rating filter
-      if (filters.minRating !== null && (activity.rating ?? 0) < filters.minRating) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [activities, filters]);
 
   if (!MAPBOX_TOKEN) {
     return (
@@ -143,16 +155,18 @@ export default function MapView() {
 
   const mapContent = (
     <Map
+      ref={mapRef}
       {...viewState}
       onMove={(evt) => setViewState(evt.viewState)}
       style={{ width: "100%", height: "100%" }}
       mapStyle="mapbox://styles/mapbox/streets-v12"
       mapboxAccessToken={MAPBOX_TOKEN}
+      onClick={() => {
+        // Deselect on map click (mobile)
+        if (isMobile) setSelectedActivity(null);
+      }}
     >
-      {/* Navigation Controls - Position adjusted with CSS for mobile bottom nav */}
       <NavigationControl position="bottom-right" style={{ marginBottom: "20px" }} />
-      
-      {/* Geolocate Control */}
       <GeolocateControl
         position="bottom-right"
         style={{ marginBottom: "80px" }}
@@ -164,6 +178,7 @@ export default function MapView() {
       {filteredActivities.map((activity) => {
         const IconComponent = categoryIcons[activity.category] || MapPin;
         const colorClass = categoryColors[activity.category] || "bg-primary";
+        const isSelected = selectedActivity?.id === activity.id;
         return (
           <Marker
             key={activity.id}
@@ -176,16 +191,18 @@ export default function MapView() {
             }}
           >
             <div
-              className={`w-10 h-10 rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110`}
+              className={`rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110 ${
+                isSelected ? "w-12 h-12 ring-2 ring-white scale-110" : "w-10 h-10"
+              }`}
             >
-              <IconComponent className="w-5 h-5 text-white" />
+              <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
             </div>
           </Marker>
         );
       })}
 
-      {/* Popup for selected activity */}
-      {selectedActivity && (
+      {/* Desktop Popup only */}
+      {selectedActivity && !isMobile && (
         <Popup
           latitude={selectedActivity.latitude}
           longitude={selectedActivity.longitude}
@@ -203,13 +220,9 @@ export default function MapView() {
                 {selectedActivity.category}
               </span>
               {selectedActivity.is_open ? (
-                <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
-                  Open
-                </span>
+                <span className="px-2 py-0.5 rounded-full text-xs bg-success/10 text-success">Open</span>
               ) : (
-                <span className="px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700">
-                  Closed
-                </span>
+                <span className="px-2 py-0.5 rounded-full text-xs bg-destructive/10 text-destructive">Closed</span>
               )}
             </div>
             <h3 className="font-bold text-foreground">{selectedActivity.name}</h3>
@@ -236,11 +249,23 @@ export default function MapView() {
       <div className="flex h-screen overflow-hidden">
         {/* LEFT COLUMN: SCROLLABLE LIST - Hidden on mobile, visible on desktop */}
         <div className="hidden md:flex flex-col w-[400px] border-r border-border bg-background h-full">
-          {/* Search Bar & Filters - Sticky header */}
+          {/* Header with view switch */}
           <div className="p-4 sticky top-0 bg-background z-10 border-b border-border shrink-0">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-muted-foreground">
+                {isLoading ? "Loading..." : `${filteredActivities.length} places`}
+              </span>
+              <Link
+                to="/"
+                className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                <LayoutList className="w-4 h-4" />
+                List View
+              </Link>
+            </div>
             <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
           </div>
-          
+
           {/* Venue List Cards - Scrollable */}
           <div className="flex-1 overflow-y-auto">
             <VenueList
@@ -256,11 +281,57 @@ export default function MapView() {
         {/* RIGHT COLUMN: MAP */}
         <div className="flex-1 h-full relative">
           {mapContent}
-          
-          {/* Mobile-only floating search bar */}
-          <div className="absolute top-4 left-4 right-4 safe-top z-10 md:hidden">
-            <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
+
+          {/* Mobile-only floating controls */}
+          <div className="md:hidden">
+            {/* Collapsible filter area */}
+            {filtersVisible ? (
+              <div className="absolute top-4 left-3 right-3 safe-top z-10 space-y-2">
+                <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
+                {/* Collapse + View switch buttons */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setFiltersVisible(false)}
+                    className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-1.5 text-xs font-medium text-muted-foreground"
+                  >
+                    <ChevronUp className="w-3.5 h-3.5" />
+                    Hide filters
+                  </button>
+                  <Link
+                    to="/"
+                    className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-1.5 text-xs font-medium text-primary"
+                  >
+                    <LayoutList className="w-3.5 h-3.5" />
+                    List View
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              /* Collapsed: show small floating buttons */
+              <div className="absolute top-4 left-3 safe-top z-10 flex items-center gap-2">
+                <button
+                  onClick={() => setFiltersVisible(true)}
+                  className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-2 text-sm font-medium"
+                >
+                  <Search className="w-4 h-4 text-primary" />
+                  Search & Filters
+                </button>
+                <Link
+                  to="/"
+                  className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-2 text-sm font-medium text-primary"
+                >
+                  <LayoutList className="w-4 h-4" />
+                </Link>
+              </div>
+            )}
           </div>
+
+          {/* Mobile venue card - replaces Popup on mobile */}
+          <MobileVenueCard
+            activity={selectedActivity}
+            onClose={() => setSelectedActivity(null)}
+            onNavigate={handleNavigateToDetails}
+          />
         </div>
       </div>
     </AppLayout>
