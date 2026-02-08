@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, Home, Map, Bookmark, MessageCircle, User, Settings, LogOut } from "lucide-react";
+import { Menu, X, Home, Map, Clock, MessageCircle, User, Settings, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,12 +10,16 @@ import { motion, AnimatePresence } from "framer-motion";
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
   { icon: Map, label: "Map", path: "/map" },
-  { icon: Bookmark, label: "Saved", path: "/saved" },
+  { icon: Clock, label: "Timeline", path: "/timeline" },
   { icon: MessageCircle, label: "Chat", path: "/chat" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
 
-export function HamburgerMenu() {
+interface HamburgerMenuProps {
+  variant?: "transparent" | "solid";
+}
+
+export function HamburgerMenu({ variant = "transparent" }: HamburgerMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -37,10 +41,13 @@ export function HamburgerMenu() {
       {/* Hamburger Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+        className={cn(
+          "p-2 rounded-lg transition-colors",
+          variant === "solid" ? "hover:bg-muted" : "hover:bg-white/10"
+        )}
         aria-label="Open menu"
       >
-        <Menu className="w-6 h-6 text-white" />
+        <Menu className={cn("w-6 h-6", variant === "solid" ? "text-foreground" : "text-white")} />
       </button>
 
       {/* Overlay & Menu */}
