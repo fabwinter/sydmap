@@ -58,7 +58,7 @@ export function MapFilters({ activityCount, isLoading }: MapFiltersProps) {
 
   return (
     <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
-      {/* Search Input */}
+      {/* Search Input with embedded filter button */}
       <div className="bg-card rounded-xl shadow-lg p-3 flex items-center gap-3">
         <MapPin className="w-5 h-5 text-primary shrink-0" />
         <input
@@ -73,164 +73,162 @@ export function MapFilters({ activityCount, isLoading }: MapFiltersProps) {
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         )}
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetTrigger asChild>
+            <button
+              className={`p-2 rounded-lg transition-colors relative ${
+                activeFilterCount > 0
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-primary/10 hover:bg-primary/20"
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <SlidersHorizontal className={`w-4 h-4 ${activeFilterCount > 0 ? "" : "text-primary"}`} />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl">
+            <SheetHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <SheetTitle className="text-lg font-bold">Filters</SheetTitle>
+                {activeFilterCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-sm text-muted-foreground">
+                    Clear all
+                  </Button>
+                )}
+              </div>
+            </SheetHeader>
+            <ScrollArea className="h-[calc(85vh-120px)]">
+              <div className="space-y-6 pb-6 pr-2">
+                {/* Distance slider */}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Travel distance</h3>
+                  <div className="px-1">
+                    <Slider
+                      value={[filters.maxDistance ?? 20]}
+                      onValueChange={([val]) => setMaxDistance(val === 20 ? null : val)}
+                      min={1}
+                      max={20}
+                      step={1}
+                    />
+                    <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                      <span>1 km</span>
+                      <span className="font-medium text-foreground">
+                        {filters.maxDistance ? `${filters.maxDistance} km` : "Any distance"}
+                      </span>
+                      <span>20 km</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rating filter */}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Minimum rating</h3>
+                  <div className="flex gap-2">
+                    {[null, 3, 3.5, 4, 4.5].map((rating) => (
+                      <button
+                        key={rating ?? "any"}
+                        onClick={() => setMinRating(rating)}
+                        className={`filter-chip text-xs ${
+                          filters.minRating === rating ? "active" : ""
+                        }`}
+                      >
+                        {rating ? `${rating}+ ★` : "Any"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Experience type */}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Experience type</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {experienceTags.map(({ id, label, icon: Icon }) => (
+                      <button
+                        key={id}
+                        onClick={() => toggleTag(id)}
+                        className={`filter-chip flex items-center gap-1.5 text-xs ${
+                          filters.tags.includes(id) ? "active" : ""
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Traveller type */}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Traveller type</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {travellerTags.map(({ id, label, icon: Icon }) => (
+                      <button
+                        key={id}
+                        onClick={() => toggleTag(id)}
+                        className={`filter-chip flex items-center gap-1.5 text-xs ${
+                          filters.tags.includes(id) ? "active" : ""
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Category (full list) */}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Category</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map(({ id, label, icon: Icon }) => (
+                      <button
+                        key={id}
+                        onClick={() => setCategory(filters.category === id ? null : id)}
+                        className={`filter-chip flex items-center gap-1.5 text-xs ${
+                          filters.category === id ? "active" : ""
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+
+            <div className="pt-3 border-t border-border">
+              <Button className="w-full" onClick={() => setSheetOpen(false)}>
+                Show results
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
-      {/* Filter Chips + Sheet trigger */}
+      {/* Category chips */}
       <div className="bg-card rounded-xl shadow-lg p-3">
-        {/* Category chips row */}
-        <div className="flex gap-2 items-center">
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1 flex-1 min-w-0">
-            {categories.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCategory(filters.category === id ? null : id);
-                }}
-                className={`filter-chip flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
-                  filters.category === id ? "active" : ""
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* Filters Sheet */}
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
-              <button
-                className="filter-chip flex items-center gap-1.5 shrink-0 relative"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                Filters
-                {activeFilterCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl">
-              <SheetHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <SheetTitle className="text-lg font-bold">Filters</SheetTitle>
-                  {activeFilterCount > 0 && (
-                    <Button variant="ghost" size="sm" onClick={clearFilters} className="text-sm text-muted-foreground">
-                      Clear all
-                    </Button>
-                  )}
-                </div>
-              </SheetHeader>
-              <ScrollArea className="h-[calc(85vh-120px)]">
-                <div className="space-y-6 pb-6 pr-2">
-                  {/* Distance slider */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Travel distance</h3>
-                    <div className="px-1">
-                      <Slider
-                        value={[filters.maxDistance ?? 20]}
-                        onValueChange={([val]) => setMaxDistance(val === 20 ? null : val)}
-                        min={1}
-                        max={20}
-                        step={1}
-                      />
-                      <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                        <span>1 km</span>
-                        <span className="font-medium text-foreground">
-                          {filters.maxDistance ? `${filters.maxDistance} km` : "Any distance"}
-                        </span>
-                        <span>20 km</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Rating filter */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Minimum rating</h3>
-                    <div className="flex gap-2">
-                      {[null, 3, 3.5, 4, 4.5].map((rating) => (
-                        <button
-                          key={rating ?? "any"}
-                          onClick={() => setMinRating(rating)}
-                          className={`filter-chip text-xs ${
-                            filters.minRating === rating ? "active" : ""
-                          }`}
-                        >
-                          {rating ? `${rating}+ ★` : "Any"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Experience type */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Experience type</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {experienceTags.map(({ id, label, icon: Icon }) => (
-                        <button
-                          key={id}
-                          onClick={() => toggleTag(id)}
-                          className={`filter-chip flex items-center gap-1.5 text-xs ${
-                            filters.tags.includes(id) ? "active" : ""
-                          }`}
-                        >
-                          <Icon className="w-3.5 h-3.5" />
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Traveller type */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Traveller type</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {travellerTags.map(({ id, label, icon: Icon }) => (
-                        <button
-                          key={id}
-                          onClick={() => toggleTag(id)}
-                          className={`filter-chip flex items-center gap-1.5 text-xs ${
-                            filters.tags.includes(id) ? "active" : ""
-                          }`}
-                        >
-                          <Icon className="w-3.5 h-3.5" />
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Category (full list) */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Category</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {categories.map(({ id, label, icon: Icon }) => (
-                        <button
-                          key={id}
-                          onClick={() => setCategory(filters.category === id ? null : id)}
-                          className={`filter-chip flex items-center gap-1.5 text-xs ${
-                            filters.category === id ? "active" : ""
-                          }`}
-                        >
-                          <Icon className="w-3.5 h-3.5" />
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </ScrollArea>
-
-              <div className="pt-3 border-t border-border">
-                <Button className="w-full" onClick={() => setSheetOpen(false)}>
-                  Show results
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1 min-w-0">
+          {categories.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={(e) => {
+                e.stopPropagation();
+                setCategory(filters.category === id ? null : id);
+              }}
+              className={`filter-chip flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                filters.category === id ? "active" : ""
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* Open Now + Clear */}

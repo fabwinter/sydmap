@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Search, X, SlidersHorizontal, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake, Sun, Home, DollarSign, Baby, Dog, Accessibility, Wifi, Car, Mountain, Heart, Users, Moon, Palette, Map } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Search, X, SlidersHorizontal, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake, Sun, Home, DollarSign, Baby, Dog, Accessibility, Wifi, Car, Mountain, Heart, Users, Moon, Palette } from "lucide-react";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { SurpriseButton } from "./SurpriseButton";
 import { Slider } from "@/components/ui/slider";
@@ -206,45 +205,20 @@ export function ControlPanel() {
         </Sheet>
       </div>
 
-      {/* Category chips row + Filters button inline */}
-      <div className="flex gap-2 items-center">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1 flex-1">
-          {categories.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setCategory(filters.category === id ? null : id)}
-              className={`filter-chip flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
-                filters.category === id ? "active" : ""
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Inline Filters button with badge */}
-        <button
-          onClick={() => setFilterOpen(true)}
-          className="filter-chip flex items-center gap-1.5 shrink-0 relative"
-        >
-          <SlidersHorizontal className="w-3.5 h-3.5" />
-          Filters
-          {activeFilterCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
-
-        {/* Map view switch */}
-        <Link
-          to="/map"
-          className="filter-chip flex items-center gap-1.5 shrink-0 border-primary/30 text-primary"
-        >
-          <Map className="w-3.5 h-3.5" />
-          Map
-        </Link>
+      {/* Category chips row */}
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
+        {categories.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setCategory(filters.category === id ? null : id)}
+            className={`filter-chip flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+              filters.category === id ? "active" : ""
+            }`}
+          >
+            <Icon className="w-3.5 h-3.5" />
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Surprise Button */}
