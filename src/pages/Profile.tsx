@@ -1,19 +1,41 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Settings, MapPin, Users, Coffee, Award, ChevronRight, Loader2 } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Settings, MapPin, Users, Coffee, Award, ChevronRight, Loader2, Heart, Bookmark, Plus, Trash2 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PremiumModal } from "@/components/premium/PremiumModal";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useSavedItems, useToggleSavedItem } from "@/hooks/useSavedItems";
+import { usePlaylists, useCreatePlaylist, useDeletePlaylist } from "@/hooks/usePlaylists";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function Profile() {
   const [showPremium, setShowPremium] = useState(false);
   const { user, isLoading: authLoading, isAuthenticated, signOut } = useAuth();
   const navigate = useNavigate();
+
+  // Saved items & playlists
+  const { data: savedItems, isLoading: savedLoading } = useSavedItems();
+  const { data: playlists, isLoading: playlistsLoading } = usePlaylists();
+  const toggleSaved = useToggleSavedItem();
+  const createPlaylist = useCreatePlaylist();
+  const deletePlaylist = useDeletePlaylist();
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+  const [newPlaylistEmoji, setNewPlaylistEmoji] = useState("📍");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -59,13 +81,11 @@ export default function Profile() {
     queryFn: async () => {
       if (!profile?.id) return { checkIns: 0, friends: 0, topCategory: { name: "None", count: 0 } };
       
-      // Get check-in count
       const { count: checkInCount } = await supabase
         .from("check_ins")
         .select("*", { count: "exact", head: true })
         .eq("user_id", profile.id);
 
-      // Get friends count
       const { count: friendCount } = await supabase
         .from("friends")
         .select("*", { count: "exact", head: true })
@@ -124,7 +144,6 @@ export default function Profile() {
   const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url;
   const bio = profile?.bio || "Exploring Sydney ☕";
 
-  // Get user initials
   const getInitials = () => {
     if (displayName.includes(" ")) {
       return displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
@@ -132,7 +151,6 @@ export default function Profile() {
     return displayName.slice(0, 2).toUpperCase();
   };
 
-  // Badge emoji mapping
   const badgeEmojis: Record<string, string> = {
     "Explorer": "🧭",
     "Foodie": "🍽️",
@@ -145,6 +163,24 @@ export default function Profile() {
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
+  };
+
+  const handleCreatePlaylist = () => {
+    if (!newPlaylistName.trim()) return;
+    createPlaylist.mutate(
+      { name: newPlaylistName, emoji: newPlaylistEmoji },
+      {
+        onSuccess: () => {
+          setNewPlaylistName("");
+          setNewPlaylistEmoji("📍");
+          setIsDialogOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleRemoveSaved = (activityId: string) => {
+    toggleSaved.mutate({ activityId, isSaved: true });
   };
 
   return (
@@ -164,7 +200,6 @@ export default function Profile() {
           <h1 className="text-xl font-bold mt-4">{displayName}</h1>
           <p className="text-muted-foreground text-sm mt-1">{bio}</p>
           
-          {/* Badges */}
           {badges.length > 0 && (
             <div className="flex justify-center gap-2 mt-4 flex-wrap">
               {badges.slice(0, 4).map((badge) => (
@@ -193,32 +228,22 @@ export default function Profile() {
         
         {/* Stats */}
         <div className="grid grid-cols-3 border-b border-border">
-          <StatItem
-            icon={MapPin}
-            value={stats?.checkIns || 0}
-            label="Check-ins"
-          />
-          <StatItem
-            icon={Users}
-            value={stats?.friends || 0}
-            label="Friends"
-          />
-          <StatItem
-            icon={Coffee}
-            value={stats?.topCategory?.count || 0}
-            label={stats?.topCategory?.name || "Activities"}
-          />
+          <StatItem icon={MapPin} value={stats?.checkIns || 0} label="Check-ins" />
+          <StatItem icon={Users} value={stats?.friends || 0} label="Friends" />
+          <StatItem icon={Coffee} value={stats?.topCategory?.count || 0} label={stats?.topCategory?.name || "Activities"} />
         </div>
         
         {/* Tabs */}
         <Tabs defaultValue="overview" className="px-4 py-4">
-          <TabsList className="w-full grid grid-cols-4 mb-4">
+          <TabsList className="w-full grid grid-cols-5 mb-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="checkins">Check-Ins</TabsTrigger>
+            <TabsTrigger value="saved">Saved</TabsTrigger>
             <TabsTrigger value="playlists">Playlists</TabsTrigger>
             <TabsTrigger value="friends">Friends</TabsTrigger>
           </TabsList>
           
+          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4 mt-0">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold">Recent Check-Ins</h3>
@@ -260,6 +285,7 @@ export default function Profile() {
             )}
           </TabsContent>
           
+          {/* Check-Ins Tab */}
           <TabsContent value="checkins">
             {recentCheckIns.length > 0 ? (
               <div className="space-y-3">
@@ -292,16 +318,148 @@ export default function Profile() {
               </div>
             )}
           </TabsContent>
-          
-          <TabsContent value="playlists">
-            <div className="text-center py-8 text-muted-foreground">
-              <p>No playlists yet</p>
-              <Button variant="link" className="mt-2 text-primary">
-                Create your first playlist
-              </Button>
-            </div>
+
+          {/* Saved Tab */}
+          <TabsContent value="saved" className="space-y-4 mt-0">
+            {savedLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border">
+                  <Skeleton className="w-16 h-16 rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+              ))
+            ) : savedItems && savedItems.length > 0 ? (
+              <div className="space-y-3">
+                {savedItems.map((item) => (
+                  <Link
+                    key={item.id}
+                    to={`/activity/${item.activity_id}`}
+                    className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border hover:border-primary transition-colors"
+                  >
+                    <img
+                      src={item.activities.hero_image_url || "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&h=300&fit=crop"}
+                      alt={item.activities.name}
+                      className="w-16 h-16 rounded-lg object-cover"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm truncate">{item.activities.name}</h3>
+                      <p className="text-xs text-muted-foreground">{item.activities.category}</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                        <MapPin className="w-3 h-3" />
+                        {item.activities.address || "Sydney, NSW"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleRemoveSaved(item.activity_id);
+                      }}
+                      className="p-2 rounded-full hover:bg-muted transition-colors"
+                    >
+                      <Heart className="w-5 h-5 fill-destructive text-destructive" />
+                    </button>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Bookmark className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>No saved places yet</p>
+                <p className="text-sm">Start exploring and save your favorite spots!</p>
+              </div>
+            )}
           </TabsContent>
           
+          {/* Playlists Tab */}
+          <TabsContent value="playlists" className="space-y-4 mt-0">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-sm">Your Playlists</h3>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="gap-1 h-8">
+                    <Plus className="w-3 h-3" />
+                    New
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create New Playlist</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="emoji">Emoji</Label>
+                      <Input
+                        id="emoji"
+                        value={newPlaylistEmoji}
+                        onChange={(e) => setNewPlaylistEmoji(e.target.value)}
+                        maxLength={2}
+                        className="w-20 text-2xl text-center"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Name</Label>
+                      <Input
+                        id="name"
+                        placeholder="e.g. Weekend Vibes"
+                        value={newPlaylistName}
+                        onChange={(e) => setNewPlaylistName(e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      onClick={handleCreatePlaylist}
+                      className="w-full"
+                      disabled={!newPlaylistName.trim() || createPlaylist.isPending}
+                    >
+                      {createPlaylist.isPending ? "Creating..." : "Create Playlist"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {playlistsLoading ? (
+              <div className="grid grid-cols-2 gap-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-24 rounded-xl" />
+                ))}
+              </div>
+            ) : playlists && playlists.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3">
+                {playlists.map((playlist) => (
+                  <div
+                    key={playlist.id}
+                    className="bg-card rounded-xl p-4 border border-border hover:border-primary transition-colors cursor-pointer relative group"
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deletePlaylist.mutate(playlist.id);
+                      }}
+                      className="absolute top-2 right-2 p-1 rounded-full bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                    <span className="text-3xl">{playlist.emoji || "📍"}</span>
+                    <h3 className="font-semibold text-sm mt-2 line-clamp-1">{playlist.name}</h3>
+                    <p className="text-xs text-muted-foreground">{playlist.item_count || 0} places</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No playlists yet</p>
+                <Button variant="link" className="mt-2 text-primary" onClick={() => setIsDialogOpen(true)}>
+                  Create your first playlist
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+          
+          {/* Friends Tab */}
           <TabsContent value="friends">
             <div className="text-center py-8 text-muted-foreground">
               <p>Connect with friends</p>

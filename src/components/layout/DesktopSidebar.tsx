@@ -1,4 +1,4 @@
-import { Home, Map, Bookmark, MessageCircle, User, Settings, LogOut } from "lucide-react";
+import { Home, Map, Clock, MessageCircle, User, Settings, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { icon: Home, label: "Home", path: "/" },
   { icon: Map, label: "Map", path: "/map" },
-  { icon: Bookmark, label: "Saved", path: "/saved" },
+  { icon: Clock, label: "Timeline", path: "/timeline" },
   { icon: MessageCircle, label: "Chat", path: "/chat" },
 ];
 
