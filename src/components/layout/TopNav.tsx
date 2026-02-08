@@ -1,17 +1,8 @@
-import { Link, useLocation } from "react-router-dom";
-import { Home, Map, Clock, MessageCircle, User } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { HamburgerMenu } from "./HamburgerMenu";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
-
-const desktopNavItems = [
-  { icon: Home, label: "Home", path: "/" },
-  { icon: Map, label: "Map", path: "/map" },
-  { icon: Clock, label: "Timeline", path: "/timeline" },
-  { icon: MessageCircle, label: "Chat", path: "/chat" },
-  { icon: User, label: "Profile", path: "/profile" },
-];
 
 interface TopNavProps {
   variant?: "transparent" | "solid";
@@ -19,7 +10,6 @@ interface TopNavProps {
 
 export function TopNav({ variant = "transparent" }: TopNavProps) {
   const { isAuthenticated } = useAuth();
-  const location = useLocation();
   const isSolid = variant === "solid";
 
   return (
@@ -50,33 +40,7 @@ export function TopNav({ variant = "transparent" }: TopNavProps) {
             </span>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1">
-            {desktopNavItems.map(({ icon: Icon, label, path }) => {
-              const isActive = location.pathname === path;
-              return (
-                <Link
-                  key={path}
-                  to={path}
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                    isActive
-                      ? isSolid
-                        ? "bg-primary/10 text-primary"
-                        : "bg-white/20 text-white"
-                      : isSolid
-                        ? "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        : "text-white/70 hover:bg-white/10 hover:text-white"
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Right Side */}
+          {/* Right Side - Hamburger for all screen sizes */}
           <div className="flex items-center gap-3">
             {!isAuthenticated && (
               <Button 
@@ -90,10 +54,8 @@ export function TopNav({ variant = "transparent" }: TopNavProps) {
                 <Link to="/login">Log in</Link>
               </Button>
             )}
-            {/* Hamburger - mobile only */}
-            <div className="md:hidden">
-              <HamburgerMenu variant={isSolid ? "solid" : "transparent"} />
-            </div>
+            {/* Hamburger - visible on all screen sizes now */}
+            <HamburgerMenu variant={isSolid ? "solid" : "transparent"} />
           </div>
         </div>
       </div>
