@@ -8,7 +8,7 @@ import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import MapView from "./pages/MapView";
-import Saved from "./pages/Saved";
+import Timeline from "./pages/Timeline";
 import Chat from "./pages/Chat";
 import ActivityDetails from "./pages/ActivityDetails";
 import NotFound from "./pages/NotFound";
@@ -27,8 +27,7 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/map" element={<MapView />} />
-          <Route path="/saved" element={<Saved />} />
-          <Route path="/saved" element={<Saved />} />
+          <Route path="/timeline" element={<Timeline />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/activity/:id" element={<ActivityDetails />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
