@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ControlPanel } from "@/components/home/ControlPanel";
 import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { RecommendedSection } from "@/components/home/RecommendedSection";
+import { CuratedSections } from "@/components/home/CuratedSections";
 import { HeroSlideshow } from "@/components/ui/HeroSlideshow";
 
 const HERO_SEEN_KEY = "sydmap_hero_seen";
@@ -47,6 +48,8 @@ const Index = () => {
           </div>
           
           <RecommendedSection />
+          
+          <CuratedSections />
         </div>
       </div>
     </AppLayout>
