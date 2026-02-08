@@ -127,7 +127,7 @@ export default function ActivityDetails() {
         </div>
       </div>
       
-      <div className="px-4 py-4 space-y-6 max-w-lg mx-auto">
+      <div className="px-4 py-4 space-y-6 max-w-2xl mx-auto">
         {/* Rating */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
@@ -143,7 +143,7 @@ export default function ActivityDetails() {
         </div>
         
         {/* Quick Info */}
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
+        <div className="grid grid-cols-3 gap-3">
           <InfoCard
             icon={MapPin}
             title={activity.address?.split(",")[0] || "Sydney"}
@@ -298,7 +298,7 @@ export default function ActivityDetails() {
       
       {/* Sticky Bottom Actions */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 safe-bottom">
-        <div className="flex gap-3 max-w-lg mx-auto">
+        <div className="flex gap-3 max-w-2xl mx-auto">
           <Button
             variant="outline"
             size="icon"
@@ -344,10 +344,10 @@ function InfoCard({
   highlight?: boolean;
 }) {
   return (
-    <div className="shrink-0 w-32 bg-card rounded-xl p-3 border border-border">
+    <div className="min-w-0 bg-card rounded-xl p-3 border border-border">
       <Icon className={`w-5 h-5 mb-2 ${highlight ? "text-success" : "text-primary"}`} />
-      <p className={`font-semibold text-sm ${highlight ? "text-success" : ""}`}>{title}</p>
-      <p className="text-xs text-muted-foreground line-clamp-1">{subtitle}</p>
+      <p className={`font-semibold text-sm truncate ${highlight ? "text-success" : ""}`}>{title}</p>
+      <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
     </div>
   );
 }
