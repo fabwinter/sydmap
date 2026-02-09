@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Heart,
-  Share2,
   MapPin,
   Clock,
   Phone,
@@ -16,17 +15,20 @@ import {
   Check,
   PawPrint,
   UtensilsCrossed,
+  CalendarCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckInModal } from "@/components/activity/CheckInModal";
+import { ShareMenu } from "@/components/activity/ShareMenu";
 import { LocationMap } from "@/components/activity/LocationMap";
 import { useActivityById } from "@/hooks/useActivities";
 import { useActivityReviews, useActivityPhotos } from "@/hooks/useReviews";
 import { useIsActivitySaved, useToggleSavedItem } from "@/hooks/useSavedItems";
+import { useLastCheckIn } from "@/hooks/useLastCheckIn";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 
 export default function ActivityDetails() {
   const { id } = useParams();
@@ -38,6 +40,7 @@ export default function ActivityDetails() {
   const { data: reviews, isLoading: reviewsLoading } = useActivityReviews(id || "");
   const { data: photos } = useActivityPhotos(id || "");
   const { data: isSaved } = useIsActivitySaved(id || "");
+  const { data: lastCheckIn } = useLastCheckIn(id || "");
   const toggleSaved = useToggleSavedItem();
 
   const handleToggleSave = () => {
@@ -308,16 +311,27 @@ export default function ActivityDetails() {
           >
             <Heart className={`w-5 h-5 ${isSaved ? "fill-destructive text-destructive" : ""}`} />
           </Button>
-          <Button variant="outline" size="icon" className="shrink-0">
-            <Share2 className="w-5 h-5" />
-          </Button>
-          <Button
-            className="flex-1 bg-primary hover:bg-primary/90"
-            onClick={handleCheckIn}
-          >
-            <Check className="w-5 h-5 mr-2" />
-            Check-In
-          </Button>
+          <ShareMenu activityName={activity.name} activityId={id!} />
+          {lastCheckIn ? (
+            <Button
+              className="flex-1"
+              variant="outline"
+              disabled
+            >
+              <CalendarCheck className="w-5 h-5 mr-2 text-primary" />
+              <span className="text-sm truncate">
+                Checked-in {format(new Date(lastCheckIn.created_at), "EEE d MMM, h:mm a")}
+              </span>
+            </Button>
+          ) : (
+            <Button
+              className="flex-1 bg-primary hover:bg-primary/90"
+              onClick={handleCheckIn}
+            >
+              <Check className="w-5 h-5 mr-2" />
+              Check-In
+            </Button>
+          )}
         </div>
       </div>
       

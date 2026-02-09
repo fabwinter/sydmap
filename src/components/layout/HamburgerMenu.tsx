@@ -84,30 +84,30 @@ export function HamburgerMenu({ variant = "transparent" }: HamburgerMenuProps) {
                 </button>
               </div>
 
-                {/* Navigation Links */}
-                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                  {navItems.map(({ icon: Icon, label, path }) => {
-                    const isActive = location.pathname === path;
-                    return (
-                      <button
-                        key={path}
-                        onClick={() => handleNavClick(path)}
-                        className={cn(
-                          "flex items-center gap-3 w-full px-4 py-3 rounded-xl text-base font-medium transition-colors text-left",
-                          isActive
-                            ? "bg-primary/10 text-primary"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        )}
-                      >
-                        <Icon className="w-5 h-5" />
-                        <span>{label}</span>
-                      </button>
-                    );
-                  })}
-                </nav>
+              {/* Navigation Links */}
+              <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                {navItems.map(({ icon: Icon, label, path }) => {
+                  const isActive = location.pathname === path;
+                  return (
+                    <button
+                      key={path}
+                      onClick={() => handleNavClick(path)}
+                      className={cn(
+                        "flex items-center gap-3 w-full px-4 py-3 rounded-xl text-base font-medium transition-colors text-left",
+                        isActive
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
 
-                {/* User Section */}
-                <div className="p-4 border-t border-border space-y-3">
+              {/* User Section */}
+              <div className="p-4 border-t border-border space-y-3 shrink-0">
                   {isAuthenticated ? (
                     <>
                       <div className="flex items-center gap-3 px-4 py-3">
