@@ -3,7 +3,9 @@ import { Send, Sparkles, Trash2 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { useChat } from "@/hooks/useChat";
+import { useAuth } from "@/hooks/useAuth";
 import ReactMarkdown from "react-markdown";
+import { ChatVenueCards } from "@/components/chat/ChatVenueCards";
 
 const starterPrompts = [
   "🍳 Best brunch spots nearby",
@@ -16,8 +18,11 @@ const starterPrompts = [
 
 export default function Chat() {
   const { messages, isLoading, sendMessage, clearMessages } = useChat();
+  const { profile, isAuthenticated } = useAuth();
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const firstName = profile?.name?.split(" ")[0];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -40,7 +45,7 @@ export default function Chat() {
                 <Sparkles className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="font-bold">SYDMAP Assistant</h1>
+                <h1 className="font-bold">Sydney Planner Assistant</h1>
                 <p className="text-xs text-muted-foreground">AI-powered discovery</p>
               </div>
             </div>
@@ -60,9 +65,11 @@ export default function Chat() {
                 <Sparkles className="w-8 h-8 text-primary-foreground" />
               </div>
               <div className="text-center space-y-2">
-                <h2 className="text-lg font-semibold">G'day! 👋</h2>
+                <h2 className="text-lg font-semibold">
+                  G'day{isAuthenticated && firstName ? ` ${firstName}` : ""}! 👋
+                </h2>
                 <p className="text-sm text-muted-foreground max-w-xs">
-                  I'm your SYDMAP assistant. Tell me what you're in the mood for, and I'll find the perfect spots in Sydney!
+                  I'm your Sydney Planner assistant. Tell me what you're in the mood for, and I'll find the perfect spots in Sydney!
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 justify-center max-w-sm">
@@ -80,31 +87,36 @@ export default function Chat() {
           ) : (
             <>
               {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                >
+                <div key={message.id}>
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                      message.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-md"
-                        : "bg-card border border-border rounded-bl-md"
-                    }`}
+                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                   >
-                    {message.role === "assistant" ? (
-                      <div className="text-sm prose prose-sm dark:prose-invert max-w-none [&>p]:mb-2 [&>ul]:mb-2 [&>ol]:mb-2">
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
-                      </div>
-                    ) : (
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    )}
-                    <p className="text-xs opacity-60 mt-1">
-                      {message.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                        message.role === "user"
+                          ? "bg-primary text-primary-foreground rounded-br-md"
+                          : "bg-card border border-border rounded-bl-md"
+                      }`}
+                    >
+                      {message.role === "assistant" ? (
+                        <div className="text-sm prose prose-sm dark:prose-invert max-w-none [&>p]:mb-2 [&>ul]:mb-2 [&>ol]:mb-2">
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      )}
+                      <p className="text-xs opacity-60 mt-1">
+                        {message.timestamp.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
                   </div>
+                  {/* Venue thumbnail cards for assistant messages */}
+                  {message.role === "assistant" && message.content.length > 20 && (
+                    <ChatVenueCards messageContent={message.content} />
+                  )}
                 </div>
               ))}
               {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
