@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
+import { useChatStore } from "@/stores/chatStore";
 
 interface ChatMessage {
   id: string;
@@ -11,7 +12,7 @@ interface ChatMessage {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 export function useChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const { messages, setMessages, clearMessages } = useChatStore();
   const [isLoading, setIsLoading] = useState(false);
 
   const sendMessage = useCallback(async (text: string) => {
@@ -47,9 +48,9 @@ export function useChat() {
     };
 
     try {
-      // Build conversation history for context
-      const allMessages = [...messages, userMsg];
-      const apiMessages = allMessages.map((m) => ({
+      // Build conversation history for context - read current state
+      const currentMessages = useChatStore.getState().messages;
+      const apiMessages = currentMessages.map((m) => ({
         role: m.role,
         content: m.content,
       }));
@@ -139,11 +140,7 @@ export function useChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, isLoading]);
-
-  const clearMessages = useCallback(() => {
-    setMessages([]);
-  }, []);
+  }, [isLoading, setMessages]);
 
   return { messages, isLoading, sendMessage, clearMessages };
 }

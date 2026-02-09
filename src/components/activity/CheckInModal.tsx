@@ -51,6 +51,7 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["check-ins"] });
+      queryClient.invalidateQueries({ queryKey: ["last-check-in"] });
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast({
         title: "🎉 Check-in complete!",
