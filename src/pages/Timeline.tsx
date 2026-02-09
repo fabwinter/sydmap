@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Map, Clock, Star, MapPin, Filter } from "lucide-react";
+import { Search, Map, Clock, Star, MapPin, Filter, CalendarDays, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
 
 const CATEGORY_OPTIONS = [
   { value: "all", label: "All Categories" },
@@ -26,7 +34,6 @@ const CATEGORY_OPTIONS = [
   { value: "shopping", label: "Shopping" },
 ];
 
-// Category icon mapping
 const categoryIcons: Record<string, string> = {
   cafe: "☕",
   restaurant: "🍽️",
@@ -43,7 +50,7 @@ export default function Timeline() {
   const { user, isLoading: authLoading } = useAuth();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
-  const [showFilters, setShowFilters] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const { data: groupedCheckIns, isLoading } = useCheckInTimeline(search, category);
 
@@ -52,7 +59,23 @@ export default function Timeline() {
     return null;
   }
 
-  const totalCheckIns = groupedCheckIns?.reduce((sum, group) => sum + group.checkIns.length, 0) || 0;
+  // Filter by date range client-side
+  const filteredGroups = groupedCheckIns?.filter((group) => {
+    if (!dateRange?.from) return true;
+    const groupDate = new Date(group.date);
+    const from = new Date(dateRange.from);
+    from.setHours(0, 0, 0, 0);
+    if (dateRange.to) {
+      const to = new Date(dateRange.to);
+      to.setHours(23, 59, 59, 999);
+      return groupDate >= from && groupDate <= to;
+    }
+    return groupDate.toDateString() === from.toDateString();
+  });
+
+  const totalCheckIns = filteredGroups?.reduce((sum, group) => sum + group.checkIns.length, 0) || 0;
+
+  const hasDateFilter = !!dateRange?.from;
 
   return (
     <AppLayout>
@@ -85,10 +108,10 @@ export default function Timeline() {
               className="pl-10"
             />
           </div>
-          
+
           <div className="flex gap-2">
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="flex-1">
                 <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
@@ -100,6 +123,45 @@ export default function Timeline() {
                 ))}
               </SelectContent>
             </Select>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={hasDateFilter ? "default" : "outline"}
+                  size="sm"
+                  className="gap-1.5 shrink-0"
+                >
+                  <CalendarDays className="w-4 h-4" />
+                  {hasDateFilter
+                    ? dateRange?.to
+                      ? `${format(dateRange.from!, "d MMM")} – ${format(dateRange.to, "d MMM")}`
+                      : format(dateRange.from!, "d MMM yyyy")
+                    : "Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={1}
+                  initialFocus
+                />
+                {hasDateFilter && (
+                  <div className="p-2 border-t border-border">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={() => setDateRange(undefined)}
+                    >
+                      <X className="w-3 h-3 mr-1" />
+                      Clear dates
+                    </Button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
@@ -122,13 +184,10 @@ export default function Timeline() {
                 </div>
               </div>
             ))
-          ) : groupedCheckIns && groupedCheckIns.length > 0 ? (
-            groupedCheckIns.map((group) => (
+          ) : filteredGroups && filteredGroups.length > 0 ? (
+            filteredGroups.map((group) => (
               <div key={group.date}>
-                {/* Date Header */}
                 <h2 className="font-bold text-base mb-3">{group.label}</h2>
-
-                {/* Timeline items */}
                 <div className="space-y-3 pl-6 border-l-2 border-primary/20 ml-3">
                   {group.checkIns.map((checkIn) => {
                     const catKey = checkIn.activities?.category?.toLowerCase() || "";
@@ -145,15 +204,10 @@ export default function Timeline() {
                         to={`/activity/${checkIn.activity_id}`}
                         className="relative flex items-start gap-3 p-3 bg-card rounded-xl border border-border hover:border-primary transition-colors"
                       >
-                        {/* Timeline dot */}
                         <div className="absolute -left-[calc(1.5rem+7px)] top-5 w-3.5 h-3.5 rounded-full bg-primary/80 border-2 border-background" />
-
-                        {/* Icon */}
                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-lg shrink-0">
                           {icon}
                         </div>
-
-                        {/* Details */}
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-sm truncate">
                             {checkIn.activities?.name || "Unknown venue"}
@@ -180,8 +234,6 @@ export default function Timeline() {
                             </p>
                           )}
                         </div>
-
-                        {/* Photo thumbnail */}
                         {(checkIn.photo_url || checkIn.activities?.hero_image_url) && (
                           <img
                             src={checkIn.photo_url || checkIn.activities?.hero_image_url || ""}
@@ -198,17 +250,23 @@ export default function Timeline() {
           ) : (
             <div className="text-center py-12 text-muted-foreground">
               <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="font-medium">No check-ins yet</p>
-              <p className="text-sm mt-1">
-                Start checking in to build your timeline!
+              <p className="font-medium">
+                {hasDateFilter ? "No check-ins in this date range" : "No check-ins yet"}
               </p>
-              <Button
-                variant="link"
-                className="mt-2 text-primary"
-                onClick={() => navigate("/")}
-              >
-                Explore activities
-              </Button>
+              <p className="text-sm mt-1">
+                {hasDateFilter
+                  ? "Try a different date range or clear the filter."
+                  : "Start checking in to build your timeline!"}
+              </p>
+              {!hasDateFilter && (
+                <Button
+                  variant="link"
+                  className="mt-2 text-primary"
+                  onClick={() => navigate("/")}
+                >
+                  Explore activities
+                </Button>
+              )}
             </div>
           )}
         </div>

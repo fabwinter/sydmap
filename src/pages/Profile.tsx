@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Settings, MapPin, Users, Coffee, Award, ChevronRight, Loader2, Heart, Bookmark, Plus, Trash2 } from "lucide-react";
+import { Settings, MapPin, Users, Coffee, Award, ChevronRight, ChevronDown, Loader2, Heart, Bookmark, Plus, Trash2, Star, MessageSquare, Image as ImageIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -101,7 +101,7 @@ export default function Profile() {
     enabled: !!profile?.id,
   });
 
-  // Fetch recent check-ins
+  // Fetch recent check-ins with full details
   const { data: recentCheckIns = [] } = useQuery({
     queryKey: ["recent-checkins", profile?.id],
     queryFn: async () => {
@@ -111,18 +111,22 @@ export default function Profile() {
         .select(`
           id,
           rating,
+          comment,
           created_at,
           photo_url,
           activities (
             id,
             name,
             category,
-            hero_image_url
+            hero_image_url,
+            address,
+            rating,
+            review_count
           )
         `)
         .eq("user_id", profile.id)
         .order("created_at", { ascending: false })
-        .limit(6);
+        .limit(20);
       if (error) throw error;
       return data;
     },
@@ -290,26 +294,7 @@ export default function Profile() {
             {recentCheckIns.length > 0 ? (
               <div className="space-y-3">
                 {recentCheckIns.map((checkIn) => (
-                  <div
-                    key={checkIn.id}
-                    className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border"
-                  >
-                    <img
-                      src={checkIn.photo_url || checkIn.activities?.hero_image_url || "/placeholder.svg"}
-                      alt={checkIn.activities?.name || "Check-in"}
-                      className="w-16 h-16 rounded-lg object-cover"
-                    />
-                    <div className="flex-1">
-                      <p className="font-semibold text-sm">{checkIn.activities?.name || "Activity"}</p>
-                      <p className="text-xs text-muted-foreground">{checkIn.activities?.category}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(checkIn.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {"⭐".repeat(checkIn.rating)}
-                    </div>
-                  </div>
+                  <CheckInCard key={checkIn.id} checkIn={checkIn} />
                 ))}
               </div>
             ) : (
@@ -490,6 +475,106 @@ function StatItem({
       <Icon className="w-5 h-5 text-primary mb-1" />
       <span className="text-xl font-bold">{value}</span>
       <span className="text-xs text-muted-foreground">{label}</span>
+    </div>
+  );
+}
+
+function CheckInCard({ checkIn }: { checkIn: any }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="bg-card rounded-xl border border-border overflow-hidden">
+      {/* Summary row - always visible */}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted/50 transition-colors"
+      >
+        <img
+          src={checkIn.photo_url || checkIn.activities?.hero_image_url || "/placeholder.svg"}
+          alt={checkIn.activities?.name || "Check-in"}
+          className="w-16 h-16 rounded-lg object-cover shrink-0"
+        />
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm truncate">{checkIn.activities?.name || "Activity"}</p>
+          <p className="text-xs text-muted-foreground">{checkIn.activities?.category}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {new Date(checkIn.created_at).toLocaleDateString("en-AU", {
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}
+          </p>
+        </div>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <div className="flex items-center gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`w-3 h-3 ${
+                  i < checkIn.rating
+                    ? "fill-warning text-warning"
+                    : "text-muted"
+                }`}
+              />
+            ))}
+          </div>
+          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
+        </div>
+      </button>
+
+      {/* Expanded details */}
+      {expanded && (
+        <div className="px-3 pb-3 space-y-3 border-t border-border pt-3">
+          {/* Comment */}
+          {checkIn.comment && (
+            <div className="flex items-start gap-2">
+              <MessageSquare className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+              <p className="text-sm text-muted-foreground italic">"{checkIn.comment}"</p>
+            </div>
+          )}
+
+          {/* Photo */}
+          {checkIn.photo_url && (
+            <div className="flex items-start gap-2">
+              <ImageIcon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+              <img
+                src={checkIn.photo_url}
+                alt="Check-in photo"
+                className="w-full max-w-xs rounded-lg object-cover"
+              />
+            </div>
+          )}
+
+          {/* Activity info */}
+          {checkIn.activities && (
+            <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{checkIn.activities.name}</span>
+                {checkIn.activities.rating && (
+                  <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                    <Star className="w-3 h-3 fill-warning text-warning" />
+                    {checkIn.activities.rating.toFixed(1)}
+                  </span>
+                )}
+              </div>
+              {checkIn.activities.address && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  {checkIn.activities.address}
+                </p>
+              )}
+              <Link
+                to={`/activity/${checkIn.activities.id}`}
+                className="inline-flex items-center gap-1 text-xs text-primary font-medium mt-1"
+              >
+                View activity
+                <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

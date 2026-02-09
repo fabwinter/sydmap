@@ -58,9 +58,12 @@ export function TopNav({ variant = "transparent" }: TopNavProps) {
             {/* Weather */}
             {weather && (
               <div className={cn(
-                "hidden sm:flex items-center gap-1.5 text-sm font-medium",
-                isSolid ? "text-foreground" : "text-white"
+                "flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-full",
+                isSolid 
+                  ? "bg-muted text-foreground" 
+                  : "bg-white/15 backdrop-blur-sm text-white"
               )}>
+                <span className="text-xs">Sydney</span>
                 <span>{weather.icon}</span>
                 <span>{weather.temp}°C</span>
               </div>

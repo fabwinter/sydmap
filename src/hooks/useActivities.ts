@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useSearchFilters, type SearchFilters } from "@/hooks/useSearchFilters";
+import { calculateDistance, formatDistance } from "@/hooks/useUserLocation";
 
 export type Activity = Tables<"activities">;
 
@@ -17,11 +18,22 @@ export interface ActivityDisplay {
   closesAt?: string;
 }
 
-// Helper to calculate fake distance (since we don't have user location yet)
-function calculateFakeDistance(lat: number, lng: number): string {
-  // Random distance based on coordinates for demo purposes
-  const distance = Math.abs(lat + lng) % 10 + 0.5;
-  return `${distance.toFixed(1)} km`;
+// Sydney CBD as fallback
+const SYDNEY_LAT = -33.8688;
+const SYDNEY_LNG = 151.2093;
+
+let userLat = SYDNEY_LAT;
+let userLng = SYDNEY_LNG;
+
+// Try to get user location once
+if ("geolocation" in navigator) {
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
+    },
+    () => {} // silently fail
+  );
 }
 
 // Helper to extract closing time from hours_close
@@ -32,13 +44,14 @@ function extractClosingTime(hoursClose: string | null): string | undefined {
 
 // Transform database activity to display format
 export function transformActivity(activity: Activity): ActivityDisplay {
+  const dist = calculateDistance(userLat, userLng, activity.latitude, activity.longitude);
   return {
     id: activity.id,
     name: activity.name,
     category: activity.category,
     rating: activity.rating ?? 0,
     reviewCount: activity.review_count,
-    distance: calculateFakeDistance(activity.latitude, activity.longitude),
+    distance: formatDistance(dist),
     image: activity.hero_image_url ?? "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&h=600&fit=crop",
     isOpen: activity.is_open,
     closesAt: extractClosingTime(activity.hours_close),
