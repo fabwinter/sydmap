@@ -16,11 +16,13 @@ import {
   PawPrint,
   UtensilsCrossed,
   CalendarCheck,
+  ListPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckInModal } from "@/components/activity/CheckInModal";
 import { ShareMenu } from "@/components/activity/ShareMenu";
+import { AddToPlaylistModal } from "@/components/activity/AddToPlaylistModal";
 import { LocationMap } from "@/components/activity/LocationMap";
 import { useActivityById } from "@/hooks/useActivities";
 import { useActivityReviews, useActivityPhotos } from "@/hooks/useReviews";
@@ -35,6 +37,7 @@ export default function ActivityDetails() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showCheckIn, setShowCheckIn] = useState(false);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
   const { data: activity, isLoading: activityLoading, error } = useActivityById(id || "");
   const { data: reviews, isLoading: reviewsLoading } = useActivityReviews(id || "");
@@ -311,6 +314,21 @@ export default function ActivityDetails() {
           >
             <Heart className={`w-5 h-5 ${isSaved ? "fill-destructive text-destructive" : ""}`} />
           </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              if (!user) {
+                toast.error("Please sign in to save to playlists");
+                navigate("/login");
+                return;
+              }
+              setShowPlaylistModal(true);
+            }}
+            className="shrink-0"
+          >
+            <ListPlus className="w-5 h-5" />
+          </Button>
           <ShareMenu activityName={activity.name} activityId={id!} />
           {lastCheckIn ? (
             <Button
@@ -340,6 +358,13 @@ export default function ActivityDetails() {
           activityId={id!}
           activityName={activity.name}
           onClose={() => setShowCheckIn(false)}
+        />
+      )}
+      {showPlaylistModal && (
+        <AddToPlaylistModal
+          activityId={id!}
+          activityName={activity.name}
+          onClose={() => setShowPlaylistModal(false)}
         />
       )}
     </div>

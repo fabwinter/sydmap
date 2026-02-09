@@ -46,8 +46,8 @@ export function ControlPanel() {
 
   const firstName = profile?.name?.split(" ")[0];
   const placeholder = isAuthenticated && firstName
-    ? `Hi ${firstName}, where do you want to go today?`
-    : "Where should I go?";
+    ? `Hi ${firstName}, where to today?`
+    : "Where to today?";
 
   const activeFilterCount =
     filters.tags.length +
