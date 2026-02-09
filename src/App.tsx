@@ -11,6 +11,7 @@ import MapView from "./pages/MapView";
 import Timeline from "./pages/Timeline";
 import Chat from "./pages/Chat";
 import ActivityDetails from "./pages/ActivityDetails";
+import CategoryView from "./pages/CategoryView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/timeline" element={<Timeline />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/activity/:id" element={<ActivityDetails />} />
+          <Route path="/explore" element={<CategoryView />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -16,7 +16,7 @@ export function FeaturedSection() {
       icon={<Sparkles className="w-5 h-5 text-warning" />}
       activities={activities}
       isLoading={isLoading}
-      linkTo="/search?filter=open"
+      linkTo="/explore?section=whats-on"
     />
   );
 }

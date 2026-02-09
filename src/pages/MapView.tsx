@@ -159,7 +159,7 @@ export default function MapView() {
       {...viewState}
       onMove={(evt) => setViewState(evt.viewState)}
       style={{ width: "100%", height: "100%" }}
-      mapStyle="mapbox://styles/mapbox/streets-v12"
+      mapStyle="mapbox://styles/mapbox/light-v11"
       mapboxAccessToken={MAPBOX_TOKEN}
       onClick={() => {
         // Deselect on map click (mobile)
@@ -311,14 +311,14 @@ export default function MapView() {
               <div className="absolute top-4 left-3 safe-top z-10 flex items-center gap-2">
                 <button
                   onClick={() => setFiltersVisible(true)}
-                  className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-2 text-sm font-medium"
+                  className="flex items-center gap-1.5 bg-card shadow-lg rounded-full px-3 py-2 text-sm font-medium"
                 >
                   <Search className="w-4 h-4 text-primary" />
                   Search & Filters
                 </button>
                 <button
                   onClick={() => navigate("/")}
-                  className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-2 text-sm font-medium text-primary"
+                  className="flex items-center gap-1.5 bg-card shadow-lg rounded-full px-3 py-2 text-sm font-medium text-primary"
                 >
                   <LayoutList className="w-4 h-4" />
                 </button>
