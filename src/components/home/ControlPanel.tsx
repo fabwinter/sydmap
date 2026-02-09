@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Search, X, SlidersHorizontal, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake, Sun, Home, DollarSign, Baby, Dog, Accessibility, Wifi, Car, Mountain, Heart, Users, Moon, Palette } from "lucide-react";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
+import { useAuth } from "@/hooks/useAuth";
 import { SurpriseButton } from "./SurpriseButton";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,13 @@ const travellerTags = [
 
 export function ControlPanel() {
   const { filters, setQuery, setCategory, toggleTag, setMaxDistance, setMinRating, clearFilters } = useSearchFilters();
+  const { profile, isAuthenticated } = useAuth();
   const [filterOpen, setFilterOpen] = useState(false);
+
+  const firstName = profile?.name?.split(" ")[0];
+  const placeholder = isAuthenticated && firstName
+    ? `Hi ${firstName}, where do you want to go today?`
+    : "Where should I go?";
 
   const activeFilterCount =
     filters.tags.length +
@@ -57,7 +64,7 @@ export function ControlPanel() {
           type="text"
           value={filters.query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Where should I go?"
+          placeholder={placeholder}
           className="search-input shadow-soft"
         />
         {filters.query && (
