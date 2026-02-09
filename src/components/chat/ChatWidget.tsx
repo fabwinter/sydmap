@@ -2,7 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChat } from "@/hooks/useChat";
+import { useAuth } from "@/hooks/useAuth";
 import ReactMarkdown from "react-markdown";
+import { ChatVenueCards } from "@/components/chat/ChatVenueCards";
 
 const starterPrompts = [
   "Quiet cafe with WiFi",
@@ -14,8 +16,11 @@ const starterPrompts = [
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const { messages, isLoading, sendMessage } = useChat();
+  const { profile, isAuthenticated } = useAuth();
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const firstName = profile?.name?.split(" ")[0];
 
   useEffect(() => {
     if (isOpen) {
@@ -50,7 +55,7 @@ export function ChatWidget() {
             <Sparkles className="w-4 h-4 text-primary-foreground" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm">Ask SYDMAP</h3>
+            <h3 className="font-semibold text-sm">Sydney Planner Assistant</h3>
             <p className="text-xs text-muted-foreground">AI-powered discovery</p>
           </div>
         </div>
@@ -67,7 +72,7 @@ export function ChatWidget() {
         {messages.length === 0 ? (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground text-center">
-              Hi! I can help you discover amazing places in Sydney. Try asking:
+              G'day{isAuthenticated && firstName ? ` ${firstName}` : ""}! 👋 I can help you discover amazing places in Sydney. Try asking:
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               {starterPrompts.map((prompt) => (
@@ -84,28 +89,33 @@ export function ChatWidget() {
         ) : (
           <>
             {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-              >
+              <div key={message.id}>
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-br-md"
-                      : "bg-muted text-foreground rounded-bl-md"
-                  }`}
+                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                 >
-                  {message.role === "assistant" ? (
-                    <div className="text-sm prose prose-sm dark:prose-invert max-w-none [&>p]:mb-1 [&>ul]:mb-1">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
-                    </div>
-                  ) : (
-                    <p className="text-sm">{message.content}</p>
-                  )}
-                  <p className="text-xs opacity-70 mt-1">
-                    {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  </p>
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground rounded-br-md"
+                        : "bg-muted text-foreground rounded-bl-md"
+                    }`}
+                  >
+                    {message.role === "assistant" ? (
+                      <div className="text-sm prose prose-sm dark:prose-invert max-w-none [&>p]:mb-1 [&>ul]:mb-1">
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="text-sm">{message.content}</p>
+                    )}
+                    <p className="text-xs opacity-70 mt-1">
+                      {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
                 </div>
+                {/* Venue cards */}
+                {message.role === "assistant" && message.content.length > 20 && (
+                  <ChatVenueCards messageContent={message.content} />
+                )}
               </div>
             ))}
             {isLoading && messages[messages.length - 1]?.role !== "assistant" && (

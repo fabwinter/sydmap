@@ -60,22 +60,6 @@ export function HeroSlideshow({
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/60" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
 
-      {/* Award badges - top center, positioned below header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.6 }}
-        className="absolute top-28 md:top-32 left-1/2 -translate-x-1/2 z-10 flex items-center gap-6"
-      >
-        <div className="flex items-center gap-2 text-white/80 text-xs md:text-sm">
-          <span className="text-amber-400">🏆</span>
-          <span className="font-medium">Google Play<br />Editor's Choice</span>
-        </div>
-        <div className="hidden md:flex items-center gap-2 text-white/80 text-xs md:text-sm">
-          <span className="text-amber-400">🍎</span>
-          <span className="font-medium">App Store<br />App of the Day</span>
-        </div>
-      </motion.div>
 
       {/* Main content - centered */}
       <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">

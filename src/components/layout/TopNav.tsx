@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { HamburgerMenu } from "./HamburgerMenu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
+import { useWeather } from "@/hooks/useWeather";
 import { cn } from "@/lib/utils";
 
 interface TopNavProps {
@@ -11,6 +12,7 @@ interface TopNavProps {
 
 export function TopNav({ variant = "transparent" }: TopNavProps) {
   const { user, profile, isAuthenticated } = useAuth();
+  const weather = useWeather();
   const isSolid = variant === "solid";
 
   const getInitials = () => {
@@ -52,6 +54,17 @@ export function TopNav({ variant = "transparent" }: TopNavProps) {
 
           {/* Right Side */}
           <div className="flex items-center gap-3">
+            {/* Weather */}
+            {weather && (
+              <div className={cn(
+                "hidden sm:flex items-center gap-1.5 text-sm font-medium",
+                isSolid ? "text-foreground" : "text-white"
+              )}>
+                <span>{weather.icon}</span>
+                <span>{weather.temp}°C</span>
+              </div>
+            )}
+
             {isAuthenticated ? (
               <Link to="/profile">
                 <Avatar className={cn(
