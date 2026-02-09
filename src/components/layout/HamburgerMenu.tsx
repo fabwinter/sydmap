@@ -70,20 +70,19 @@ export function HamburgerMenu({ variant = "transparent" }: HamburgerMenuProps) {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-card z-50 shadow-2xl"
+              className="fixed right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-card z-50 shadow-2xl flex flex-col"
             >
-              <div className="flex flex-col h-full">
-                {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-border">
-                  <span className="text-xl font-bold text-foreground">Sydney Planner</span>
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="p-2 rounded-lg hover:bg-muted transition-colors"
-                    aria-label="Close menu"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-border shrink-0">
+                <span className="text-xl font-bold text-foreground">Sydney Planner</span>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                  aria-label="Close menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
                 {/* Navigation Links */}
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -156,7 +155,6 @@ export function HamburgerMenu({ variant = "transparent" }: HamburgerMenuProps) {
                     </Button>
                   )}
                 </div>
-              </div>
             </motion.div>
           </>
         )}

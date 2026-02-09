@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { HamburgerMenu } from "./HamburgerMenu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
@@ -9,8 +10,17 @@ interface TopNavProps {
 }
 
 export function TopNav({ variant = "transparent" }: TopNavProps) {
-  const { isAuthenticated } = useAuth();
+  const { user, profile, isAuthenticated } = useAuth();
   const isSolid = variant === "solid";
+
+  const getInitials = () => {
+    if (!profile?.name && !user?.email) return "?";
+    const name = profile?.name || user?.email || "";
+    if (name.includes(" ")) {
+      return name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
 
   return (
     <header 
@@ -40,12 +50,30 @@ export function TopNav({ variant = "transparent" }: TopNavProps) {
             </span>
           </Link>
 
-          {/* Right Side - Hamburger for all screen sizes */}
+          {/* Right Side */}
           <div className="flex items-center gap-3">
-            {!isAuthenticated && (
+            {isAuthenticated ? (
+              <Link to="/profile">
+                <Avatar className={cn(
+                  "w-9 h-9 ring-2 cursor-pointer transition-opacity hover:opacity-80",
+                  isSolid ? "ring-primary/20" : "ring-white/30"
+                )}>
+                  <AvatarImage src={profile?.avatar_url || ""} />
+                  <AvatarFallback className={cn(
+                    "text-sm font-semibold",
+                    isSolid 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-white/20 text-white backdrop-blur-sm"
+                  )}>
+                    {getInitials()}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+            ) : (
               <Button 
                 asChild 
                 variant="outline" 
+                size="sm"
                 className={cn(
                   "hidden sm:inline-flex",
                   !isSolid && "border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm"
@@ -54,7 +82,6 @@ export function TopNav({ variant = "transparent" }: TopNavProps) {
                 <Link to="/login">Log in</Link>
               </Button>
             )}
-            {/* Hamburger - visible on all screen sizes now */}
             <HamburgerMenu variant={isSolid ? "solid" : "transparent"} />
           </div>
         </div>
