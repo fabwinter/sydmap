@@ -13,6 +13,7 @@ export function RecommendedSection() {
       title="Recommended For You"
       activities={activities}
       isLoading={isLoading}
+      linkTo="/explore?section=recommended"
     />
   );
 }

@@ -21,6 +21,7 @@ export function CuratedSections() {
         icon={<TreePine className="w-5 h-5 text-emerald-500" />}
         activities={outdoor.data}
         isLoading={outdoor.isLoading}
+        linkTo="/explore?section=outdoor"
       />
 
       <ActivityCarouselSection
@@ -29,6 +30,7 @@ export function CuratedSections() {
         icon={<Trophy className="w-5 h-5 text-amber-500" />}
         activities={bestOf.data}
         isLoading={bestOf.isLoading}
+        linkTo="/explore?section=best-of"
       />
 
       <ActivityCarouselSection
@@ -37,6 +39,7 @@ export function CuratedSections() {
         icon={<Coffee className="w-5 h-5 text-amber-700" />}
         activities={cafes.data}
         isLoading={cafes.isLoading}
+        linkTo="/explore?section=cafes"
       />
 
       <ActivityCarouselSection
@@ -45,6 +48,7 @@ export function CuratedSections() {
         icon={<Moon className="w-5 h-5 text-violet-500" />}
         activities={nightlife.data}
         isLoading={nightlife.isLoading}
+        linkTo="/explore?section=nightlife"
       />
     </>
   );
