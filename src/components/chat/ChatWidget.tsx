@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Sparkles } from "lucide-react";
+import { MessageCircle, X, Send, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChat } from "@/hooks/useChat";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,7 +15,7 @@ const starterPrompts = [
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const { messages, isLoading, sendMessage } = useChat();
+  const { messages, isLoading, sendMessage, clearMessages } = useChat();
   const { profile, isAuthenticated } = useAuth();
   const [input, setInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -38,7 +38,7 @@ export function ChatWidget() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fab pulse-glow md:hidden"
+        className="fab pulse-glow"
         aria-label="Open chat"
       >
         <MessageCircle className="w-6 h-6" />
@@ -56,15 +56,29 @@ export function ChatWidget() {
           </div>
           <div>
             <h3 className="font-semibold text-sm">Sydney Planner Assistant</h3>
-            <p className="text-xs text-muted-foreground">AI-powered discovery</p>
+            <div className="flex items-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-xs text-muted-foreground">Powered by AI</p>
+            </div>
           </div>
         </div>
-        <button
-          onClick={() => setIsOpen(false)}
-          className="p-2 rounded-full hover:bg-muted transition-colors"
-        >
-          <X className="w-5 h-5 text-muted-foreground" />
-        </button>
+        <div className="flex items-center gap-1">
+          {messages.length > 0 && (
+            <button
+              onClick={clearMessages}
+              className="p-2 rounded-full hover:bg-muted transition-colors"
+              title="Clear chat"
+            >
+              <Trash2 className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
+          <button
+            onClick={() => setIsOpen(false)}
+            className="p-2 rounded-full hover:bg-muted transition-colors"
+          >
+            <X className="w-5 h-5 text-muted-foreground" />
+          </button>
+        </div>
       </div>
       
       {/* Messages */}

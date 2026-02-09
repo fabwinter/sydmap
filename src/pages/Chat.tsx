@@ -38,7 +38,7 @@ export default function Chat() {
     <AppLayout>
       <div className="flex flex-col h-[calc(100vh-8rem)] max-w-lg mx-auto">
         {/* Header */}
-        <div className="px-4 py-4 border-b border-border">
+        <div className="px-4 py-4 border-b border-border bg-card">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
@@ -46,12 +46,16 @@ export default function Chat() {
               </div>
               <div>
                 <h1 className="font-bold">Sydney Planner Assistant</h1>
-                <p className="text-xs text-muted-foreground">AI-powered discovery</p>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <p className="text-xs text-muted-foreground">Powered by AI</p>
+                </div>
               </div>
             </div>
             {messages.length > 0 && (
-              <Button variant="ghost" size="icon" onClick={clearMessages} title="Clear chat">
-                <Trash2 className="w-4 h-4 text-muted-foreground" />
+              <Button variant="ghost" size="sm" onClick={clearMessages} className="gap-1.5 text-muted-foreground hover:text-destructive" title="Clear chat">
+                <Trash2 className="w-4 h-4" />
+                <span className="text-xs hidden sm:inline">Clear</span>
               </Button>
             )}
           </div>

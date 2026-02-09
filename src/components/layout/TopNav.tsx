@@ -26,11 +26,12 @@ export function TopNav({ variant = "transparent" }: TopNavProps) {
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-40 transition-colors duration-300 ${
+      className={cn(
+        "fixed top-0 left-0 right-0 z-40 transition-colors duration-300",
         isSolid 
           ? "bg-background/95 backdrop-blur-md border-b border-border" 
-          : ""
-      }`}
+          : "bg-gradient-to-b from-black/40 to-transparent"
+      )}
     >
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
