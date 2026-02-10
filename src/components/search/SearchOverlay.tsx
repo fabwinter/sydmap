@@ -8,8 +8,8 @@ import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { useAuth } from "@/hooks/useAuth";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
+import { motion, AnimatePresence } from "framer-motion";
 
 const categories = [
   { id: "Cafe", label: "Cafes", icon: Coffee },
@@ -49,9 +49,7 @@ const allSuggestions = [
 ];
 
 interface SearchOverlayProps {
-  /** Extra class for the wrapper */
   className?: string;
-  /** If true, render the search bar in a card container (home). Otherwise bare (map). */
   variant?: "home" | "map";
 }
 
@@ -68,7 +66,6 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
   const firstName = profile?.name?.split(" ")[0];
   const placeholder = isAuthenticated && firstName ? `Hi ${firstName}, where to today?` : "Where to today?";
 
-  // Sync local query from store
   useEffect(() => { setLocalQuery(filters.query); }, [filters.query]);
 
   // Predictive search
@@ -85,14 +82,13 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
     return () => clearTimeout(timeout);
   }, [localQuery]);
 
-  // Filter suggestions matching typed query
   const matchedSuggestions = useMemo(() => {
     if (localQuery.length < 1) return [];
     const q = localQuery.toLowerCase();
     return allSuggestions.filter((s) => s.label.toLowerCase().includes(q)).slice(0, 4);
   }, [localQuery]);
 
-  // Active filter labels for chips below search bar
+  // Active filter chips
   const activeChips = useMemo(() => {
     const chips: { key: string; label: string; onRemove: () => void }[] = [];
     if (filters.category) {
@@ -115,9 +111,7 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
     return chips;
   }, [filters, setCategory, setMaxDistance, setMinRating, setIsOpen, toggleTag]);
 
-  const activeFilterCount = activeChips.length - (filters.category ? 1 : 0) + (filters.category ? 1 : 0);
-
-  // Close overlay on outside click
+  // Close on outside click
   useEffect(() => {
     if (!expanded) return;
     const handler = (e: MouseEvent) => {
@@ -127,6 +121,16 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
+  }, [expanded]);
+
+  // Prevent body scroll when expanded
+  useEffect(() => {
+    if (expanded) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
   }, [expanded]);
 
   const handleSearch = () => {
@@ -158,7 +162,7 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
 
   return (
     <div ref={containerRef} className={`relative z-30 ${className}`}>
-      <div className={`${wrapperClass} p-3 md:p-4`}>
+      <div className={`${wrapperClass} p-3 md:p-4 relative z-[31]`}>
         {/* Search bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -197,7 +201,7 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
           </button>
         </div>
 
-        {/* Active filter chips */}
+        {/* Active filter chips (collapsed state) */}
         {activeChips.length > 0 && !expanded && (
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide mt-2 py-1">
             {activeChips.map((chip) => (
@@ -222,142 +226,151 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
         )}
       </div>
 
-      {/* Expanded overlay */}
-      {expanded && (
-        <div className={`absolute left-0 right-0 top-full mt-1 ${wrapperClass} p-4 shadow-xl max-h-[70vh] overflow-hidden flex flex-col fade-in`}>
-          {/* Predictions */}
-          {(predictions.length > 0 || matchedSuggestions.length > 0) && localQuery.length >= 1 && (
-            <div className="mb-4 space-y-1">
-              {matchedSuggestions.map((s) => {
-                const Icon = s.icon;
-                const isActive = s.type === "category" ? filters.category === s.id : filters.tags.includes(s.id);
-                return (
-                  <button
-                    key={s.id}
-                    onClick={() => handleSuggestionClick(s)}
-                    className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-                      isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 text-muted-foreground" />
-                    <span>{s.label}</span>
-                    <span className="text-xs text-muted-foreground ml-auto">{s.type === "category" ? "Category" : "Filter"}</span>
-                  </button>
-                );
-              })}
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => handlePredictionClick(p.name)}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm hover:bg-muted transition-colors"
-                >
-                  <Search className="w-4 h-4 text-muted-foreground" />
-                  <span>{p.name}</span>
-                  <span className="text-xs text-muted-foreground ml-auto">{p.category}</span>
-                </button>
-              ))}
-            </div>
-          )}
+      {/* Expanding filter panel - animates down from search bar */}
+      <AnimatePresence>
+        {expanded && (
+          <>
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              className={`${wrapperClass} overflow-hidden -mt-3 pt-4 relative z-[30] rounded-t-none border-t-0`}
+              style={{ originY: 0 }}
+            >
+              <div className="px-4 pb-4 max-h-[60vh] overflow-y-auto overscroll-contain">
+                {/* Predictions */}
+                {(predictions.length > 0 || matchedSuggestions.length > 0) && localQuery.length >= 1 && (
+                  <div className="mb-4 space-y-1">
+                    {matchedSuggestions.map((s) => {
+                      const Icon = s.icon;
+                      const isActive = s.type === "category" ? filters.category === s.id : filters.tags.includes(s.id);
+                      return (
+                        <button
+                          key={s.id}
+                          onClick={() => handleSuggestionClick(s)}
+                          className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+                            isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"
+                          }`}
+                        >
+                          <Icon className="w-4 h-4 text-muted-foreground" />
+                          <span>{s.label}</span>
+                          <span className="text-xs text-muted-foreground ml-auto">{s.type === "category" ? "Category" : "Filter"}</span>
+                        </button>
+                      );
+                    })}
+                    {predictions.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => handlePredictionClick(p.name)}
+                        className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm hover:bg-muted transition-colors"
+                      >
+                        <Search className="w-4 h-4 text-muted-foreground" />
+                        <span>{p.name}</span>
+                        <span className="text-xs text-muted-foreground ml-auto">{p.category}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-          <ScrollArea className="flex-1 -mr-2 pr-2" style={{ maxHeight: "calc(70vh - 120px)" }}>
-            <div className="space-y-5">
-              {/* Distance slider */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-3">Travel distance</h3>
-                <div className="px-1">
-                  <Slider
-                    value={[filters.maxDistance ?? 20]}
-                    onValueChange={([val]) => setMaxDistance(val === 20 ? null : val)}
-                    min={1} max={20} step={1}
-                  />
-                  <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                    <span>1 km</span>
-                    <span className="font-medium text-foreground">
-                      {filters.maxDistance ? `${filters.maxDistance} km` : "Any distance"}
-                    </span>
-                    <span>20 km</span>
+                <div className="space-y-5">
+                  {/* Distance slider */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Travel distance</h3>
+                    <div className="px-1">
+                      <Slider
+                        value={[filters.maxDistance ?? 20]}
+                        onValueChange={([val]) => setMaxDistance(val === 20 ? null : val)}
+                        min={1} max={20} step={1}
+                      />
+                      <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                        <span>1 km</span>
+                        <span className="font-medium text-foreground">
+                          {filters.maxDistance ? `${filters.maxDistance} km` : "Any distance"}
+                        </span>
+                        <span>20 km</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rating */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Minimum rating</h3>
+                    <div className="flex gap-2">
+                      {[null, 3, 3.5, 4, 4.5].map((rating) => (
+                        <button
+                          key={rating ?? "any"}
+                          onClick={() => setMinRating(rating)}
+                          className={`filter-chip text-xs ${filters.minRating === rating ? "active" : ""}`}
+                        >
+                          {rating ? `${rating}+ ★` : "Any"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Experience type */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Experience type</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {experienceTags.map(({ id, label, icon: Icon }) => (
+                        <button key={id} onClick={() => toggleTag(id)}
+                          className={`filter-chip flex items-center gap-1.5 text-xs ${filters.tags.includes(id) ? "active" : ""}`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />{label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Traveller type */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Traveller type</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {travellerTags.map(({ id, label, icon: Icon }) => (
+                        <button key={id} onClick={() => toggleTag(id)}
+                          className={`filter-chip flex items-center gap-1.5 text-xs ${filters.tags.includes(id) ? "active" : ""}`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />{label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Category */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Category</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.map(({ id, label, icon: Icon }) => (
+                        <button key={id} onClick={() => setCategory(filters.category === id ? null : id)}
+                          className={`filter-chip flex items-center gap-1.5 text-xs ${filters.category === id ? "active" : ""}`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />{label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Rating */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-3">Minimum rating</h3>
-                <div className="flex gap-2">
-                  {[null, 3, 3.5, 4, 4.5].map((rating) => (
-                    <button
-                      key={rating ?? "any"}
-                      onClick={() => setMinRating(rating)}
-                      className={`filter-chip text-xs ${filters.minRating === rating ? "active" : ""}`}
-                    >
-                      {rating ? `${rating}+ ★` : "Any"}
-                    </button>
-                  ))}
-                </div>
+              {/* Search button + clear */}
+              <div className="px-4 py-3 border-t border-border flex gap-2">
+                {activeChips.length > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-sm text-muted-foreground">
+                    Clear all
+                  </Button>
+                )}
+                <Button className="flex-1" onClick={handleSearch}>
+                  Search
+                </Button>
               </div>
+            </motion.div>
 
-              {/* Experience type */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-3">Experience type</h3>
-                <div className="flex flex-wrap gap-2">
-                  {experienceTags.map(({ id, label, icon: Icon }) => (
-                    <button key={id} onClick={() => toggleTag(id)}
-                      className={`filter-chip flex items-center gap-1.5 text-xs ${filters.tags.includes(id) ? "active" : ""}`}
-                    >
-                      <Icon className="w-3.5 h-3.5" />{label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Traveller type */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-3">Traveller type</h3>
-                <div className="flex flex-wrap gap-2">
-                  {travellerTags.map(({ id, label, icon: Icon }) => (
-                    <button key={id} onClick={() => toggleTag(id)}
-                      className={`filter-chip flex items-center gap-1.5 text-xs ${filters.tags.includes(id) ? "active" : ""}`}
-                    >
-                      <Icon className="w-3.5 h-3.5" />{label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Category */}
-              <div>
-                <h3 className="text-sm font-semibold text-foreground mb-3">Category</h3>
-                <div className="flex flex-wrap gap-2">
-                  {categories.map(({ id, label, icon: Icon }) => (
-                    <button key={id} onClick={() => setCategory(filters.category === id ? null : id)}
-                      className={`filter-chip flex items-center gap-1.5 text-xs ${filters.category === id ? "active" : ""}`}
-                    >
-                      <Icon className="w-3.5 h-3.5" />{label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </ScrollArea>
-
-          {/* Search button + clear */}
-          <div className="pt-3 border-t border-border mt-3 flex gap-2">
-            {activeChips.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-sm text-muted-foreground">
-                Clear all
-              </Button>
-            )}
-            <Button className="flex-1" onClick={handleSearch}>
-              Search
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Backdrop when expanded */}
-      {expanded && (
-        <div className="fixed inset-0 bg-black/20 z-[-1]" onClick={() => setExpanded(false)} />
-      )}
+            {/* Backdrop */}
+            <div className="fixed inset-0 bg-black/20 z-[-1]" onClick={() => setExpanded(false)} />
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
