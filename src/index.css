@@ -136,15 +136,15 @@
   
   /* Filter Chip */
   .filter-chip {
-    @apply px-4 py-2 rounded-full bg-muted text-muted-foreground text-sm font-medium transition-all duration-200;
+    @apply px-4 py-2 rounded-full border border-primary/30 text-primary bg-transparent text-sm font-medium transition-all duration-200;
   }
   
   .filter-chip:hover {
-    @apply bg-primary/10 text-primary;
+    @apply border-primary bg-primary/5;
   }
   
   .filter-chip.active {
-    @apply bg-primary text-primary-foreground;
+    @apply border-primary bg-primary/10 text-primary font-semibold;
   }
   
   /* Navigation Tab */
