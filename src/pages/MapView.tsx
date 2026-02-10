@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import Map, { Marker, Popup, GeolocateControl, NavigationControl, MapRef } from "react-map-gl/mapbox";
 import { LngLatBounds } from "mapbox-gl";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, Search, ChevronUp, LayoutList } from "lucide-react";
+import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, LayoutList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -44,7 +44,7 @@ export default function MapView() {
   const { data: activities, isLoading } = useAllActivities(200);
   const { filters } = useSearchFilters();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-  const [filtersVisible, setFiltersVisible] = useState(true);
+  // filtersVisible removed - SearchOverlay handles its own expand/collapse
   const mapRef = useRef<MapRef>(null);
   const isMobile = useIsMobile();
 
@@ -126,7 +126,7 @@ export default function MapView() {
       zoom: 15,
     }));
     // On mobile, hide filters when a venue is selected
-    if (isMobile) setFiltersVisible(false);
+    // filters handled by SearchOverlay
   }, [isMobile]);
 
   const handleNavigateToDetails = useCallback((activity: Activity) => {
@@ -284,46 +284,18 @@ export default function MapView() {
 
           {/* Mobile-only floating controls */}
           <div className="md:hidden" onClick={(e) => e.stopPropagation()}>
-            {/* Collapsible filter area */}
-            {filtersVisible ? (
-              <div className="absolute top-4 left-3 right-3 safe-top z-10 space-y-2 max-w-[calc(100vw-1.5rem)]">
-                <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
-                {/* Collapse + View switch buttons */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setFiltersVisible(false)}
-                    className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-1.5 text-xs font-medium text-muted-foreground"
-                  >
-                    <ChevronUp className="w-3.5 h-3.5" />
-                    Hide filters
-                  </button>
-                  <button
-                    onClick={() => navigate("/")}
-                    className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-full shadow-lg px-3 py-1.5 text-xs font-medium text-primary"
-                  >
-                    <LayoutList className="w-3.5 h-3.5" />
-                    List View
-                  </button>
-                </div>
-              </div>
-            ) : (
-              /* Collapsed: show small floating buttons */
-              <div className="absolute top-4 left-3 safe-top z-10 flex items-center gap-2">
-                <button
-                  onClick={() => setFiltersVisible(true)}
-                  className="flex items-center gap-1.5 bg-card shadow-lg rounded-full px-3 py-2 text-sm font-medium"
-                >
-                  <Search className="w-4 h-4 text-primary" />
-                  Search & Filters
-                </button>
+            <div className="absolute top-4 left-3 right-3 safe-top z-10 space-y-2 max-w-[calc(100vw-1.5rem)]">
+              <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => navigate("/")}
-                  className="flex items-center gap-1.5 bg-card shadow-lg rounded-full px-3 py-2 text-sm font-medium text-primary"
+                  className="flex items-center gap-1.5 bg-card rounded-full shadow-lg px-3 py-1.5 text-xs font-medium text-primary"
                 >
-                  <LayoutList className="w-4 h-4" />
+                  <LayoutList className="w-3.5 h-3.5" />
+                  List View
                 </button>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Mobile venue card - replaces Popup on mobile */}
