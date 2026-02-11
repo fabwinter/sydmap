@@ -285,10 +285,10 @@ export default function MapView() {
           {/* Mobile list view */}
           {isMobile && mobileView === "list" ? (
             <div className="h-full flex flex-col bg-background">
-              <div className="p-3 border-b border-border shrink-0">
+              <div className="p-3 border-b border-border shrink-0 safe-top">
                 <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
               </div>
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto pb-20">
                 <VenueList
                   activities={filteredActivities}
                   isLoading={isLoading}
@@ -322,7 +322,7 @@ export default function MapView() {
                 triggerHaptic("medium");
                 setMobileView(mobileView === "map" ? "list" : "map");
               }}
-              className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-full shadow-elevated font-semibold text-sm"
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-elevated font-semibold text-sm"
             >
               {mobileView === "map" ? (
                 <>
