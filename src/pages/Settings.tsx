@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, 
@@ -126,10 +127,10 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 bg-background/95 backdrop-blur-md border-b border-border z-30 safe-top">
-        <div className="flex items-center gap-3 px-4 py-3 max-w-lg mx-auto">
+    <AppLayout>
+      <div className="max-w-lg mx-auto pb-8">
+        {/* Header */}
+        <div className="flex items-center gap-3 px-4 py-3">
           <button 
             onClick={() => navigate("/profile")}
             className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors"
@@ -138,9 +139,7 @@ export default function Settings() {
           </button>
           <h1 className="text-lg font-semibold">Settings</h1>
         </div>
-      </header>
 
-      <div className="max-w-lg mx-auto pb-8">
         {/* Profile Section */}
         <section className="px-4 py-6 border-b border-border">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
@@ -294,7 +293,7 @@ export default function Settings() {
           </Button>
         </section>
       </div>
-    </div>
+    </AppLayout>
   );
 }
 

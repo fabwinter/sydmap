@@ -26,7 +26,7 @@ const Index = () => {
   }, []);
 
   return (
-    <AppLayout showHeader={true} transparentHeader={showHero}>
+    <AppLayout>
       {/* Full-page Hero - only on first visit per session */}
       {showHero && (
         <HeroSlideshow 
@@ -39,7 +39,7 @@ const Index = () => {
       )}
       
       {/* Content Section */}
-      <div id="content-section" className="bg-background pt-20 md:pt-24">
+      <div id="content-section" className="bg-background">
         <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8">
           <ControlPanel />
           
