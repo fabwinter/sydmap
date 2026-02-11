@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
-import { ChatWidget } from "@/components/chat/ChatWidget";
 
 interface ResponsiveShellProps {
   children: ReactNode;
@@ -18,9 +17,6 @@ export function ResponsiveShell({
       <main className={fullHeight ? "min-h-screen" : "pb-16"}>
         {children}
       </main>
-
-      {/* Chat Widget */}
-      <ChatWidget />
 
       {/* Bottom Nav - visible on all screen sizes */}
       <BottomNav />

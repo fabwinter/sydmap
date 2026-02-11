@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import Map, { Marker, Popup, GeolocateControl, NavigationControl, MapRef } from "react-map-gl/mapbox";
 import { LngLatBounds } from "mapbox-gl";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, LayoutList } from "lucide-react";
+import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, LayoutList, MapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -13,6 +13,8 @@ import { VenueList } from "@/components/map/VenueList";
 import { MapFilters } from "@/components/map/MapFilters";
 import { MobileVenueCard } from "@/components/map/MobileVenueCard";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { triggerHaptic } from "@/lib/haptics";
+import { motion, AnimatePresence } from "framer-motion";
 
 const categoryIcons: Record<string, any> = {
   Cafe: Coffee,
@@ -44,7 +46,7 @@ export default function MapView() {
   const { data: activities, isLoading } = useAllActivities(200);
   const { filters } = useSearchFilters();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
-  // filtersVisible removed - SearchOverlay handles its own expand/collapse
+  const [mobileView, setMobileView] = useState<"map" | "list">("map");
   const mapRef = useRef<MapRef>(null);
   const isMobile = useIsMobile();
 
@@ -278,32 +280,63 @@ export default function MapView() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: MAP */}
+        {/* RIGHT COLUMN: MAP or LIST (mobile toggle) */}
         <div className="flex-1 h-full relative">
-          {mapContent}
-
-          {/* Mobile-only floating controls */}
-          <div className="md:hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="absolute top-4 left-3 right-3 safe-top z-10 space-y-2 max-w-[calc(100vw-1.5rem)]">
-              <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => navigate("/")}
-                  className="flex items-center gap-1.5 bg-card rounded-full shadow-lg px-3 py-1.5 text-xs font-medium text-primary"
-                >
-                  <LayoutList className="w-3.5 h-3.5" />
-                  List View
-                </button>
+          {/* Mobile list view */}
+          {isMobile && mobileView === "list" ? (
+            <div className="h-full flex flex-col bg-background">
+              <div className="p-3 border-b border-border shrink-0">
+                <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <VenueList
+                  activities={filteredActivities}
+                  isLoading={isLoading}
+                  selectedActivity={selectedActivity}
+                  onSelectActivity={handleMarkerClick}
+                  onNavigateToDetails={handleNavigateToDetails}
+                />
               </div>
             </div>
-          </div>
+          ) : (
+            <>
+              {mapContent}
+              {/* Mobile-only floating search */}
+              <div className="md:hidden" onClick={(e) => e.stopPropagation()}>
+                <div className="absolute top-4 left-3 right-3 safe-top z-10">
+                  <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
+                </div>
+              </div>
+              <MobileVenueCard
+                activity={selectedActivity}
+                onClose={() => setSelectedActivity(null)}
+                onNavigate={handleNavigateToDetails}
+              />
+            </>
+          )}
 
-          {/* Mobile venue card - replaces Popup on mobile */}
-          <MobileVenueCard
-            activity={selectedActivity}
-            onClose={() => setSelectedActivity(null)}
-            onNavigate={handleNavigateToDetails}
-          />
+          {/* Floating Map/List toggle button - mobile only */}
+          {isMobile && (
+            <button
+              onClick={() => {
+                triggerHaptic("medium");
+                setMobileView(mobileView === "map" ? "list" : "map");
+              }}
+              className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-full shadow-elevated font-semibold text-sm"
+            >
+              {mobileView === "map" ? (
+                <>
+                  <LayoutList className="w-4 h-4" />
+                  List
+                </>
+              ) : (
+                <>
+                  <MapIcon className="w-4 h-4" />
+                  Map
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </AppLayout>
