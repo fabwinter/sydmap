@@ -164,6 +164,26 @@ export default function Profile() {
     "Early Bird": "🌅",
   };
 
+  // Category sticker data from check-ins
+  const categoryStickers: Record<string, { emoji: string; bg: string }> = {
+    cafe: { emoji: "☕", bg: "bg-amber-50" },
+    restaurant: { emoji: "🍽️", bg: "bg-red-50" },
+    bar: { emoji: "🍺", bg: "bg-yellow-50" },
+    beach: { emoji: "🏖️", bg: "bg-blue-50" },
+    park: { emoji: "🌳", bg: "bg-green-50" },
+    museum: { emoji: "🏛️", bg: "bg-purple-50" },
+    shopping: { emoji: "🛍️", bg: "bg-pink-50" },
+    bakery: { emoji: "🧁", bg: "bg-orange-50" },
+    gym: { emoji: "💪", bg: "bg-slate-50" },
+  };
+
+  // Build category counts from check-ins
+  const categoryCounts = recentCheckIns.reduce((acc, ci) => {
+    const cat = ci.activities?.category?.toLowerCase() || "";
+    if (cat) acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -218,14 +238,19 @@ export default function Profile() {
               ))}
             </div>
           )}
+
+          {/* Coin count inspired by reference */}
+          <div className="flex items-center justify-center gap-1 mt-3">
+            <span className="text-lg">🪙</span>
+            <span className="font-bold text-foreground">{stats?.checkIns || 0}</span>
+          </div>
           
-          <div className="flex gap-3 mt-6">
-            <Button variant="outline" className="flex-1" onClick={() => setShowPremium(true)}>
-              <Award className="w-4 h-4 mr-2" />
-              {profile?.is_premium ? "Premium" : "Upgrade"}
+          <div className="flex gap-3 mt-4">
+            <Button variant="outline" className="flex-1" onClick={() => navigate("/settings")}>
+              Edit Profile
             </Button>
-            <Button variant="outline" size="icon" onClick={() => navigate("/settings")} title="Settings">
-              <Settings className="w-5 h-5" />
+            <Button variant="outline" size="icon" onClick={() => setShowPremium(true)} title="Premium">
+              <Award className="w-5 h-5" />
             </Button>
           </div>
         </div>
@@ -248,45 +273,113 @@ export default function Profile() {
           </TabsList>
           
           {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-4 mt-0">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold">Recent Check-Ins</h3>
-              {recentCheckIns.length > 0 && (
+          <TabsContent value="overview" className="space-y-6 mt-0">
+            {/* Lists Section */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-lg">Lists <span className="text-muted-foreground font-normal text-sm">{(playlists?.length || 0) + 1}</span></h3>
                 <button className="text-sm text-primary font-medium flex items-center gap-1">
                   See all
                   <ChevronRight className="w-4 h-4" />
                 </button>
-              )}
-            </div>
-            
-            {recentCheckIns.length > 0 ? (
-              <div className="grid grid-cols-3 gap-3">
-                {recentCheckIns.map((checkIn) => (
-                  <div key={checkIn.id} className="activity-card">
-                    <div className="relative aspect-square">
-                      <img
-                        src={checkIn.photo_url || checkIn.activities?.hero_image_url || "/placeholder.svg"}
-                        alt={checkIn.activities?.name || "Check-in"}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute bottom-2 left-2 right-2">
-                        <p className="text-white text-xs font-medium line-clamp-1">
-                          {checkIn.activities?.name || "Activity"}
-                        </p>
-                      </div>
-                    </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-muted/60 p-6 flex flex-col items-center justify-center min-h-[120px]">
+                  <Bookmark className="w-8 h-8 text-muted-foreground mb-2" />
+                  <p className="font-semibold text-sm">Saved places</p>
+                  <p className="text-xs text-muted-foreground">{savedItems?.length || 0} places</p>
+                </div>
+                {playlists?.slice(0, 1).map((playlist) => (
+                  <div key={playlist.id} className="rounded-2xl bg-amber-50 p-6 flex flex-col items-center justify-center min-h-[120px]">
+                    <span className="text-3xl mb-2">{playlist.emoji || "📍"}</span>
+                    <p className="font-semibold text-sm">{playlist.name}</p>
+                    <p className="text-xs text-muted-foreground">{playlist.item_count || 0} places</p>
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No check-ins yet</p>
-                <Button variant="link" className="mt-2 text-primary" onClick={() => navigate("/")}>
-                  Start exploring
-                </Button>
+            </div>
+
+            {/* Achievements / Category Stickers */}
+            <div>
+              <h3 className="font-bold text-lg mb-3">Achievements</h3>
+              <div className="bg-card rounded-2xl border border-border p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-semibold text-sm">Categories <span className="text-muted-foreground font-normal">{Object.keys(categoryCounts).length}/100</span></span>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                </div>
+                {Object.keys(categoryCounts).length > 0 ? (
+                  <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
+                    {Object.entries(categoryCounts).map(([cat, count]) => {
+                      const sticker = categoryStickers[cat] || { emoji: "📍", bg: "bg-muted" };
+                      return (
+                        <div key={cat} className="flex flex-col items-center shrink-0 min-w-[72px]">
+                          <div className={`w-16 h-16 rounded-2xl ${sticker.bg} flex items-center justify-center text-3xl shadow-sm`}>
+                            {sticker.emoji}
+                          </div>
+                          <p className="text-xs font-medium mt-1.5 text-center capitalize line-clamp-2">{cat}</p>
+                          <p className="text-[10px] text-muted-foreground">{count} Check-in{count !== 1 ? "s" : ""}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">Check in to unlock category stickers!</p>
+                )}
               </div>
-            )}
+
+              {/* Earned Badges */}
+              {badges.length > 0 && (
+                <div className="bg-card rounded-2xl border border-border p-4 mt-3">
+                  <span className="font-semibold text-sm">Badges <span className="text-muted-foreground font-normal">{badges.length}</span></span>
+                  <div className="flex gap-4 mt-3 overflow-x-auto scrollbar-hide pb-1">
+                    {badges.map((badge) => (
+                      <div key={badge.id} className="flex flex-col items-center shrink-0 min-w-[72px]">
+                        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl shadow-sm">
+                          {badgeEmojis[badge.badge_name] || "🏅"}
+                        </div>
+                        <p className="text-xs font-medium mt-1.5 text-center line-clamp-2">{badge.badge_name}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Check-Ins */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-lg">Recent Check-Ins</h3>
+              </div>
+              
+              {recentCheckIns.length > 0 ? (
+                <div className="grid grid-cols-3 gap-3">
+                  {recentCheckIns.slice(0, 6).map((checkIn) => (
+                    <Link key={checkIn.id} to={`/activity/${checkIn.activities?.id}`} className="activity-card">
+                      <div className="relative aspect-square">
+                        <img
+                          src={checkIn.photo_url || checkIn.activities?.hero_image_url || "/placeholder.svg"}
+                          alt={checkIn.activities?.name || "Check-in"}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute bottom-2 left-2 right-2">
+                          <p className="text-white text-xs font-medium line-clamp-1">
+                            {checkIn.activities?.name || "Activity"}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No check-ins yet</p>
+                  <Button variant="link" className="mt-2 text-primary" onClick={() => navigate("/")}>
+                    Start exploring
+                  </Button>
+                </div>
+              )}
+            </div>
           </TabsContent>
           
           {/* Check-Ins Tab */}

@@ -135,7 +135,7 @@ export default function MapView() {
 
   if (!MAPBOX_TOKEN) {
     return (
-      <AppLayout showHeader={false} fullHeight>
+      <AppLayout fullHeight>
         <div className="h-full flex items-center justify-center bg-muted">
           <div className="text-center space-y-4 p-6">
             <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto">
@@ -245,7 +245,7 @@ export default function MapView() {
   );
 
   return (
-    <AppLayout showHeader={false} fullHeight>
+      <AppLayout fullHeight>
       <div className="flex h-screen overflow-hidden">
         {/* LEFT COLUMN: SCROLLABLE LIST - Hidden on mobile, visible on desktop */}
         <div className="hidden md:flex flex-col w-[400px] border-r border-border bg-background h-full">
