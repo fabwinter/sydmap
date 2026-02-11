@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, MapPin, ChevronDown } from "lucide-react";
 import { Button } from "./button";
+import { triggerHaptic } from "@/lib/haptics";
 
 interface HeroSlideshowProps {
   images: string[];
@@ -97,7 +98,7 @@ export function HeroSlideshow({
           >
             <Button 
               size="lg"
-              onClick={onCtaClick}
+              onClick={() => { triggerHaptic("medium"); onCtaClick?.(); }}
               className="bg-white text-foreground hover:bg-white/90 font-semibold px-8 py-6 text-base rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
             >
               <MapPin className="w-5 h-5 mr-2 text-primary" />
