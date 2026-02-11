@@ -116,9 +116,9 @@ export function VenueList({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="flex gap-3">
-                    {/* Thumbnail */}
-                    <div className="w-16 h-16 rounded-lg bg-muted overflow-hidden shrink-0">
+                  <div className="flex gap-4">
+                    {/* Thumbnail - larger */}
+                    <div className="w-28 h-28 rounded-xl bg-muted overflow-hidden shrink-0">
                       {activity.hero_image_url ? (
                         <img
                           src={activity.hero_image_url}
@@ -127,14 +127,14 @@ export function VenueList({
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <MapPin className="w-6 h-6 text-muted-foreground" />
+                          <MapPin className="w-8 h-8 text-muted-foreground" />
                         </div>
                       )}
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                    <div className="flex-1 min-w-0 py-1">
+                      <div className="flex items-center gap-2 mb-1.5">
                         <span
                           className={cn(
                             "px-2 py-0.5 rounded-full text-xs text-white",
@@ -153,12 +153,12 @@ export function VenueList({
                           </span>
                         )}
                       </div>
-                      <h3 className="font-semibold text-foreground truncate">
+                      <h3 className="font-semibold text-foreground text-base truncate">
                         {activity.name}
                       </h3>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1.5">
                         <div className="flex items-center gap-1">
-                          <Star className="w-3 h-3 fill-warning text-warning" />
+                          <Star className="w-3.5 h-3.5 fill-warning text-warning" />
                           <span>{activity.rating?.toFixed(1) || "N/A"}</span>
                         </div>
                         <span>•</span>
