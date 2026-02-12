@@ -322,7 +322,7 @@ export default function MapView() {
                 triggerHaptic("medium");
                 setMobileView(mobileView === "map" ? "list" : "map");
               }}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-elevated font-semibold text-sm"
+              className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-elevated font-semibold text-sm"
             >
               {mobileView === "map" ? (
                 <>
