@@ -327,6 +327,34 @@ export default function Profile() {
                 )}
               </div>
 
+              {/* Stickers - unlocked per check-in */}
+              <div className="bg-card rounded-2xl border border-border p-4 mt-3">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-semibold text-sm">Stickers <span className="text-muted-foreground font-normal">{recentCheckIns.length}</span></span>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                </div>
+                {recentCheckIns.length > 0 ? (
+                  <div className="flex flex-wrap gap-3">
+                    {recentCheckIns.slice(0, 8).map((ci) => {
+                      const cat = ci.activities?.category?.toLowerCase() || "";
+                      const sticker = categoryStickers[cat] || { emoji: "📍", bg: "bg-muted" };
+                      return (
+                        <div key={ci.id} className={`w-14 h-14 rounded-2xl ${sticker.bg} flex items-center justify-center text-2xl shadow-sm`}>
+                          {sticker.emoji}
+                        </div>
+                      );
+                    })}
+                    {recentCheckIns.length > 8 && (
+                      <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground">
+                        +{recentCheckIns.length - 8}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-3">Check in to earn stickers!</p>
+                )}
+              </div>
+
               {/* Earned Badges */}
               {badges.length > 0 && (
                 <div className="bg-card rounded-2xl border border-border p-4 mt-3">
