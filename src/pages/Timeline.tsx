@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Map, Clock, Star, MapPin, Filter, CalendarDays, X } from "lucide-react";
+import { Search, Map, Clock, Star, MapPin, Filter, CalendarDays, X, LayoutList } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCheckInTimeline } from "@/hooks/useCheckInTimeline";
 import { useAuth } from "@/hooks/useAuth";
+import { TimelineMap } from "@/components/timeline/TimelineMap";
 import {
   Select,
   SelectContent,
@@ -51,6 +52,7 @@ export default function Timeline() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [view, setView] = useState<"list" | "map">("list");
 
   const { data: groupedCheckIns, isLoading } = useCheckInTimeline(search, category);
 
@@ -90,10 +92,13 @@ export default function Timeline() {
             variant="outline"
             size="sm"
             className="gap-2"
-            onClick={() => navigate("/map")}
+            onClick={() => setView(view === "list" ? "map" : "list")}
           >
-            <Map className="w-4 h-4" />
-            Map
+            {view === "list" ? (
+              <><Map className="w-4 h-4" /> Map</>
+            ) : (
+              <><LayoutList className="w-4 h-4" /> List</>
+            )}
           </Button>
         </div>
 
@@ -165,7 +170,11 @@ export default function Timeline() {
           </div>
         </div>
 
-        {/* Timeline List */}
+        {view === "map" ? (
+          <div className="h-[60vh]">
+            <TimelineMap groups={filteredGroups || []} />
+          </div>
+        ) : (
         <div className="space-y-6 pb-4">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
@@ -270,6 +279,7 @@ export default function Timeline() {
             </div>
           )}
         </div>
+        )}
       </div>
     </AppLayout>
   );
