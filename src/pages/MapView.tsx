@@ -280,39 +280,54 @@ export default function MapView() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: MAP or LIST (mobile toggle) */}
+        {/* RIGHT COLUMN: MAP with sliding list overlay */}
         <div className="flex-1 h-full relative">
-          {/* Mobile list view */}
-          {isMobile && mobileView === "list" ? (
-            <div className="h-full flex flex-col bg-background">
-              <div className="p-3 border-b border-border shrink-0 safe-top">
-                <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
-              </div>
-              <div className="flex-1 overflow-y-auto pb-20">
-                <VenueList
-                  activities={filteredActivities}
-                  isLoading={isLoading}
-                  selectedActivity={selectedActivity}
-                  onSelectActivity={handleMarkerClick}
-                  onNavigateToDetails={handleNavigateToDetails}
-                />
-              </div>
+          {/* Map is always rendered */}
+          {mapContent}
+
+          {/* Mobile-only floating search */}
+          <div className="md:hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute top-4 left-3 right-3 safe-top z-10">
+              <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
             </div>
-          ) : (
-            <>
-              {mapContent}
-              {/* Mobile-only floating search */}
-              <div className="md:hidden" onClick={(e) => e.stopPropagation()}>
-                <div className="absolute top-4 left-3 right-3 safe-top z-10">
-                  <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
-                </div>
-              </div>
-              <MobileVenueCard
-                activity={selectedActivity}
-                onClose={() => setSelectedActivity(null)}
-                onNavigate={handleNavigateToDetails}
-              />
-            </>
+          </div>
+
+          {/* Mobile venue card (shown when marker tapped in map mode) */}
+          {mobileView === "map" && (
+            <MobileVenueCard
+              activity={selectedActivity}
+              onClose={() => setSelectedActivity(null)}
+              onNavigate={handleNavigateToDetails}
+            />
+          )}
+
+          {/* Sliding list overlay - rolls up from bottom over the map */}
+          {isMobile && (
+            <AnimatePresence>
+              {mobileView === "list" && (
+                <motion.div
+                  initial={{ y: "100%" }}
+                  animate={{ y: 0 }}
+                  exit={{ y: "100%" }}
+                  transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                  className="absolute inset-x-0 bottom-0 top-24 z-10 bg-background/95 backdrop-blur-sm rounded-t-2xl shadow-elevated flex flex-col"
+                >
+                  {/* Drag handle */}
+                  <div className="flex justify-center py-2 shrink-0">
+                    <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+                  </div>
+                  <div className="flex-1 overflow-y-auto pb-20">
+                    <VenueList
+                      activities={filteredActivities}
+                      isLoading={isLoading}
+                      selectedActivity={selectedActivity}
+                      onSelectActivity={handleMarkerClick}
+                      onNavigateToDetails={handleNavigateToDetails}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           )}
 
           {/* Floating Map/List toggle button - mobile only */}
