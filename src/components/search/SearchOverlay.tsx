@@ -238,7 +238,7 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
               className={`${wrapperClass} overflow-hidden -mt-3 pt-4 relative z-[30] rounded-t-none border-t-0`}
               style={{ originY: 0 }}
             >
-              <div className="px-4 pb-4 max-h-[60vh] overflow-y-auto overscroll-contain">
+              <div className="px-4 pb-4 max-h-[70dvh] overflow-y-auto overscroll-contain">
                 {/* Predictions */}
                 {(predictions.length > 0 || matchedSuggestions.length > 0) && localQuery.length >= 1 && (
                   <div className="mb-4 space-y-1">
