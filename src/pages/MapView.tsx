@@ -283,8 +283,8 @@ export default function MapView() {
         {/* RIGHT COLUMN: MAP with sliding list overlay */}
         <div className="flex-1 h-full relative flex flex-col">
           {/* Fixed search bar - mobile only */}
-          <div className="md:hidden shrink-0 z-30 bg-background/90 backdrop-blur-sm px-3 py-2 safe-top fixed top-0 left-0 right-0 touch-none pointer-events-auto" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>
-            <div className="pointer-events-auto touch-auto">
+          <div className="md:hidden shrink-0 z-30 bg-background/90 backdrop-blur-sm px-3 py-2 safe-top fixed top-0 left-0 right-0 pointer-events-auto" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>
+            <div className="pointer-events-auto">
               <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
             </div>
           </div>
