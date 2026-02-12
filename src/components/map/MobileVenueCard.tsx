@@ -86,7 +86,7 @@ export function MobileVenueCard({ activity, onClose, onNavigate }: MobileVenueCa
             className="w-full mt-3"
             onClick={() => onNavigate(activity)}
           >
-            View Details
+            View Venue
           </Button>
         </motion.div>
       )}
