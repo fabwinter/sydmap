@@ -283,9 +283,14 @@ export default function MapView() {
         {/* RIGHT COLUMN: MAP with sliding list overlay */}
         <div className="flex-1 h-full relative flex flex-col">
           {/* Fixed search bar - mobile only */}
-          <div className="md:hidden shrink-0 z-20 bg-background/90 backdrop-blur-sm px-3 py-2 safe-top" onClick={(e) => e.stopPropagation()}>
-            <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
+          <div className="md:hidden shrink-0 z-30 bg-background/90 backdrop-blur-sm px-3 py-2 safe-top fixed top-0 left-0 right-0 touch-none pointer-events-auto" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>
+            <div className="pointer-events-auto touch-auto">
+              <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
+            </div>
           </div>
+
+          {/* Spacer for fixed search bar on mobile */}
+          <div className="md:hidden shrink-0 h-[88px]" />
 
           {/* Map + overlays container */}
           <div className="flex-1 relative min-h-0">
@@ -328,30 +333,31 @@ export default function MapView() {
                 )}
               </AnimatePresence>
             )}
-
-            {/* Floating Map/List toggle button - mobile only */}
-            {isMobile && (
-              <button
-                onClick={() => {
-                  triggerHaptic("medium");
-                  setMobileView(mobileView === "map" ? "list" : "map");
-                }}
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-elevated font-semibold text-sm"
-              >
-                {mobileView === "map" ? (
-                  <>
-                    <LayoutList className="w-4 h-4" />
-                    List
-                  </>
-                ) : (
-                  <>
-                    <MapIcon className="w-4 h-4" />
-                    Map
-                  </>
-                )}
-              </button>
-            )}
           </div>
+
+          {/* Fixed Map/List toggle button - mobile only, above bottom nav */}
+          {isMobile && (
+            <button
+              onClick={() => {
+                triggerHaptic("medium");
+                setMobileView(mobileView === "map" ? "list" : "map");
+              }}
+              className="fixed bottom-16 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-elevated font-semibold text-sm touch-none"
+              style={{ userSelect: 'none', WebkitUserSelect: 'none', marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
+            >
+              {mobileView === "map" ? (
+                <>
+                  <LayoutList className="w-4 h-4" />
+                  List
+                </>
+              ) : (
+                <>
+                  <MapIcon className="w-4 h-4" />
+                  Map
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </AppLayout>
