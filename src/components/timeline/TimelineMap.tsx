@@ -143,7 +143,7 @@ export function TimelineMap({ groups }: TimelineMapProps) {
               </div>
               <p className="text-xs text-muted-foreground mt-1">{selected.visitCount} visit{selected.visitCount > 1 ? "s" : ""}</p>
               <Button size="sm" className="w-full mt-2" onClick={() => navigate(`/activity/${selected.activityId}`)}>
-                View Details
+                View Venue
               </Button>
             </div>
           </Popup>

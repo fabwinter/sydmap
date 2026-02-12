@@ -112,7 +112,7 @@ export function VenueList({
                       ? "border-primary shadow-md"
                       : "border-transparent hover:border-border hover:shadow-sm"
                   )}
-                  onClick={() => onSelectActivity(activity)}
+                  onClick={() => onNavigateToDetails(activity)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -166,28 +166,6 @@ export function VenueList({
                       </div>
                     </div>
                   </div>
-
-                  <AnimatePresence>
-                    {isSelected && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <Button
-                          size="sm"
-                          className="w-full mt-3"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onNavigateToDetails(activity);
-                          }}
-                        >
-                          View Details
-                        </Button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </motion.div>
               );
             })}

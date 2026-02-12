@@ -12,11 +12,13 @@ import {
   Accessibility,
   Star,
   ChevronRight,
+  ChevronLeft,
   Check,
   PawPrint,
   UtensilsCrossed,
   CalendarCheck,
   ListPlus,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,10 +29,10 @@ import { LocationMap } from "@/components/activity/LocationMap";
 import { useActivityById } from "@/hooks/useActivities";
 import { useActivityReviews, useActivityPhotos } from "@/hooks/useReviews";
 import { useIsActivitySaved, useToggleSavedItem } from "@/hooks/useSavedItems";
-import { useLastCheckIn } from "@/hooks/useLastCheckIn";
+import { useActivityCheckIns } from "@/hooks/useActivityCheckIns";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
 
 export default function ActivityDetails() {
   const { id } = useParams();
@@ -38,13 +40,17 @@ export default function ActivityDetails() {
   const { user } = useAuth();
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [visitIndex, setVisitIndex] = useState(0);
 
   const { data: activity, isLoading: activityLoading, error } = useActivityById(id || "");
   const { data: reviews, isLoading: reviewsLoading } = useActivityReviews(id || "");
   const { data: photos } = useActivityPhotos(id || "");
   const { data: isSaved } = useIsActivitySaved(id || "");
-  const { data: lastCheckIn } = useLastCheckIn(id || "");
+  const { data: checkIns } = useActivityCheckIns(id || "");
   const toggleSaved = useToggleSavedItem();
+
+  const visitCount = checkIns?.length || 0;
+  const currentVisit = checkIns?.[visitIndex] || null;
 
   const handleToggleSave = () => {
     if (!user) {
@@ -93,7 +99,6 @@ export default function ActivityDetails() {
     );
   }
 
-  // Combine hero image with photos
   const allPhotos = [
     activity.hero_image_url || "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&h=500&fit=crop",
     ...(photos?.map(p => p.photo_url) || []),
@@ -111,22 +116,14 @@ export default function ActivityDetails() {
     <div className="min-h-screen bg-background pb-24">
       {/* Hero Image */}
       <div className="relative h-72 sm:h-80">
-        <img
-          src={allPhotos[0]}
-          alt={activity.name}
-          className="w-full h-full object-cover"
-        />
+        <img src={allPhotos[0]} alt={activity.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        
-        {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
           className="absolute top-4 left-4 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        
-        {/* Category Badge */}
         <div className="absolute bottom-4 left-4">
           <span className="status-badge open">{activity.category}</span>
           <h1 className="text-2xl font-bold text-white mt-2">{activity.name}</h1>
@@ -150,40 +147,83 @@ export default function ActivityDetails() {
         
         {/* Quick Info */}
         <div className="grid grid-cols-3 gap-3">
-          <InfoCard
-            icon={MapPin}
-            title={activity.address?.split(",")[0] || "Sydney"}
-            subtitle={activity.address || "Sydney, NSW"}
-          />
-          <InfoCard
-            icon={Clock}
-            title={activity.is_open ? "Open Now" : "Closed"}
-            subtitle={activity.hours_close ? `Closes at ${activity.hours_close}` : "Hours vary"}
-            highlight={activity.is_open}
-          />
-          {activity.phone && (
-            <InfoCard
-              icon={Phone}
-              title="Call"
-              subtitle={activity.phone}
-            />
-          )}
-          {activity.website && (
-            <InfoCard
-              icon={Globe}
-              title="Website"
-              subtitle={activity.website}
-            />
-          )}
+          <InfoCard icon={MapPin} title={activity.address?.split(",")[0] || "Sydney"} subtitle={activity.address || "Sydney, NSW"} />
+          <InfoCard icon={Clock} title={activity.is_open ? "Open Now" : "Closed"} subtitle={activity.hours_close ? `Closes at ${activity.hours_close}` : "Hours vary"} highlight={activity.is_open} />
+          {activity.phone && <InfoCard icon={Phone} title="Call" subtitle={activity.phone} />}
+          {activity.website && <InfoCard icon={Globe} title="Website" subtitle={activity.website} />}
         </div>
+
+        {/* Check-in History */}
+        {visitCount > 0 && (
+          <section className="bg-card rounded-xl border border-border p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold text-sm flex items-center gap-2">
+                <CalendarCheck className="w-4 h-4 text-primary" />
+                Your Visits ({visitCount})
+              </h2>
+              <Button size="sm" variant="outline" onClick={handleCheckIn} className="text-xs gap-1">
+                <Check className="w-3 h-3" /> Check-In Again
+              </Button>
+            </div>
+
+            {/* Visit navigator */}
+            {visitCount > 1 && (
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <button
+                  onClick={() => setVisitIndex(Math.min(visitIndex + 1, visitCount - 1))}
+                  disabled={visitIndex >= visitCount - 1}
+                  className="p-1 rounded-full hover:bg-muted disabled:opacity-30"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-xs text-muted-foreground font-medium">
+                  Visit {visitCount - visitIndex} of {visitCount}
+                </span>
+                <button
+                  onClick={() => setVisitIndex(Math.max(visitIndex - 1, 0))}
+                  disabled={visitIndex <= 0}
+                  className="p-1 rounded-full hover:bg-muted disabled:opacity-30"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {currentVisit && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {format(new Date(currentVisit.created_at), "EEE d MMM yyyy, h:mm a")}
+                  </span>
+                  <div className="flex items-center gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-3.5 h-3.5 ${i < currentVisit.rating ? "fill-warning text-warning" : "text-muted"}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                {currentVisit.comment && (
+                  <p className="text-sm text-muted-foreground italic">"{currentVisit.comment}"</p>
+                )}
+                {currentVisit.photo_url && (
+                  <img
+                    src={currentVisit.photo_url}
+                    alt="Check-in photo"
+                    className="w-full h-32 rounded-lg object-cover"
+                  />
+                )}
+              </div>
+            )}
+          </section>
+        )}
         
         {/* About */}
         {activity.description && (
           <section>
             <h2 className="section-header">About</h2>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              {activity.description}
-            </p>
+            <p className="text-muted-foreground text-sm leading-relaxed">{activity.description}</p>
           </section>
         )}
         
@@ -192,17 +232,8 @@ export default function ActivityDetails() {
           <h2 className="section-header">Amenities</h2>
           <div className="flex gap-4 flex-wrap">
             {amenities.map(({ icon: Icon, label, available }) => (
-              <div
-                key={label}
-                className={`flex flex-col items-center gap-1 ${
-                  available ? "text-foreground" : "text-muted-foreground/50"
-                }`}
-              >
-                <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                    available ? "bg-primary/10" : "bg-muted"
-                  }`}
-                >
+              <div key={label} className={`flex flex-col items-center gap-1 ${available ? "text-foreground" : "text-muted-foreground/50"}`}>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${available ? "bg-primary/10" : "bg-muted"}`}>
                   <Icon className="w-5 h-5" />
                 </div>
                 <span className="text-xs">{label}</span>
@@ -217,18 +248,12 @@ export default function ActivityDetails() {
             <div className="flex items-center justify-between mb-3">
               <h2 className="section-header mb-0">Photos</h2>
               <button className="text-sm text-primary font-medium flex items-center gap-1">
-                See all
-                <ChevronRight className="w-4 h-4" />
+                See all <ChevronRight className="w-4 h-4" />
               </button>
             </div>
             <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4">
               {allPhotos.map((photo, i) => (
-                <img
-                  key={i}
-                  src={photo}
-                  alt={`${activity.name} ${i + 1}`}
-                  className="w-32 h-24 rounded-xl object-cover shrink-0"
-                />
+                <img key={i} src={photo} alt={`${activity.name} ${i + 1}`} className="w-32 h-24 rounded-xl object-cover shrink-0" />
               ))}
             </div>
           </section>
@@ -237,11 +262,7 @@ export default function ActivityDetails() {
         {/* Location Map */}
         <section>
           <h2 className="section-header">Location</h2>
-          <LocationMap
-            latitude={activity.latitude}
-            longitude={activity.longitude}
-            name={activity.name}
-          />
+          <LocationMap latitude={activity.latitude} longitude={activity.longitude} name={activity.name} />
         </section>
         
         {/* Reviews */}
@@ -249,8 +270,7 @@ export default function ActivityDetails() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="section-header mb-0">Reviews</h2>
             <button className="text-sm text-primary font-medium flex items-center gap-1">
-              View all
-              <ChevronRight className="w-4 h-4" />
+              View all <ChevronRight className="w-4 h-4" />
             </button>
           </div>
           <div className="space-y-4">
@@ -271,19 +291,12 @@ export default function ActivityDetails() {
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-sm">{review.profiles?.name || "Anonymous"}</span>
                         <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
+                          {format(new Date(review.created_at), "d MMM yyyy")}
                         </span>
                       </div>
                       <div className="flex items-center gap-0.5 mt-0.5">
                         {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-3 h-3 ${
-                              i < review.rating
-                                ? "fill-warning text-warning"
-                                : "text-muted"
-                            }`}
-                          />
+                          <Star key={i} className={`w-3 h-3 ${i < review.rating ? "fill-warning text-warning" : "text-muted"}`} />
                         ))}
                       </div>
                       {review.review_text && (
@@ -305,24 +318,14 @@ export default function ActivityDetails() {
       {/* Sticky Bottom Actions */}
       <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 safe-bottom">
         <div className="flex gap-3 max-w-2xl mx-auto">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleToggleSave}
-            className="shrink-0"
-            disabled={toggleSaved.isPending}
-          >
+          <Button variant="outline" size="icon" onClick={handleToggleSave} className="shrink-0" disabled={toggleSaved.isPending}>
             <Heart className={`w-5 h-5 ${isSaved ? "fill-destructive text-destructive" : ""}`} />
           </Button>
           <Button
             variant="outline"
             size="icon"
             onClick={() => {
-              if (!user) {
-                toast.error("Please sign in to save to playlists");
-                navigate("/login");
-                return;
-              }
+              if (!user) { toast.error("Please sign in to save to playlists"); navigate("/login"); return; }
               setShowPlaylistModal(true);
             }}
             className="shrink-0"
@@ -330,58 +333,24 @@ export default function ActivityDetails() {
             <ListPlus className="w-5 h-5" />
           </Button>
           <ShareMenu activityName={activity.name} activityId={id!} />
-          {lastCheckIn ? (
-            <Button
-              className="flex-1"
-              variant="outline"
-              disabled
-            >
-              <CalendarCheck className="w-5 h-5 mr-2 text-primary" />
-              <span className="text-sm truncate">
-                Checked-in {format(new Date(lastCheckIn.created_at), "EEE d MMM, h:mm a")}
-              </span>
-            </Button>
-          ) : (
-            <Button
-              className="flex-1 bg-primary hover:bg-primary/90"
-              onClick={handleCheckIn}
-            >
-              <Check className="w-5 h-5 mr-2" />
-              Check-In
-            </Button>
-          )}
+          <Button className="flex-1 bg-primary hover:bg-primary/90" onClick={handleCheckIn}>
+            <Check className="w-5 h-5 mr-2" />
+            {visitCount > 0 ? `Check-In Again (${visitCount})` : "Check-In"}
+          </Button>
         </div>
       </div>
       
       {showCheckIn && (
-        <CheckInModal
-          activityId={id!}
-          activityName={activity.name}
-          onClose={() => setShowCheckIn(false)}
-        />
+        <CheckInModal activityId={id!} activityName={activity.name} onClose={() => setShowCheckIn(false)} />
       )}
       {showPlaylistModal && (
-        <AddToPlaylistModal
-          activityId={id!}
-          activityName={activity.name}
-          onClose={() => setShowPlaylistModal(false)}
-        />
+        <AddToPlaylistModal activityId={id!} activityName={activity.name} onClose={() => setShowPlaylistModal(false)} />
       )}
     </div>
   );
 }
 
-function InfoCard({
-  icon: Icon,
-  title,
-  subtitle,
-  highlight,
-}: {
-  icon: any;
-  title: string;
-  subtitle: string;
-  highlight?: boolean;
-}) {
+function InfoCard({ icon: Icon, title, subtitle, highlight }: { icon: any; title: string; subtitle: string; highlight?: boolean }) {
   return (
     <div className="min-w-0 bg-card rounded-xl p-3 border border-border">
       <Icon className={`w-5 h-5 mb-2 ${highlight ? "text-success" : "text-primary"}`} />
