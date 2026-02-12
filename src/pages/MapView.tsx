@@ -248,7 +248,7 @@ export default function MapView() {
 
   return (
       <AppLayout fullHeight>
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-[100dvh] overflow-hidden">
         {/* LEFT COLUMN: SCROLLABLE LIST - Hidden on mobile, visible on desktop */}
         <div className="hidden md:flex flex-col w-[400px] border-r border-border bg-background h-full">
           {/* Header with view switch */}
@@ -281,77 +281,77 @@ export default function MapView() {
         </div>
 
         {/* RIGHT COLUMN: MAP with sliding list overlay */}
-        <div className="flex-1 h-full relative">
-          {/* Map is always rendered */}
-          {mapContent}
-
-          {/* Mobile-only floating search */}
-          <div className="md:hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="absolute top-4 left-3 right-3 safe-top z-10">
-              <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
-            </div>
+        <div className="flex-1 h-full relative flex flex-col">
+          {/* Fixed search bar - mobile only */}
+          <div className="md:hidden shrink-0 z-20 bg-background/90 backdrop-blur-sm px-3 py-2 safe-top" onClick={(e) => e.stopPropagation()}>
+            <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
           </div>
 
-          {/* Mobile venue card (shown when marker tapped in map mode) */}
-          {mobileView === "map" && (
-            <MobileVenueCard
-              activity={selectedActivity}
-              onClose={() => setSelectedActivity(null)}
-              onNavigate={handleNavigateToDetails}
-            />
-          )}
+          {/* Map + overlays container */}
+          <div className="flex-1 relative min-h-0">
+            {mapContent}
 
-          {/* Sliding list overlay - rolls up from bottom over the map */}
-          {isMobile && (
-            <AnimatePresence>
-              {mobileView === "list" && (
-                <motion.div
-                  initial={{ y: "100%" }}
-                  animate={{ y: 0 }}
-                  exit={{ y: "100%" }}
-                  transition={{ type: "spring", damping: 28, stiffness: 300 }}
-                  className="absolute inset-x-0 bottom-0 top-24 z-10 bg-background/95 backdrop-blur-sm rounded-t-2xl shadow-elevated flex flex-col"
-                >
-                  {/* Drag handle */}
-                  <div className="flex justify-center py-2 shrink-0">
-                    <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
-                  </div>
-                  <div className="flex-1 overflow-y-auto pb-20">
-                    <VenueList
-                      activities={filteredActivities}
-                      isLoading={isLoading}
-                      selectedActivity={selectedActivity}
-                      onSelectActivity={handleMarkerClick}
-                      onNavigateToDetails={handleNavigateToDetails}
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          )}
+            {/* Mobile venue card (shown when marker tapped in map mode) */}
+            {mobileView === "map" && (
+              <MobileVenueCard
+                activity={selectedActivity}
+                onClose={() => setSelectedActivity(null)}
+                onNavigate={handleNavigateToDetails}
+              />
+            )}
 
-          {/* Floating Map/List toggle button - mobile only */}
-          {isMobile && (
-            <button
-              onClick={() => {
-                triggerHaptic("medium");
-                setMobileView(mobileView === "map" ? "list" : "map");
-              }}
-              className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-elevated font-semibold text-sm"
-            >
-              {mobileView === "map" ? (
-                <>
-                  <LayoutList className="w-4 h-4" />
-                  List
-                </>
-              ) : (
-                <>
-                  <MapIcon className="w-4 h-4" />
-                  Map
-                </>
-              )}
-            </button>
-          )}
+            {/* Sliding list overlay - rolls up from bottom over the map */}
+            {isMobile && (
+              <AnimatePresence>
+                {mobileView === "list" && (
+                  <motion.div
+                    initial={{ y: "100%" }}
+                    animate={{ y: 0 }}
+                    exit={{ y: "100%" }}
+                    transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                    className="absolute inset-x-0 bottom-0 top-0 z-10 bg-background/95 backdrop-blur-sm rounded-t-2xl shadow-elevated flex flex-col"
+                  >
+                    {/* Drag handle */}
+                    <div className="flex justify-center py-2 shrink-0">
+                      <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+                    </div>
+                    <div className="flex-1 overflow-y-auto pb-20">
+                      <VenueList
+                        activities={filteredActivities}
+                        isLoading={isLoading}
+                        selectedActivity={selectedActivity}
+                        onSelectActivity={handleMarkerClick}
+                        onNavigateToDetails={handleNavigateToDetails}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )}
+
+            {/* Floating Map/List toggle button - mobile only */}
+            {isMobile && (
+              <button
+                onClick={() => {
+                  triggerHaptic("medium");
+                  setMobileView(mobileView === "map" ? "list" : "map");
+                }}
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full shadow-elevated font-semibold text-sm"
+              >
+                {mobileView === "map" ? (
+                  <>
+                    <LayoutList className="w-4 h-4" />
+                    List
+                  </>
+                ) : (
+                  <>
+                    <MapIcon className="w-4 h-4" />
+                    Map
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </AppLayout>
