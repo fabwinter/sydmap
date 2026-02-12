@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { Share2, Mail, MessageSquare, Link, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -9,7 +9,7 @@ interface ShareMenuProps {
   activityId: string;
 }
 
-export function ShareMenu({ activityName, activityId }: ShareMenuProps) {
+export const ShareMenu = forwardRef<HTMLDivElement, ShareMenuProps>(function ShareMenu({ activityName, activityId }, ref) {
   const [isOpen, setIsOpen] = useState(false);
 
   const shareUrl = `${window.location.origin}/activity/${activityId}`;
@@ -94,4 +94,4 @@ export function ShareMenu({ activityName, activityId }: ShareMenuProps) {
       </AnimatePresence>
     </div>
   );
-}
+});
