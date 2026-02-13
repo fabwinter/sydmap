@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { X, Star, Camera, ImagePlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -17,16 +17,38 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
-  const [photo, setPhoto] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [shareWithFriends, setShareWithFriends] = useState(true);
   const [addToPublic, setAddToPublic] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Please select a photo under 5MB", variant: "destructive" });
+      return;
+    }
+    setPhotoFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setPhotoPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const removePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+  };
 
   const checkInMutation = useMutation({
     mutationFn: async () => {
-      // Get profile id first
       const { data: profile } = await supabase
         .from("profiles")
         .select("id")
@@ -35,14 +57,33 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
 
       if (!profile) throw new Error("Profile not found");
 
+      let photoUrl: string | null = null;
+
+      // Upload photo if selected
+      if (photoFile) {
+        const ext = photoFile.name.split(".").pop() || "jpg";
+        const path = `${profile.id}/${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("check-in-photos")
+          .upload(path, photoFile, { contentType: photoFile.type });
+
+        if (uploadError) throw new Error("Photo upload failed: " + uploadError.message);
+
+        const { data: urlData } = supabase.storage
+          .from("check-in-photos")
+          .getPublicUrl(path);
+
+        photoUrl = urlData.publicUrl;
+      }
+
       const { error } = await supabase
         .from("check_ins")
         .insert({
           user_id: profile.id,
           activity_id: activityId,
           rating,
-          comment: comment || null,
-          photo_url: photo || null,
+          comment: comment.trim() || null,
+          photo_url: photoUrl,
           share_with_friends: shareWithFriends,
           add_to_public_feed: addToPublic,
         });
@@ -72,7 +113,7 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
       } else {
         toast({
           title: "Check-in failed",
-          description: "Please try again",
+          description: error.message || "Please try again",
           variant: "destructive",
         });
       }
@@ -88,7 +129,6 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
       });
       return;
     }
-    
     checkInMutation.mutate();
   };
 
@@ -96,21 +136,18 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end">
       <div className="w-full bg-card rounded-t-3xl slide-up max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-card border-b border-border px-4 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-card border-b border-border px-4 py-4 flex items-center justify-between z-10">
           <h2 className="text-lg font-bold">Check-In</h2>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-muted transition-colors"
-          >
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-muted transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
-        
+
         <div className="p-4 space-y-6">
           <p className="text-center text-muted-foreground">
             Share your experience at <span className="font-semibold text-foreground">{activityName}</span>
           </p>
-          
+
           {/* Rating */}
           <div className="text-center space-y-2">
             <p className="text-sm font-medium">How was it?</p>
@@ -134,19 +171,30 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
               ))}
             </div>
           </div>
-          
+
           {/* Photo Upload */}
           <div className="space-y-2">
             <p className="text-sm font-medium">Add a photo</p>
-            {photo ? (
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            {photoPreview ? (
               <div className="relative w-full aspect-video rounded-xl overflow-hidden">
-                <img
-                  src={photo}
-                  alt="Check-in photo"
-                  className="w-full h-full object-cover"
-                />
+                <img src={photoPreview} alt="Check-in photo" className="w-full h-full object-cover" />
                 <button
-                  onClick={() => setPhoto(null)}
+                  onClick={removePhoto}
                   className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
                 >
                   <X className="w-4 h-4" />
@@ -155,14 +203,14 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
             ) : (
               <div className="flex gap-3">
                 <button
-                  onClick={() => setPhoto("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=500&fit=crop")}
+                  onClick={() => cameraInputRef.current?.click()}
                   className="flex-1 flex items-center justify-center gap-2 py-4 border-2 border-dashed border-border rounded-xl hover:border-primary hover:bg-primary/5 transition-colors"
                 >
                   <Camera className="w-5 h-5 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Take photo</span>
                 </button>
                 <button
-                  onClick={() => setPhoto("https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&h=500&fit=crop")}
+                  onClick={() => fileInputRef.current?.click()}
                   className="flex-1 flex items-center justify-center gap-2 py-4 border-2 border-dashed border-border rounded-xl hover:border-primary hover:bg-primary/5 transition-colors"
                 >
                   <ImagePlus className="w-5 h-5 text-muted-foreground" />
@@ -171,7 +219,7 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
               </div>
             )}
           </div>
-          
+
           {/* Comment */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -186,7 +234,7 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
               className="w-full bg-muted rounded-xl px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
             />
           </div>
-          
+
           {/* Visibility */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -194,24 +242,18 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
                 <p className="text-sm font-medium">Share with friends</p>
                 <p className="text-xs text-muted-foreground">Your friends will see this check-in</p>
               </div>
-              <Switch
-                checked={shareWithFriends}
-                onCheckedChange={setShareWithFriends}
-              />
+              <Switch checked={shareWithFriends} onCheckedChange={setShareWithFriends} />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">Add to public feed</p>
                 <p className="text-xs text-muted-foreground">Everyone can see this review</p>
               </div>
-              <Switch
-                checked={addToPublic}
-                onCheckedChange={setAddToPublic}
-              />
+              <Switch checked={addToPublic} onCheckedChange={setAddToPublic} />
             </div>
           </div>
         </div>
-        
+
         {/* Actions */}
         <div className="sticky bottom-0 bg-card border-t border-border p-4 safe-bottom">
           <div className="flex gap-3">
