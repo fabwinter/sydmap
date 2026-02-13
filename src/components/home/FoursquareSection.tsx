@@ -69,10 +69,7 @@ export function FoursquareSection() {
 
   // Only show when there's an active search query
   if (!filters.query || filters.query.length < 2) return null;
-  if (error) {
-    console.error("Foursquare error:", error);
-    return null;
-  }
+  if (error || (venues && venues.length === 0)) return null;
 
   return (
     <section className="space-y-4">
