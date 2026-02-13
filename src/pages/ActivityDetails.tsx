@@ -19,6 +19,9 @@ import {
   CalendarCheck,
   ListPlus,
   Camera,
+  Pencil,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,6 +36,8 @@ import { useActivityCheckIns } from "@/hooks/useActivityCheckIns";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function ActivityDetails() {
   const { id } = useParams();
@@ -41,6 +46,10 @@ export default function ActivityDetails() {
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [visitIndex, setVisitIndex] = useState(0);
+  const [editingCheckIn, setEditingCheckIn] = useState<string | null>(null);
+  const [editRating, setEditRating] = useState(0);
+  const [editComment, setEditComment] = useState("");
+  const queryClient = useQueryClient();
 
   const { data: activity, isLoading: activityLoading, error } = useActivityById(id || "");
   const { data: reviews, isLoading: reviewsLoading } = useActivityReviews(id || "");
@@ -51,6 +60,38 @@ export default function ActivityDetails() {
 
   const visitCount = checkIns?.length || 0;
   const currentVisit = checkIns?.[visitIndex] || null;
+
+  const deleteCheckIn = useMutation({
+    mutationFn: async (checkInId: string) => {
+      const { error } = await supabase.from("check_ins").delete().eq("id", checkInId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["activity-check-ins"] });
+      queryClient.invalidateQueries({ queryKey: ["check-in-timeline"] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setVisitIndex(0);
+      toast.success("Check-in deleted");
+    },
+    onError: () => toast.error("Failed to delete check-in"),
+  });
+
+  const updateCheckIn = useMutation({
+    mutationFn: async ({ checkInId, rating, comment }: { checkInId: string; rating: number; comment: string }) => {
+      const { error } = await supabase
+        .from("check_ins")
+        .update({ rating, comment: comment.trim() || null })
+        .eq("id", checkInId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["activity-check-ins"] });
+      queryClient.invalidateQueries({ queryKey: ["check-in-timeline"] });
+      setEditingCheckIn(null);
+      toast.success("Check-in updated");
+    },
+    onError: () => toast.error("Failed to update check-in"),
+  });
 
   const handleToggleSave = () => {
     if (!user) {
@@ -189,7 +230,35 @@ export default function ActivityDetails() {
               </div>
             )}
 
-            {currentVisit && (
+            {currentVisit && editingCheckIn === currentVisit.id ? (
+              <div className="space-y-3">
+                <div className="flex justify-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button key={star} onClick={() => setEditRating(star)} className="p-0.5">
+                      <Star className={`w-6 h-6 ${star <= editRating ? "fill-warning text-warning" : "text-muted"}`} />
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={editComment}
+                  onChange={(e) => setEditComment(e.target.value.slice(0, 300))}
+                  placeholder="Update your comment..."
+                  rows={2}
+                  className="w-full bg-muted rounded-xl px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                />
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="flex-1" onClick={() => setEditingCheckIn(null)}>Cancel</Button>
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                    disabled={updateCheckIn.isPending || editRating === 0}
+                    onClick={() => updateCheckIn.mutate({ checkInId: currentVisit.id, rating: editRating, comment: editComment })}
+                  >
+                    {updateCheckIn.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
+                  </Button>
+                </div>
+              </div>
+            ) : currentVisit ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
@@ -214,8 +283,31 @@ export default function ActivityDetails() {
                     className="w-full h-32 rounded-lg object-cover"
                   />
                 )}
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={() => {
+                      setEditingCheckIn(currentVisit.id);
+                      setEditRating(currentVisit.rating);
+                      setEditComment(currentVisit.comment || "");
+                    }}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Pencil className="w-3 h-3" /> Edit
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm("Delete this check-in?")) {
+                        deleteCheckIn.mutate(currentVisit.id);
+                      }
+                    }}
+                    disabled={deleteCheckIn.isPending}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <Trash2 className="w-3 h-3" /> Delete
+                  </button>
+                </div>
               </div>
-            )}
+            ) : null}
           </section>
         )}
         

@@ -84,7 +84,7 @@ export function TimelineMap({ groups }: TimelineMapProps) {
   }
 
   return (
-    <div className="flex-1 relative min-h-0 rounded-xl overflow-hidden">
+    <div className="relative w-full h-full rounded-xl overflow-hidden">
       <MapGL
         ref={mapRef}
         initialViewState={{ latitude: center.lat, longitude: center.lng, zoom: 12 }}
