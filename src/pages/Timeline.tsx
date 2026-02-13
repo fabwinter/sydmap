@@ -171,7 +171,7 @@ export default function Timeline() {
         </div>
 
         {view === "map" ? (
-          <div className="h-[60vh]">
+          <div className="rounded-xl overflow-hidden" style={{ height: "calc(100vh - 280px)" }}>
             <TimelineMap groups={filteredGroups || []} />
           </div>
         ) : (
