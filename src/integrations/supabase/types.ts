@@ -560,11 +560,38 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_add_activity: { Args: { p_data: Json }; Returns: string }
+      admin_delete_activity: {
+        Args: { p_activity_id: string }
+        Returns: undefined
+      }
+      admin_update_activity: {
+        Args: { p_activity_id: string; p_updates: Json }
+        Returns: undefined
+      }
       bulk_import_activities: {
         Args: { activities_json: Json }
         Returns: number
@@ -576,6 +603,13 @@ export type Database = {
       chat_message_limit_exceeded: { Args: never; Returns: boolean }
       check_in_limit_exceeded: { Args: never; Returns: boolean }
       get_profile_id_from_auth: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_premium_user: { Args: never; Returns: boolean }
       playlist_limit_exceeded: { Args: never; Returns: boolean }
       upsert_foursquare_venue: {
@@ -596,7 +630,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -723,6 +757,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

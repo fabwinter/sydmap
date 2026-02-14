@@ -34,6 +34,8 @@ import { useActivityReviews, useActivityPhotos } from "@/hooks/useReviews";
 import { useIsActivitySaved, useToggleSavedItem } from "@/hooks/useSavedItems";
 import { useActivityCheckIns } from "@/hooks/useActivityCheckIns";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { AdminPanel } from "@/components/activity/AdminPanel";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -43,6 +45,7 @@ export default function ActivityDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isAdmin = useIsAdmin();
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [visitIndex, setVisitIndex] = useState(0);
@@ -155,6 +158,7 @@ export default function ActivityDetails() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      {isAdmin && <AdminPanel activity={activity} />}
       {/* Hero Image */}
       <div className="relative h-72 sm:h-80">
         <img src={allPhotos[0]} alt={activity.name} className="w-full h-full object-cover" />
