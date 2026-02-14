@@ -21,7 +21,7 @@ export function useActivitiesByCategories(
         .limit(limit);
 
       if (error) throw error;
-      return (data as Activity[]).map(transformActivity);
+      return (data as Activity[]).map((a) => transformActivity(a));
     },
   });
 }
@@ -41,7 +41,7 @@ export function useBestOfActivities(limit = 15) {
         .limit(limit);
 
       if (error) throw error;
-      return (data as Activity[]).map(transformActivity);
+      return (data as Activity[]).map((a) => transformActivity(a));
     },
   });
 }
@@ -61,7 +61,7 @@ export function useOutdoorActivities(limit = 15) {
         .limit(limit);
 
       if (error) throw error;
-      return (data as Activity[]).map(transformActivity);
+      return (data as Activity[]).map((a) => transformActivity(a));
     },
   });
 }
@@ -81,7 +81,7 @@ export function useNightlifeActivities(limit = 15) {
         .limit(limit);
 
       if (error) throw error;
-      return (data as Activity[]).map(transformActivity);
+      return (data as Activity[]).map((a) => transformActivity(a));
     },
   });
 }

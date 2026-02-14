@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useSearchFilters, type SearchFilters } from "@/hooks/useSearchFilters";
-import { calculateDistance, formatDistance } from "@/hooks/useUserLocation";
+import { useUserLocation, calculateDistance, formatDistance } from "@/hooks/useUserLocation";
 
 export type Activity = Tables<"activities">;
 
@@ -13,6 +13,7 @@ export interface ActivityDisplay {
   rating: number;
   reviewCount: number;
   distance: string;
+  distanceKm: number;
   image: string;
   isOpen: boolean;
   closesAt?: string;
@@ -22,20 +23,6 @@ export interface ActivityDisplay {
 const SYDNEY_LAT = -33.8688;
 const SYDNEY_LNG = 151.2093;
 
-let userLat = SYDNEY_LAT;
-let userLng = SYDNEY_LNG;
-
-// Try to get user location once
-if ("geolocation" in navigator) {
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      userLat = pos.coords.latitude;
-      userLng = pos.coords.longitude;
-    },
-    () => {} // silently fail
-  );
-}
-
 // Helper to extract closing time from hours_close
 function extractClosingTime(hoursClose: string | null): string | undefined {
   if (!hoursClose) return undefined;
@@ -43,7 +30,9 @@ function extractClosingTime(hoursClose: string | null): string | undefined {
 }
 
 // Transform database activity to display format
-export function transformActivity(activity: Activity): ActivityDisplay {
+export function transformActivity(activity: Activity, lat?: number, lng?: number): ActivityDisplay {
+  const userLat = lat ?? SYDNEY_LAT;
+  const userLng = lng ?? SYDNEY_LNG;
   const dist = calculateDistance(userLat, userLng, activity.latitude, activity.longitude);
   return {
     id: activity.id,
@@ -52,6 +41,7 @@ export function transformActivity(activity: Activity): ActivityDisplay {
     rating: activity.rating ?? 0,
     reviewCount: activity.review_count,
     distance: formatDistance(dist),
+    distanceKm: dist,
     image: activity.hero_image_url ?? "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&h=600&fit=crop",
     isOpen: activity.is_open,
     closesAt: extractClosingTime(activity.hours_close),
@@ -72,7 +62,7 @@ function applyFilters(queryBuilder: any, filters: SearchFilters) {
   let query = queryBuilder;
 
   if (filters.query) {
-    query = query.or(`name.ilike.%${filters.query}%,description.ilike.%${filters.query}%,category.ilike.%${filters.query}%`);
+    query = query.or(`name.ilike.%${filters.query}%,description.ilike.%${filters.query}%,category.ilike.%${filters.query}%,address.ilike.%${filters.query}%`);
   }
 
   if (filters.category) {
@@ -106,30 +96,47 @@ function applyFilters(queryBuilder: any, filters: SearchFilters) {
   return query;
 }
 
+/** Client-side distance filter using user location */
+function filterByDistance(activities: Activity[], maxDistanceKm: number | null, userLat: number, userLng: number): Activity[] {
+  if (maxDistanceKm === null) return activities;
+  return activities.filter((a) => {
+    const dist = calculateDistance(userLat, userLng, a.latitude, a.longitude);
+    return dist <= maxDistanceKm;
+  });
+}
+
+/** Sort activities by distance from user */
+function sortByDistance(activities: Activity[], userLat: number, userLng: number): Activity[] {
+  return [...activities].sort((a, b) => {
+    const distA = calculateDistance(userLat, userLng, a.latitude, a.longitude);
+    const distB = calculateDistance(userLat, userLng, b.latitude, b.longitude);
+    return distA - distB;
+  });
+}
+
 export function useFeaturedActivities(limit = 10) {
   const { filters } = useSearchFilters();
-  
+  const { location } = useUserLocation();
+  const lat = location?.latitude ?? SYDNEY_LAT;
+  const lng = location?.longitude ?? SYDNEY_LNG;
+
   return useQuery({
-    queryKey: ["activities", "featured", limit, filters],
+    queryKey: ["activities", "featured", limit, filters, lat, lng],
     queryFn: async () => {
       let query = supabase
         .from("activities")
         .select("*")
         .eq("is_open", true) as any;
 
-      // Apply search query filter
       if (filters.query) {
-        query = query.or(`name.ilike.%${filters.query}%,description.ilike.%${filters.query}%,category.ilike.%${filters.query}%`);
+        query = query.or(`name.ilike.%${filters.query}%,description.ilike.%${filters.query}%,category.ilike.%${filters.query}%,address.ilike.%${filters.query}%`);
       }
-
-      // Apply category, rating, and tag filters
       if (filters.category) {
         query = query.eq("category", filters.category);
       }
       if (filters.minRating !== null) {
         query = query.gte("rating", filters.minRating);
       }
-      // Apply tag-based boolean filters
       for (const tag of filters.tags) {
         const column = tagToColumn[tag];
         if (column) {
@@ -139,33 +146,45 @@ export function useFeaturedActivities(limit = 10) {
 
       const { data, error } = await query
         .order("rating", { ascending: false })
-        .limit(limit);
+        .limit(200); // Fetch more, then filter by distance
 
       if (error) throw error;
-      return (data as Activity[]).map(transformActivity);
+
+      let results = data as Activity[];
+      results = filterByDistance(results, filters.maxDistance, lat, lng);
+      results = sortByDistance(results, lat, lng);
+
+      return results.slice(0, limit).map((a) => transformActivity(a, lat, lng));
     },
   });
 }
 
 export function useRecommendedActivities(limit = 12) {
   const { filters } = useSearchFilters();
-  
+  const { location } = useUserLocation();
+  const lat = location?.latitude ?? SYDNEY_LAT;
+  const lng = location?.longitude ?? SYDNEY_LNG;
+
   return useQuery({
-    queryKey: ["activities", "recommended", limit, filters],
+    queryKey: ["activities", "recommended", limit, filters, lat, lng],
     queryFn: async () => {
       let queryBuilder = supabase
         .from("activities")
         .select("*");
 
-      // Apply all filters including search query
       queryBuilder = applyFilters(queryBuilder, filters);
 
       const { data, error } = await queryBuilder
         .order("review_count", { ascending: false })
-        .limit(limit);
+        .limit(200);
 
       if (error) throw error;
-      return data.map(transformActivity);
+
+      let results = data as Activity[];
+      results = filterByDistance(results, filters.maxDistance, lat, lng);
+      results = sortByDistance(results, lat, lng);
+
+      return results.slice(0, limit).map((a) => transformActivity(a, lat, lng));
     },
   });
 }
@@ -188,8 +207,12 @@ export function useActivityById(id: string) {
 }
 
 export function useActivitiesByCategory(category: string, limit = 20) {
+  const { location } = useUserLocation();
+  const lat = location?.latitude ?? SYDNEY_LAT;
+  const lng = location?.longitude ?? SYDNEY_LNG;
+
   return useQuery({
-    queryKey: ["activities", "category", category, limit],
+    queryKey: ["activities", "category", category, limit, lat, lng],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("activities")
@@ -199,22 +222,26 @@ export function useActivitiesByCategory(category: string, limit = 20) {
         .limit(limit);
 
       if (error) throw error;
-      return data.map(transformActivity);
+      return sortByDistance(data, lat, lng).map((a) => transformActivity(a, lat, lng));
     },
     enabled: !!category,
   });
 }
 
 export function useSearchActivities(query: string, filters?: { category?: string; isOpen?: boolean }) {
+  const { location } = useUserLocation();
+  const lat = location?.latitude ?? SYDNEY_LAT;
+  const lng = location?.longitude ?? SYDNEY_LNG;
+
   return useQuery({
-    queryKey: ["activities", "search", query, filters],
+    queryKey: ["activities", "search", query, filters, lat, lng],
     queryFn: async () => {
       let queryBuilder = supabase
         .from("activities")
         .select("*");
 
       if (query) {
-        queryBuilder = queryBuilder.or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%`);
+        queryBuilder = queryBuilder.or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%,address.ilike.%${query}%`);
       }
 
       if (filters?.category) {
@@ -230,7 +257,7 @@ export function useSearchActivities(query: string, filters?: { category?: string
         .limit(50);
 
       if (error) throw error;
-      return data.map(transformActivity);
+      return sortByDistance(data, lat, lng).map((a) => transformActivity(a, lat, lng));
     },
     enabled: query.length > 0 || !!filters?.category || !!filters?.isOpen,
   });
