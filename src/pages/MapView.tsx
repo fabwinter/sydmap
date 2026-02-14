@@ -62,8 +62,16 @@ export default function MapView() {
   const userLat = userLocation?.latitude ?? SYDNEY_LAT;
   const userLng = userLocation?.longitude ?? SYDNEY_LNG;
 
-  // Foursquare search: trigger on query text OR category filter
-  const fsQuery = filters.query || filters.cuisine || filters.category || "";
+  // Foursquare search: build combined query from all active filters
+  const fsQuery = useMemo(() => {
+    const parts: string[] = [];
+    if (filters.query) parts.push(filters.query);
+    if (filters.cuisine) parts.push(filters.cuisine);
+    if (filters.category && !filters.cuisine) parts.push(filters.category);
+    // If only category is set (e.g. "Restaurant"), use it; if cuisine is set, combine (e.g. "Chinese Restaurant")
+    if (filters.cuisine && filters.category) parts.push(filters.category);
+    return parts.join(" ") || "";
+  }, [filters.query, filters.cuisine, filters.category]);
   const { data: foursquareVenues } = useFoursquareSearch(fsQuery, fsQuery.length >= 2);
 
   // Convert Foursquare venues to Activity-compatible objects for map display
@@ -138,6 +146,11 @@ export default function MapView() {
       }
       // Category
       if (filters.category && activity.category !== filters.category) return false;
+      // Cuisine: when a cuisine is selected, only show food-related categories (Restaurant, Cafe, Bakery, Bar)
+      if (filters.cuisine && !filters.category) {
+        const foodCategories = ["Restaurant", "Cafe", "Bakery", "Bar"];
+        if (!foodCategories.includes(activity.category)) return false;
+      }
       // Open now
       if (filters.isOpen && !activity.is_open) return false;
       // Min rating
