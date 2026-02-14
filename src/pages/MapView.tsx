@@ -71,34 +71,34 @@ export default function MapView() {
     const localFsIds = new Set(activities?.filter(a => a.foursquare_id).map(a => a.foursquare_id) ?? []);
     return foursquareVenues
       .filter(v => !localFsIds.has(v.id))
-      .map(v => {
+      .map((v): Activity => {
         const normalizedCategory = normalizeFoursquareCategory(v.category, v.tags, v.name);
         return {
           id: `fs-${v.id}`,
           name: v.name,
           category: normalizedCategory,
-        latitude: v.latitude,
-        longitude: v.longitude,
-        address: v.address || null,
-        description: v.description || null,
-        rating: v.rating,
-        review_count: 0,
-        hero_image_url: v.photos?.[0] || null,
-        is_open: true,
-        phone: v.phone || null,
-        website: v.website || null,
-        hours_open: null,
-        hours_close: null,
-        parking: false,
-        wheelchair_accessible: false,
-        wifi: false,
-        outdoor_seating: false,
-        pet_friendly: false,
-        foursquare_id: v.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as Activity);
-    });
+          latitude: v.latitude,
+          longitude: v.longitude,
+          address: v.address || null,
+          description: v.description || null,
+          rating: v.rating,
+          review_count: 0,
+          hero_image_url: v.photos?.[0] || null,
+          is_open: true,
+          phone: v.phone || null,
+          website: v.website || null,
+          hours_open: null,
+          hours_close: null,
+          parking: false,
+          wheelchair_accessible: false,
+          wifi: false,
+          outdoor_seating: false,
+          pet_friendly: false,
+          foursquare_id: v.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      });
   }, [foursquareVenues, activities]);
 
   const urlLat = searchParams.get("lat");
