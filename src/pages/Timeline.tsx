@@ -35,17 +35,6 @@ const CATEGORY_OPTIONS = [
   { value: "shopping", label: "Shopping" },
 ];
 
-const categoryIcons: Record<string, string> = {
-  cafe: "☕",
-  restaurant: "🍽️",
-  bar: "🍸",
-  beach: "🏖️",
-  park: "🌳",
-  museum: "🏛️",
-  shopping: "🛍️",
-  pub: "🍺",
-};
-
 export default function Timeline() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
@@ -175,15 +164,15 @@ export default function Timeline() {
             <TimelineMap groups={filteredGroups || []} />
           </div>
         ) : (
-        <div className="space-y-6 pb-4">
+        <div className="space-y-8 pb-4">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="space-y-3">
                 <Skeleton className="h-5 w-32" />
-                <div className="space-y-3 pl-6 border-l-2 border-border ml-3">
+                <div className="space-y-4 ml-4">
                   {Array.from({ length: 2 }).map((_, j) => (
-                    <div key={j} className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border">
-                      <Skeleton className="w-14 h-14 rounded-lg" />
+                    <div key={j} className="flex gap-3 p-3 bg-card rounded-xl border border-border">
+                      <Skeleton className="w-20 h-20 rounded-lg shrink-0" />
                       <div className="flex-1 space-y-2">
                         <Skeleton className="h-4 w-3/4" />
                         <Skeleton className="h-3 w-1/2" />
@@ -196,63 +185,74 @@ export default function Timeline() {
           ) : filteredGroups && filteredGroups.length > 0 ? (
             filteredGroups.map((group) => (
               <div key={group.date}>
-                <h2 className="font-bold text-base mb-3">{group.label}</h2>
-                <div className="space-y-3 pl-6 border-l-2 border-primary/20 ml-3">
-                  {group.checkIns.map((checkIn) => {
-                    const catKey = checkIn.activities?.category?.toLowerCase() || "";
-                    const icon = categoryIcons[catKey] || "📍";
-                    const time = new Date(checkIn.created_at).toLocaleTimeString("en-AU", {
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true,
-                    });
+                <h2 className="font-bold text-lg mb-4">{group.label}</h2>
+                {/* Timeline track */}
+                <div className="relative ml-3">
+                  {/* Vertical line */}
+                  <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/25 rounded-full" />
 
-                    return (
-                      <Link
-                        key={checkIn.id}
-                        to={`/activity/${checkIn.activity_id}`}
-                        className="relative flex items-start gap-3 p-3 bg-card rounded-xl border border-border hover:border-primary transition-colors"
-                      >
-                        <div className="absolute -left-[calc(1.5rem+7px)] top-5 w-3.5 h-3.5 rounded-full bg-primary/80 border-2 border-background" />
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-lg shrink-0">
-                          {icon}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm truncate">
-                            {checkIn.activities?.name || "Unknown venue"}
-                          </h3>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {checkIn.activities?.category}
-                            {checkIn.activities?.address && ` • ${checkIn.activities.address.split(",")[0]}`}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            {checkIn.rating > 0 && (
-                              <span className="flex items-center gap-0.5 text-xs text-warning">
-                                <Star className="w-3 h-3 fill-current" />
-                                {checkIn.rating}
-                              </span>
-                            )}
-                            <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                              <Clock className="w-3 h-3" />
-                              {time}
-                            </span>
+                  <div className="space-y-4">
+                    {group.checkIns.map((checkIn) => {
+                      const time = new Date(checkIn.created_at).toLocaleTimeString("en-AU", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                      });
+                      const heroImg = checkIn.photo_url || checkIn.activities?.hero_image_url;
+
+                      return (
+                        <div key={checkIn.id} className="relative pl-8">
+                          {/* Timeline dot */}
+                          <div className="absolute left-0 top-6 -translate-x-[calc(50%-1px)] w-4 h-4 rounded-full bg-primary border-[3px] border-background shadow-sm z-10 flex items-center justify-center">
+                            <MapPin className="w-2 h-2 text-primary-foreground" />
                           </div>
-                          {checkIn.comment && (
-                            <p className="text-xs text-muted-foreground mt-1 line-clamp-1 italic">
-                              "{checkIn.comment}"
-                            </p>
-                          )}
+
+                          <Link
+                            to={`/activity/${checkIn.activity_id}`}
+                            className="block bg-card rounded-2xl border border-border hover:border-primary/40 transition-colors overflow-hidden shadow-sm"
+                          >
+                            {/* Hero image */}
+                            {heroImg && (
+                              <div className="relative h-36 w-full overflow-hidden">
+                                <img
+                                  src={heroImg}
+                                  alt={checkIn.activities?.name || ""}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )}
+
+                            <div className="p-3.5 space-y-1.5">
+                              <h3 className="font-bold text-base leading-tight">
+                                {checkIn.activities?.name || "Unknown venue"}
+                              </h3>
+                              <p className="text-xs text-muted-foreground">
+                                {checkIn.activities?.category}
+                                {checkIn.activities?.address && ` · ${checkIn.activities.address.split(",")[0]}`}
+                              </p>
+                              <div className="flex items-center gap-3 pt-0.5">
+                                {checkIn.rating > 0 && (
+                                  <span className="flex items-center gap-0.5 text-sm font-semibold text-warning">
+                                    <Star className="w-3.5 h-3.5 fill-current" />
+                                    {checkIn.rating}
+                                  </span>
+                                )}
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {time}
+                                </span>
+                              </div>
+                              {checkIn.comment && (
+                                <p className="text-sm text-muted-foreground mt-1 italic line-clamp-2">
+                                  "{checkIn.comment}"
+                                </p>
+                              )}
+                            </div>
+                          </Link>
                         </div>
-                        {(checkIn.photo_url || checkIn.activities?.hero_image_url) && (
-                          <img
-                            src={checkIn.photo_url || checkIn.activities?.hero_image_url || ""}
-                            alt=""
-                            className="w-12 h-12 rounded-lg object-cover shrink-0"
-                          />
-                        )}
-                      </Link>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             ))
