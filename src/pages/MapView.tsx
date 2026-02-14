@@ -10,7 +10,7 @@ import { MAPBOX_TOKEN } from "@/config/mapbox";
 import { useAllActivities, type Activity } from "@/hooks/useActivities";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { useUserLocation, calculateDistance } from "@/hooks/useUserLocation";
-import { useFoursquareSearch, type FoursquareVenue } from "@/hooks/useFoursquareSearch";
+import { useFoursquareSearch, type FoursquareVenue, normalizeFoursquareCategory } from "@/hooks/useFoursquareSearch";
 import { useImportFoursquareVenue } from "@/hooks/useImportFoursquareVenue";
 import { VenueList } from "@/components/map/VenueList";
 import { MapFilters } from "@/components/map/MapFilters";
@@ -18,6 +18,7 @@ import { MobileVenueCard } from "@/components/map/MobileVenueCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { triggerHaptic } from "@/lib/haptics";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 const categoryIcons: Record<string, any> = {
   Cafe: Coffee, Beach: Waves, Park: TreePine, Restaurant: Utensils, Bar: Wine,
@@ -70,31 +71,34 @@ export default function MapView() {
     const localFsIds = new Set(activities?.filter(a => a.foursquare_id).map(a => a.foursquare_id) ?? []);
     return foursquareVenues
       .filter(v => !localFsIds.has(v.id))
-      .map(v => ({
-        id: `fs-${v.id}`,
-        name: v.name,
-        category: v.category.split(",")[0]?.trim() || "Restaurant",
-        latitude: v.latitude,
-        longitude: v.longitude,
-        address: v.address || null,
-        description: v.description || null,
-        rating: v.rating,
-        review_count: 0,
-        hero_image_url: v.photos?.[0] || null,
-        is_open: true,
-        phone: v.phone || null,
-        website: v.website || null,
-        hours_open: null,
-        hours_close: null,
-        parking: false,
-        wheelchair_accessible: false,
-        wifi: false,
-        outdoor_seating: false,
-        pet_friendly: false,
-        foursquare_id: v.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as Activity));
+      .map((v): Activity => {
+        const normalizedCategory = normalizeFoursquareCategory(v.category, v.tags, v.name);
+        return {
+          id: `fs-${v.id}`,
+          name: v.name,
+          category: normalizedCategory,
+          latitude: v.latitude,
+          longitude: v.longitude,
+          address: v.address || null,
+          description: v.description || null,
+          rating: v.rating,
+          review_count: 0,
+          hero_image_url: v.photos?.[0] || null,
+          is_open: true,
+          phone: v.phone || null,
+          website: v.website || null,
+          hours_open: null,
+          hours_close: null,
+          parking: false,
+          wheelchair_accessible: false,
+          wifi: false,
+          outdoor_seating: false,
+          pet_friendly: false,
+          foursquare_id: v.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      });
   }, [foursquareVenues, activities]);
 
   const urlLat = searchParams.get("lat");
@@ -192,9 +196,24 @@ export default function MapView() {
     }));
   }, []);
 
-  const handleNavigateToDetails = useCallback((activity: Activity) => {
+  const handleNavigateToDetails = useCallback(async (activity: Activity) => {
+    // If it's a Foursquare venue (fs- prefix), import it first
+    if (activity.id.startsWith("fs-")) {
+      const fsId = activity.id.replace("fs-", "");
+      const venue = foursquareVenues?.find(v => v.id === fsId);
+      if (venue) {
+        try {
+          const realId = await importVenue.mutateAsync(venue);
+          navigate(`/activity/${realId}`);
+          return;
+        } catch (e) {
+          toast.error("Failed to load venue details");
+          return;
+        }
+      }
+    }
     navigate(`/activity/${activity.id}`);
-  }, [navigate]);
+  }, [navigate, foursquareVenues, importVenue]);
 
   const handleSearchHere = useCallback(() => {
     if (!mapRef.current) return;
@@ -256,13 +275,25 @@ export default function MapView() {
       {filteredActivities.map((activity) => {
         const IconComponent = categoryIcons[activity.category] || MapPin;
         const colorClass = categoryColors[activity.category] || "bg-primary";
+        const textColor = {
+          Cafe: "text-accent", Beach: "text-secondary", Park: "text-green-500",
+          Restaurant: "text-red-500", Bar: "text-purple-500", Shopping: "text-pink-500",
+          Gym: "text-orange-500", Museum: "text-indigo-500", Bakery: "text-amber-500",
+        }[activity.category] || "text-primary";
         const isSelected = selectedActivity?.id === activity.id;
         return (
           <Marker key={activity.id} latitude={activity.latitude} longitude={activity.longitude} anchor="bottom"
             onClick={(e) => { e.originalEvent.stopPropagation(); handleMarkerClick(activity); }}
           >
-            <div className={`rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110 ${isSelected ? "w-12 h-12 ring-2 ring-white scale-110" : "w-10 h-10"}`}>
-              <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
+            <div className="flex flex-col items-center" style={{ transform: 'translateY(0)' }}>
+              <span
+                className={`${textColor} text-[11px] font-bold leading-tight max-w-[100px] truncate px-1 py-0.5 rounded bg-white/80 backdrop-blur-sm mb-0.5 text-center`}
+              >
+                {activity.name}
+              </span>
+              <div className={`rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110 ${isSelected ? "w-12 h-12 ring-2 ring-white scale-110" : "w-10 h-10"}`}>
+                <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
+              </div>
             </div>
           </Marker>
         );

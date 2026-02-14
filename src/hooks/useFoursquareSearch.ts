@@ -44,15 +44,15 @@ const SYDNEY_LNG = 151.2093;
 
 /** Map app categories to Foursquare category name fragments for matching */
 const categoryMatchMap: Record<string, string[]> = {
-  Cafe: ["cafe", "coffee", "tea"],
-  Restaurant: ["restaurant", "dining", "food", "eatery", "bistro", "grill"],
-  Bar: ["bar", "pub", "lounge", "cocktail", "brewery", "tavern"],
-  Beach: ["beach"],
-  Park: ["park", "garden", "trail", "nature"],
-  Museum: ["museum", "gallery", "art", "exhibit"],
-  Shopping: ["shop", "store", "mall", "market", "boutique"],
-  Gym: ["gym", "fitness", "sport", "yoga", "pilates"],
-  Bakery: ["bakery", "pastry", "bread", "patisserie"],
+  Cafe: ["cafe", "coffee", "tea", "espresso"],
+  Restaurant: ["restaurant", "dining", "food", "eatery", "bistro", "grill", "sushi", "pizza", "burger", "thai", "chinese", "indian", "italian", "japanese", "mexican", "korean", "vietnamese", "noodle", "ramen", "steakhouse", "seafood", "diner", "kitchen", "brasserie", "trattoria", "cantina"],
+  Bar: ["bar", "pub", "lounge", "cocktail", "brewery", "tavern", "wine bar", "beer"],
+  Beach: ["beach", "surf", "coastal"],
+  Park: ["park", "garden", "trail", "nature", "reserve", "botanical"],
+  Museum: ["museum", "gallery", "art", "exhibit", "heritage", "cultural"],
+  Shopping: ["shop", "store", "mall", "market", "boutique", "retail"],
+  Gym: ["gym", "fitness", "sport", "yoga", "pilates", "crossfit"],
+  Bakery: ["bakery", "pastry", "bread", "patisserie", "cake", "donut"],
 };
 
 function matchesCategory(venue: FoursquareVenue, category: string): boolean {
@@ -60,7 +60,17 @@ function matchesCategory(venue: FoursquareVenue, category: string): boolean {
   if (!keywords) return false;
   const venueCat = venue.category.toLowerCase();
   const venueTags = venue.tags.toLowerCase();
-  return keywords.some((kw) => venueCat.includes(kw) || venueTags.includes(kw));
+  const venueName = venue.name.toLowerCase();
+  return keywords.some((kw) => venueCat.includes(kw) || venueTags.includes(kw) || venueName.includes(kw));
+}
+
+/** Normalize a Foursquare category string to the closest app category */
+export function normalizeFoursquareCategory(fsCategoryStr: string, tags = "", name = ""): string {
+  const combined = `${fsCategoryStr} ${tags} ${name}`.toLowerCase();
+  for (const [appCat, keywords] of Object.entries(categoryMatchMap)) {
+    if (keywords.some((kw) => combined.includes(kw))) return appCat;
+  }
+  return fsCategoryStr.split(",")[0]?.trim() || "Restaurant";
 }
 
 function applyFiltersToVenues(
