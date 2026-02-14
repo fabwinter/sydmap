@@ -12,15 +12,12 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useState } from "react";
-import { calculateDistance, formatDistance } from "@/hooks/useUserLocation";
+import { calculateDistance, formatDistance, useUserLocation } from "@/hooks/useUserLocation";
 
-const SYDNEY_LAT = -33.8688;
-const SYDNEY_LNG = 151.2093;
-
-function VenueCard({ venue, onSelect }: { venue: FoursquareVenue; onSelect: (v: FoursquareVenue) => void }) {
+function VenueCard({ venue, userLat, userLng, onSelect }: { venue: FoursquareVenue; userLat: number; userLng: number; onSelect: (v: FoursquareVenue) => void }) {
   const [imgError, setImgError] = useState(false);
   const photo = venue.photos?.[0];
-  const dist = calculateDistance(SYDNEY_LAT, SYDNEY_LNG, venue.latitude, venue.longitude);
+  const dist = calculateDistance(userLat, userLng, venue.latitude, venue.longitude);
 
   return (
     <button
@@ -68,9 +65,15 @@ function VenueCard({ venue, onSelect }: { venue: FoursquareVenue; onSelect: (v: 
   );
 }
 
+const SYDNEY_LAT = -33.8688;
+const SYDNEY_LNG = 151.2093;
+
 export function FoursquareSection() {
   const { filters } = useSearchFilters();
   const navigate = useNavigate();
+  const { location } = useUserLocation();
+  const userLat = location?.latitude ?? SYDNEY_LAT;
+  const userLng = location?.longitude ?? SYDNEY_LNG;
   const { data: venues, isLoading, error } = useFoursquareSearch(filters.query);
   const importVenue = useImportFoursquareVenue();
 
@@ -121,7 +124,7 @@ export function FoursquareSection() {
                   key={venue.id}
                   className="pl-3 md:pl-4 basis-[200px] sm:basis-[220px] md:basis-[240px] lg:basis-[260px]"
                 >
-                  <VenueCard venue={venue} onSelect={handleSelect} />
+                  <VenueCard venue={venue} userLat={userLat} userLng={userLng} onSelect={handleSelect} />
                 </CarouselItem>
               ))}
             </CarouselContent>

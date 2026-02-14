@@ -292,7 +292,7 @@ export default function MapView() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-20 md:top-3 left-1/2 -translate-x-1/2 z-20"
+                  className="absolute top-1/2 md:top-3 left-1/2 -translate-x-1/2 -translate-y-1/2 md:translate-y-0 z-20"
                 >
                   <Button
                     onClick={handleSearchHere}
@@ -308,7 +308,7 @@ export default function MapView() {
 
             {/* Active bounds chip */}
             {filters.mapBounds && !showSearchHere && (
-              <div className="absolute top-20 md:top-3 left-1/2 -translate-x-1/2 z-20">
+              <div className="absolute top-1/2 md:top-3 left-1/2 -translate-x-1/2 -translate-y-1/2 md:translate-y-0 z-20">
                 <button
                   onClick={() => { setMapBounds(null); setShowSearchHere(false); }}
                   className="flex items-center gap-1.5 bg-primary text-primary-foreground rounded-full px-4 py-2 text-xs font-medium shadow-elevated"
