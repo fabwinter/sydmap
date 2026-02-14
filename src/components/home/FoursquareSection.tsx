@@ -1,6 +1,8 @@
-import { MapPin, Star, ExternalLink } from "lucide-react";
+import { MapPin, Star, ExternalLink, Loader2 } from "lucide-react";
 import { useFoursquareSearch, type FoursquareVenue } from "@/hooks/useFoursquareSearch";
+import { useImportFoursquareVenue } from "@/hooks/useImportFoursquareVenue";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
+import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Carousel,
@@ -15,13 +17,16 @@ import { calculateDistance, formatDistance } from "@/hooks/useUserLocation";
 const SYDNEY_LAT = -33.8688;
 const SYDNEY_LNG = 151.2093;
 
-function VenueCard({ venue }: { venue: FoursquareVenue }) {
+function VenueCard({ venue, onSelect }: { venue: FoursquareVenue; onSelect: (v: FoursquareVenue) => void }) {
   const [imgError, setImgError] = useState(false);
   const photo = venue.photos?.[0];
   const dist = calculateDistance(SYDNEY_LAT, SYDNEY_LNG, venue.latitude, venue.longitude);
 
   return (
-    <div className="group flex flex-col">
+    <button
+      onClick={() => onSelect(venue)}
+      className="group flex flex-col text-left w-full cursor-pointer"
+    >
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
         {photo && !imgError ? (
           <img
@@ -59,13 +64,24 @@ function VenueCard({ venue }: { venue: FoursquareVenue }) {
           </span>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
 export function FoursquareSection() {
   const { filters } = useSearchFilters();
+  const navigate = useNavigate();
   const { data: venues, isLoading, error } = useFoursquareSearch(filters.query);
+  const importVenue = useImportFoursquareVenue();
+
+  const handleSelect = async (venue: FoursquareVenue) => {
+    try {
+      const activityId = await importVenue.mutateAsync(venue);
+      navigate(`/activity/${activityId}`);
+    } catch (e) {
+      console.error("Failed to import venue:", e);
+    }
+  };
 
   // Only show when there's an active search query
   if (!filters.query || filters.query.length < 2) return null;
@@ -105,7 +121,7 @@ export function FoursquareSection() {
                   key={venue.id}
                   className="pl-3 md:pl-4 basis-[200px] sm:basis-[220px] md:basis-[240px] lg:basis-[260px]"
                 >
-                  <VenueCard venue={venue} />
+                  <VenueCard venue={venue} onSelect={handleSelect} />
                 </CarouselItem>
               ))}
             </CarouselContent>

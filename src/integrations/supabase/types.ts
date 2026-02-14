@@ -20,6 +20,7 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          foursquare_id: string | null
           hero_image_url: string | null
           hours_close: string | null
           hours_open: string | null
@@ -44,6 +45,7 @@ export type Database = {
           category: string
           created_at?: string
           description?: string | null
+          foursquare_id?: string | null
           hero_image_url?: string | null
           hours_close?: string | null
           hours_open?: string | null
@@ -68,6 +70,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          foursquare_id?: string | null
           hero_image_url?: string | null
           hours_close?: string | null
           hours_open?: string | null
@@ -575,6 +578,22 @@ export type Database = {
       get_profile_id_from_auth: { Args: never; Returns: string }
       is_premium_user: { Args: never; Returns: boolean }
       playlist_limit_exceeded: { Args: never; Returns: boolean }
+      upsert_foursquare_venue: {
+        Args: {
+          p_address?: string
+          p_category: string
+          p_description?: string
+          p_foursquare_id: string
+          p_hero_image_url?: string
+          p_latitude: number
+          p_longitude: number
+          p_name: string
+          p_phone?: string
+          p_rating?: number
+          p_website?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
