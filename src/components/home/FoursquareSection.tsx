@@ -75,7 +75,8 @@ export function FoursquareSection() {
   const userLat = location?.latitude ?? SYDNEY_LAT;
   const userLng = location?.longitude ?? SYDNEY_LNG;
   // Search by text query OR category filter
-  const fsQuery = filters.query || filters.category || "";
+  // Build query: combine text query with category/cuisine for Foursquare search
+  const fsQuery = filters.query || filters.cuisine || filters.category || "";
   const { data: venues, isLoading, error } = useFoursquareSearch(fsQuery, fsQuery.length >= 2);
   const importVenue = useImportFoursquareVenue();
 
