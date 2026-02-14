@@ -214,31 +214,6 @@ export default function ActivityDetails() {
           </div>
         </div>
 
-        {/* Details List */}
-        <section className="divide-y divide-border rounded-xl border border-border bg-card overflow-hidden">
-          {activity.name && (
-            <DetailRow icon={MapPin} label="Name" value={activity.name} />
-          )}
-          {activity.address && (
-            <DetailRow icon={MapPin} label="Address" value={activity.address} />
-          )}
-          {activity.website && (
-            <DetailRow icon={Globe} label="Website" value={activity.website} href={activity.website.startsWith("http") ? activity.website : `https://${activity.website}`} />
-          )}
-          {activity.phone && (
-            <DetailRow icon={Phone} label="Phone" value={activity.phone} href={`tel:${activity.phone}`} />
-          )}
-          <DetailRow
-            icon={Clock}
-            label="Hours"
-            value={
-              activity.hours_open && activity.hours_close
-                ? `${activity.hours_open} – ${activity.hours_close}`
-                : "Hours not available"
-            }
-          />
-        </section>
-
         {/* Check-in History */}
         {visitCount > 0 && (
           <section className="bg-card rounded-xl border border-border p-4">
@@ -357,12 +332,50 @@ export default function ActivityDetails() {
         )}
         
         {/* About */}
-        {activity.description && (
-          <section>
-            <h2 className="section-header">About</h2>
-            <p className="text-muted-foreground text-sm leading-relaxed">{activity.description}</p>
-          </section>
-        )}
+        <section>
+          <h2 className="section-header">About</h2>
+          <div className="space-y-4">
+            {activity.phone && (
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <Phone className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <a href={`tel:${activity.phone}`} className="text-sm text-primary hover:underline">{activity.phone}</a>
+              </div>
+            )}
+            {activity.website && (
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <Globe className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <a href={activity.website.startsWith("http") ? activity.website : `https://${activity.website}`} target="_blank" rel="noopener noreferrer" className="text-sm text-foreground truncate">{activity.website}</a>
+              </div>
+            )}
+            {activity.address && (
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <MapPin className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <span className="text-sm text-foreground">{activity.address}</span>
+              </div>
+            )}
+            {(activity.hours_open || activity.hours_close) && (
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <Clock className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <span className="text-sm text-foreground">
+                  {activity.hours_open && activity.hours_close
+                    ? `${activity.hours_open} – ${activity.hours_close}`
+                    : "Hours not available"}
+                </span>
+              </div>
+            )}
+          </div>
+          {activity.description && (
+            <p className="text-muted-foreground text-sm leading-relaxed mt-4">{activity.description}</p>
+          )}
+        </section>
         
         {/* Amenities */}
         <section>
