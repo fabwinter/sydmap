@@ -74,7 +74,9 @@ export function FoursquareSection() {
   const { location } = useUserLocation();
   const userLat = location?.latitude ?? SYDNEY_LAT;
   const userLng = location?.longitude ?? SYDNEY_LNG;
-  const { data: venues, isLoading, error } = useFoursquareSearch(filters.query);
+  // Search by text query OR category filter
+  const fsQuery = filters.query || filters.category || "";
+  const { data: venues, isLoading, error } = useFoursquareSearch(fsQuery, fsQuery.length >= 2);
   const importVenue = useImportFoursquareVenue();
 
   const handleSelect = async (venue: FoursquareVenue) => {
@@ -86,8 +88,8 @@ export function FoursquareSection() {
     }
   };
 
-  // Only show when there's an active search query
-  if (!filters.query || filters.query.length < 2) return null;
+  // Show when there's an active search query or category filter
+  if (fsQuery.length < 2) return null;
   if (error || (venues && venues.length === 0)) return null;
 
   return (
@@ -100,7 +102,7 @@ export function FoursquareSection() {
         <span className="text-xs text-muted-foreground">Powered by Foursquare</span>
       </div>
       <p className="text-sm text-muted-foreground -mt-2">
-        Live results for "{filters.query}"
+        Live results for "{fsQuery}"
       </p>
 
       {isLoading ? (

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserLocation, calculateDistance } from "@/hooks/useUserLocation";
@@ -24,7 +25,7 @@ async function searchFoursquare(
   lat: number,
   lng: number,
   radius = 10000,
-  limit = 20
+  limit = 30
 ): Promise<FoursquareVenue[]> {
   const { data, error } = await supabase.functions.invoke("search-foursquare", {
     body: { query, lat, lng, radius, limit },
@@ -82,6 +83,13 @@ function applyFiltersToVenues(
   });
 }
 
+/**
+ * Fetches Foursquare venues and applies local filters via useMemo (not inside queryFn).
+ * This means changing filters uses cached API data instead of refetching.
+ * 
+ * @param query - search term (text query OR category name)
+ * @param enabled - whether to run the query
+ */
 export function useFoursquareSearch(query: string, enabled = true) {
   const { location } = useUserLocation();
   const { filters } = useSearchFilters();
@@ -90,14 +98,22 @@ export function useFoursquareSearch(query: string, enabled = true) {
   // Use maxDistance as API radius (convert km to meters), default 10km
   const radiusMeters = filters.maxDistance ? filters.maxDistance * 1000 : 10000;
 
-  return useQuery({
+  const rawQuery = useQuery({
     queryKey: ["foursquare", query, lat, lng, radiusMeters],
-    queryFn: async () => {
-      const raw = await searchFoursquare(query, lat, lng, radiusMeters, 30);
-      return applyFiltersToVenues(raw, filters, lat, lng);
-    },
+    queryFn: () => searchFoursquare(query, lat, lng, radiusMeters, 30),
     enabled: enabled && query.length >= 2,
     staleTime: 1000 * 60 * 60,
     retry: 1,
   });
+
+  // Apply filters client-side via memo — instant when only filters change
+  const data = useMemo(() => {
+    if (!rawQuery.data) return undefined;
+    return applyFiltersToVenues(rawQuery.data, filters, lat, lng);
+  }, [rawQuery.data, filters, lat, lng]);
+
+  return {
+    ...rawQuery,
+    data,
+  };
 }
