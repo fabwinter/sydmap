@@ -10,7 +10,7 @@ import { MAPBOX_TOKEN } from "@/config/mapbox";
 import { useAllActivities, type Activity } from "@/hooks/useActivities";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { useUserLocation, calculateDistance } from "@/hooks/useUserLocation";
-import { useFoursquareSearch, type FoursquareVenue } from "@/hooks/useFoursquareSearch";
+import { useFoursquareSearch, type FoursquareVenue, normalizeFoursquareCategory } from "@/hooks/useFoursquareSearch";
 import { useImportFoursquareVenue } from "@/hooks/useImportFoursquareVenue";
 import { VenueList } from "@/components/map/VenueList";
 import { MapFilters } from "@/components/map/MapFilters";
@@ -18,6 +18,7 @@ import { MobileVenueCard } from "@/components/map/MobileVenueCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { triggerHaptic } from "@/lib/haptics";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 const categoryIcons: Record<string, any> = {
   Cafe: Coffee, Beach: Waves, Park: TreePine, Restaurant: Utensils, Bar: Wine,
@@ -70,10 +71,12 @@ export default function MapView() {
     const localFsIds = new Set(activities?.filter(a => a.foursquare_id).map(a => a.foursquare_id) ?? []);
     return foursquareVenues
       .filter(v => !localFsIds.has(v.id))
-      .map(v => ({
-        id: `fs-${v.id}`,
-        name: v.name,
-        category: v.category.split(",")[0]?.trim() || "Restaurant",
+      .map(v => {
+        const normalizedCategory = normalizeFoursquareCategory(v.category, v.tags, v.name);
+        return {
+          id: `fs-${v.id}`,
+          name: v.name,
+          category: normalizedCategory,
         latitude: v.latitude,
         longitude: v.longitude,
         address: v.address || null,
@@ -94,7 +97,8 @@ export default function MapView() {
         foursquare_id: v.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      } as Activity));
+      } as Activity);
+      });
   }, [foursquareVenues, activities]);
 
   const urlLat = searchParams.get("lat");
@@ -192,9 +196,24 @@ export default function MapView() {
     }));
   }, []);
 
-  const handleNavigateToDetails = useCallback((activity: Activity) => {
+  const handleNavigateToDetails = useCallback(async (activity: Activity) => {
+    // If it's a Foursquare venue (fs- prefix), import it first
+    if (activity.id.startsWith("fs-")) {
+      const fsId = activity.id.replace("fs-", "");
+      const venue = foursquareVenues?.find(v => v.id === fsId);
+      if (venue) {
+        try {
+          const realId = await importVenue.mutateAsync(venue);
+          navigate(`/activity/${realId}`);
+          return;
+        } catch (e) {
+          toast.error("Failed to load venue details");
+          return;
+        }
+      }
+    }
     navigate(`/activity/${activity.id}`);
-  }, [navigate]);
+  }, [navigate, foursquareVenues, importVenue]);
 
   const handleSearchHere = useCallback(() => {
     if (!mapRef.current) return;
