@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake,
   SlidersHorizontal, X, Baby, Sun, Home, DollarSign, Dog, Accessibility,
-  Wifi, Car, Users, Heart, Moon, Palette, Mountain, ChevronDown,
+  Wifi, Car, Users, Heart, Moon, Palette, Mountain, ChevronDown, UtensilsCrossed,
 } from "lucide-react";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { Slider } from "@/components/ui/slider";
@@ -20,6 +20,20 @@ const categories = [
   { id: "Shopping", label: "Shopping", icon: ShoppingBag },
   { id: "Gym", label: "Gyms", icon: Dumbbell },
   { id: "Bakery", label: "Bakeries", icon: Cake },
+];
+
+const cuisineCategories = [
+  { id: "Pizza", label: "Pizza", icon: Utensils },
+  { id: "Thai", label: "Thai", icon: Utensils },
+  { id: "Japanese", label: "Japanese", icon: Utensils },
+  { id: "Italian", label: "Italian", icon: Utensils },
+  { id: "Mexican", label: "Mexican", icon: Utensils },
+  { id: "Chinese", label: "Chinese", icon: Utensils },
+  { id: "Indian", label: "Indian", icon: Utensils },
+  { id: "Korean", label: "Korean", icon: Utensils },
+  { id: "Vietnamese", label: "Vietnamese", icon: Utensils },
+  { id: "Seafood", label: "Seafood", icon: Utensils },
+  { id: "Brunch", label: "Brunch", icon: Coffee },
 ];
 
 const experienceTags = [
@@ -42,11 +56,12 @@ const travellerTags = [
 ];
 
 export function FilterChips() {
-  const { filters, setCategory, toggleTag, setMaxDistance, setMinRating, clearFilters } = useSearchFilters();
+  const { filters, setCategory, setCuisine, toggleTag, setMaxDistance, setMinRating, clearFilters } = useSearchFilters();
   const [isOpen, setIsOpen] = useState(false);
 
   const activeFilterCount =
     (filters.category ? 1 : 0) +
+    (filters.cuisine ? 1 : 0) +
     filters.tags.length +
     (filters.maxDistance !== null ? 1 : 0) +
     (filters.minRating !== null ? 1 : 0) +
@@ -187,6 +202,25 @@ export function FilterChips() {
                         }`}
                       >
                         <Icon className="w-3.5 h-3.5" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Cuisine */}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Cuisine</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {cuisineCategories.map(({ id, label, icon: Icon }) => (
+                      <button
+                        key={id}
+                        onClick={() => setCuisine(filters.cuisine === id ? null : id)}
+                        className={`filter-chip flex items-center gap-1.5 text-xs ${
+                          filters.cuisine === id ? "active" : ""
+                        }`}
+                      >
+                        <UtensilsCrossed className="w-3.5 h-3.5" />
                         {label}
                       </button>
                     ))}

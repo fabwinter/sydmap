@@ -144,10 +144,9 @@ export default function ActivityDetails() {
     );
   }
 
-  const allPhotos = [
-    activity.hero_image_url || "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&h=500&fit=crop",
-    ...(photos?.map(p => p.photo_url) || []),
-  ];
+  const heroUrl = activity.hero_image_url || "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&h=500&fit=crop";
+  const galleryUrls = (photos?.map(p => p.photo_url) || []).filter(url => url !== heroUrl);
+  const allPhotos = [heroUrl, ...galleryUrls];
 
   const amenities = [
     { icon: Car, label: "Parking", available: activity.parking },
