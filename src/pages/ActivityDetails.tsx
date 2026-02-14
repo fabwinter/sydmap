@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -52,6 +52,7 @@ export default function ActivityDetails() {
   const [editingCheckIn, setEditingCheckIn] = useState<string | null>(null);
   const [editRating, setEditRating] = useState(0);
   const [editComment, setEditComment] = useState("");
+  const [heroIndex, setHeroIndex] = useState(0);
   const queryClient = useQueryClient();
 
   const { data: activity, isLoading: activityLoading, error } = useActivityById(id || "");
@@ -159,9 +160,9 @@ export default function ActivityDetails() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {isAdmin && <AdminPanel activity={activity} />}
-      {/* Hero Image */}
+      {/* Hero Image Carousel */}
       <div className="relative h-72 sm:h-80">
-        <img src={allPhotos[0]} alt={activity.name} className="w-full h-full object-cover" />
+        <img src={allPhotos[heroIndex] || allPhotos[0]} alt={activity.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         <button
           onClick={() => navigate(-1)}
@@ -169,6 +170,35 @@ export default function ActivityDetails() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
+        {/* Carousel nav arrows */}
+        {allPhotos.length > 1 && (
+          <>
+            <button
+              onClick={() => setHeroIndex((heroIndex - 1 + allPhotos.length) % allPhotos.length)}
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 text-white hover:bg-black/60"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setHeroIndex((heroIndex + 1) % allPhotos.length)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 text-white hover:bg-black/60"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </>
+        )}
+        {/* Dots */}
+        {allPhotos.length > 1 && (
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {allPhotos.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setHeroIndex(i)}
+                className={`h-2 rounded-full transition-all ${i === heroIndex ? "bg-white w-6" : "bg-white/50 w-2"}`}
+              />
+            ))}
+          </div>
+        )}
         <div className="absolute bottom-4 left-4">
           <span className="status-badge open">{activity.category}</span>
           <h1 className="text-2xl font-bold text-white mt-2">{activity.name}</h1>

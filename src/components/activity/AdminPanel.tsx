@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Shield, Trash2, ImagePlus, Pencil, Save, X, Loader2, Link as LinkIcon } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Shield, Trash2, ImagePlus, Pencil, Save, X, Loader2, Link as LinkIcon, ClipboardPaste, Images } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,7 @@ export function AdminPanel({ activity }: AdminPanelProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showImageInput, setShowImageInput] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -40,6 +41,112 @@ export function AdminPanel({ activity }: AdminPanelProps) {
     outdoor_seating: activity.outdoor_seating,
     pet_friendly: activity.pet_friendly,
   });
+
+  // Gallery images from photos table
+  const [galleryPhotos, setGalleryPhotos] = useState<{ id: string; photo_url: string }[]>([]);
+
+  const fetchGallery = useCallback(async () => {
+    const { data } = await supabase
+      .from("photos")
+      .select("id, photo_url")
+      .eq("activity_id", activity.id)
+      .order("uploaded_at", { ascending: true });
+    setGalleryPhotos(data || []);
+  }, [activity.id]);
+
+  useEffect(() => {
+    if (isOpen) fetchGallery();
+  }, [isOpen, fetchGallery]);
+
+  // Handle paste from clipboard
+  useEffect(() => {
+    if (!isOpen) return;
+    const handlePaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith("image/")) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) await uploadImageFile(file);
+          return;
+        }
+      }
+    };
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, [isOpen, activity.id]);
+
+  const uploadImageFile = async (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File too large (max 10MB)");
+      return;
+    }
+    setIsUploading(true);
+    try {
+      const ext = file.name?.split(".").pop() || "jpg";
+      const path = `admin/${activity.id}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("activity-photos")
+        .upload(path, file, { contentType: file.type });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("activity-photos")
+        .getPublicUrl(path);
+
+      await addPhotoToGallery(urlData.publicUrl);
+      toast.success("Image added to gallery");
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const addPhotoToGallery = async (url: string) => {
+    // If no hero image, set as hero first
+    if (!activity.hero_image_url) {
+      await supabase.rpc("admin_update_activity", {
+        p_activity_id: activity.id,
+        p_updates: { hero_image_url: url } as any,
+      });
+    }
+    // Also add to photos table for carousel
+    const { data: profile } = await supabase.rpc("get_profile_id_from_auth");
+    await supabase.from("photos").insert({
+      activity_id: activity.id,
+      photo_url: url,
+      user_id: profile || undefined,
+    });
+    queryClient.invalidateQueries({ queryKey: ["activity", activity.id] });
+    queryClient.invalidateQueries({ queryKey: ["activity-photos", activity.id] });
+    fetchGallery();
+  };
+
+  const handleSetAsHero = async (url: string) => {
+    try {
+      await supabase.rpc("admin_update_activity", {
+        p_activity_id: activity.id,
+        p_updates: { hero_image_url: url } as any,
+      });
+      queryClient.invalidateQueries({ queryKey: ["activity", activity.id] });
+      toast.success("Hero image updated");
+    } catch {
+      toast.error("Failed to set hero image");
+    }
+  };
+
+  const handleDeletePhoto = async (photoId: string) => {
+    const { error } = await supabase.from("photos").delete().eq("id", photoId);
+    if (error) {
+      toast.error("Failed to delete photo");
+      return;
+    }
+    fetchGallery();
+    queryClient.invalidateQueries({ queryKey: ["activity-photos", activity.id] });
+    toast.success("Photo removed");
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -77,48 +184,12 @@ export function AdminPanel({ activity }: AdminPanelProps) {
     }
   };
 
-  const handleImageUpload = async (file: File) => {
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File too large (max 10MB)");
-      return;
-    }
-    try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `admin/${activity.id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("activity-photos")
-        .upload(path, file, { contentType: file.type });
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("activity-photos")
-        .getPublicUrl(path);
-
-      await updateImage(urlData.publicUrl);
-    } catch (e: any) {
-      toast.error(e.message || "Upload failed");
-    }
-  };
-
   const handleImageUrl = async () => {
     if (!imageUrl.trim()) return;
-    await updateImage(imageUrl.trim());
+    await addPhotoToGallery(imageUrl.trim());
     setImageUrl("");
     setShowImageInput(false);
-  };
-
-  const updateImage = async (url: string) => {
-    try {
-      const { error } = await supabase.rpc("admin_update_activity", {
-        p_activity_id: activity.id,
-        p_updates: { hero_image_url: url } as any,
-      });
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["activity", activity.id] });
-      toast.success("Image updated");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to update image");
-    }
+    toast.success("Image added");
   };
 
   if (!isOpen) {
@@ -142,7 +213,7 @@ export function AdminPanel({ activity }: AdminPanelProps) {
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];
-          if (file) handleImageUpload(file);
+          if (file) uploadImageFile(file);
         }}
       />
 
@@ -158,17 +229,59 @@ export function AdminPanel({ activity }: AdminPanelProps) {
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Image Controls */}
+        {/* Image Gallery */}
         <section className="space-y-2">
-          <h3 className="text-xs font-bold uppercase text-muted-foreground">Hero Image</h3>
+          <h3 className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1">
+            <Images className="w-3 h-3" /> Image Gallery
+          </h3>
+
+          {/* Current hero */}
+          {activity.hero_image_url && (
+            <div className="relative">
+              <img src={activity.hero_image_url} alt="Hero" className="w-full h-32 rounded-lg object-cover" />
+              <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded">HERO</span>
+            </div>
+          )}
+
+          {/* Gallery thumbnails */}
+          {galleryPhotos.length > 0 && (
+            <div className="grid grid-cols-3 gap-2">
+              {galleryPhotos.map((photo) => (
+                <div key={photo.id} className="relative group">
+                  <img src={photo.photo_url} alt="" className="w-full h-20 rounded-lg object-cover" />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-1">
+                    <button
+                      onClick={() => handleSetAsHero(photo.photo_url)}
+                      className="p-1 bg-white/90 rounded text-[9px] font-bold text-foreground"
+                      title="Set as hero"
+                    >
+                      Hero
+                    </button>
+                    <button
+                      onClick={() => handleDeletePhoto(photo.id)}
+                      className="p-1 bg-destructive/90 rounded"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3 h-3 text-white" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add image buttons */}
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => fileInputRef.current?.click()}>
-              <ImagePlus className="w-3 h-3 mr-1" /> Upload
+            <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+              {isUploading ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <ImagePlus className="w-3 h-3 mr-1" />} Upload
             </Button>
             <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setShowImageInput(!showImageInput)}>
               <LinkIcon className="w-3 h-3 mr-1" /> URL
             </Button>
           </div>
+          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+            <ClipboardPaste className="w-3 h-3" /> Paste an image from clipboard (Ctrl/Cmd+V)
+          </p>
           {showImageInput && (
             <div className="flex gap-2">
               <input

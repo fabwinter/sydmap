@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import Map, { Marker, Popup, GeolocateControl, NavigationControl, MapRef } from "react-map-gl/mapbox";
 import { LngLatBounds } from "mapbox-gl";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, LayoutList, MapIcon, Search } from "lucide-react";
+import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, LayoutList, MapIcon, Search, Database, Cloud, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -12,6 +12,7 @@ import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { useUserLocation, calculateDistance } from "@/hooks/useUserLocation";
 import { useFoursquareSearch, type FoursquareVenue, normalizeFoursquareCategory } from "@/hooks/useFoursquareSearch";
 import { useImportFoursquareVenue } from "@/hooks/useImportFoursquareVenue";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { VenueList } from "@/components/map/VenueList";
 import { MapFilters } from "@/components/map/MapFilters";
 import { MobileVenueCard } from "@/components/map/MobileVenueCard";
@@ -50,6 +51,7 @@ export default function MapView() {
   const { filters, setMapBounds } = useSearchFilters();
   const { location: userLocation } = useUserLocation();
   const importVenue = useImportFoursquareVenue();
+  const isAdmin = useIsAdmin();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [mobileView, setMobileView] = useState<"map" | "list">("map");
   const [showSearchHere, setShowSearchHere] = useState(false);
@@ -281,6 +283,7 @@ export default function MapView() {
           Gym: "text-orange-500", Museum: "text-indigo-500", Bakery: "text-amber-500",
         }[activity.category] || "text-primary";
         const isSelected = selectedActivity?.id === activity.id;
+        const isFoursquare = activity.id.startsWith("fs-");
         return (
           <Marker key={activity.id} latitude={activity.latitude} longitude={activity.longitude} anchor="bottom"
             onClick={(e) => { e.originalEvent.stopPropagation(); handleMarkerClick(activity); }}
@@ -291,8 +294,15 @@ export default function MapView() {
               >
                 {activity.name}
               </span>
-              <div className={`rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110 ${isSelected ? "w-12 h-12 ring-2 ring-white scale-110" : "w-10 h-10"}`}>
-                <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
+              <div className="relative">
+                <div className={`rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110 ${isSelected ? "w-12 h-12 ring-2 ring-white scale-110" : "w-10 h-10"}`}>
+                  <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
+                </div>
+                {isAdmin && (
+                  <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold ${isFoursquare ? "bg-orange-500" : "bg-green-600"}`}>
+                    {isFoursquare ? "F" : "DB"}
+                  </div>
+                )}
               </div>
             </div>
           </Marker>
@@ -316,7 +326,27 @@ export default function MapView() {
               <span>{selectedActivity.rating?.toFixed(1) || "N/A"}</span>
               <span className="text-xs">({selectedActivity.review_count} reviews)</span>
             </div>
-            <Button size="sm" className="w-full mt-3" onClick={() => handleNavigateToDetails(selectedActivity)}>View Details</Button>
+            {isAdmin && selectedActivity.id.startsWith("fs-") && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full mt-2 gap-1 text-xs"
+                disabled={importVenue.isPending}
+                onClick={async () => {
+                  const fsId = selectedActivity.id.replace("fs-", "");
+                  const venue = foursquareVenues?.find(v => v.id === fsId);
+                  if (venue) {
+                    try {
+                      await importVenue.mutateAsync(venue);
+                      toast.success("Added to database!");
+                    } catch { toast.error("Failed to import"); }
+                  }
+                }}
+              >
+                <Plus className="w-3 h-3" /> Add to DB
+              </Button>
+            )}
+            <Button size="sm" className="w-full mt-2" onClick={() => handleNavigateToDetails(selectedActivity)}>View Details</Button>
           </div>
         </Popup>
       )}
@@ -392,7 +422,22 @@ export default function MapView() {
             )}
 
             {mobileView === "map" && (
-              <MobileVenueCard activity={selectedActivity} onClose={() => setSelectedActivity(null)} onNavigate={handleNavigateToDetails} />
+              <MobileVenueCard
+                activity={selectedActivity}
+                onClose={() => setSelectedActivity(null)}
+                onNavigate={handleNavigateToDetails}
+                isImporting={importVenue.isPending}
+                onImportToDb={async (activity) => {
+                  const fsId = activity.id.replace("fs-", "");
+                  const venue = foursquareVenues?.find(v => v.id === fsId);
+                  if (venue) {
+                    try {
+                      await importVenue.mutateAsync(venue);
+                      toast.success("Added to database!");
+                    } catch { toast.error("Failed to import"); }
+                  }
+                }}
+              />
             )}
 
             {isMobile && (
