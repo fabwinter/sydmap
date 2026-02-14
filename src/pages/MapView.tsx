@@ -98,7 +98,7 @@ export default function MapView() {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       } as Activity);
-      });
+    });
   }, [foursquareVenues, activities]);
 
   const urlLat = searchParams.get("lat");
