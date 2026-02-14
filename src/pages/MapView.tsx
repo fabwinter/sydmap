@@ -10,6 +10,8 @@ import { MAPBOX_TOKEN } from "@/config/mapbox";
 import { useAllActivities, type Activity } from "@/hooks/useActivities";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { useUserLocation, calculateDistance } from "@/hooks/useUserLocation";
+import { useFoursquareSearch, type FoursquareVenue } from "@/hooks/useFoursquareSearch";
+import { useImportFoursquareVenue } from "@/hooks/useImportFoursquareVenue";
 import { VenueList } from "@/components/map/VenueList";
 import { MapFilters } from "@/components/map/MapFilters";
 import { MobileVenueCard } from "@/components/map/MobileVenueCard";
@@ -46,6 +48,7 @@ export default function MapView() {
   const { data: activities, isLoading } = useAllActivities(500);
   const { filters, setMapBounds } = useSearchFilters();
   const { location: userLocation } = useUserLocation();
+  const importVenue = useImportFoursquareVenue();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [mobileView, setMobileView] = useState<"map" | "list">("map");
   const [showSearchHere, setShowSearchHere] = useState(false);
@@ -55,6 +58,44 @@ export default function MapView() {
 
   const userLat = userLocation?.latitude ?? SYDNEY_LAT;
   const userLng = userLocation?.longitude ?? SYDNEY_LNG;
+
+  // Foursquare search: use query or category as search term
+  const fsQuery = filters.query || filters.category || "";
+  const { data: foursquareVenues } = useFoursquareSearch(fsQuery, fsQuery.length >= 2);
+
+  // Convert Foursquare venues to Activity-compatible objects for map display
+  const foursquareAsActivities: Activity[] = useMemo(() => {
+    if (!foursquareVenues?.length) return [];
+    // Exclude venues already in local DB by foursquare_id
+    const localFsIds = new Set(activities?.filter(a => a.foursquare_id).map(a => a.foursquare_id) ?? []);
+    return foursquareVenues
+      .filter(v => !localFsIds.has(v.id))
+      .map(v => ({
+        id: `fs-${v.id}`,
+        name: v.name,
+        category: v.category.split(",")[0]?.trim() || "Restaurant",
+        latitude: v.latitude,
+        longitude: v.longitude,
+        address: v.address || null,
+        description: v.description || null,
+        rating: v.rating,
+        review_count: 0,
+        hero_image_url: v.photos?.[0] || null,
+        is_open: true,
+        phone: v.phone || null,
+        website: v.website || null,
+        hours_open: null,
+        hours_close: null,
+        parking: false,
+        wheelchair_accessible: false,
+        wifi: false,
+        outdoor_seating: false,
+        pet_friendly: false,
+        foursquare_id: v.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as Activity));
+  }, [foursquareVenues, activities]);
 
   const urlLat = searchParams.get("lat");
   const urlLng = searchParams.get("lng");
@@ -76,9 +117,9 @@ export default function MapView() {
 
   // Apply all filters from shared state
   const filteredActivities = useMemo(() => {
-    if (!activities) return [];
+    const allActivities = [...(activities || []), ...foursquareAsActivities];
 
-    return activities.filter((activity) => {
+    return allActivities.filter((activity) => {
       // Text search
       if (filters.query) {
         const query = filters.query.toLowerCase();
@@ -118,7 +159,7 @@ export default function MapView() {
       }
       return true;
     });
-  }, [activities, filters, userLat, userLng]);
+  }, [activities, foursquareAsActivities, filters, userLat, userLng]);
 
   // Auto-fit map bounds when filters change (but not mapBounds itself)
   const filterKey = JSON.stringify({ ...filters, mapBounds: null });
