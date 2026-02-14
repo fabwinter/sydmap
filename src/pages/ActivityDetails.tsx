@@ -186,46 +186,58 @@ export default function ActivityDetails() {
             </button>
           </>
         )}
-        {/* Dots */}
+        {/* Photo counter */}
         {allPhotos.length > 1 && (
-          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-1.5">
-            {allPhotos.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setHeroIndex(i)}
-                className={`h-2 rounded-full transition-all ${i === heroIndex ? "bg-white w-6" : "bg-white/50 w-2"}`}
-              />
-            ))}
+          <div className="absolute bottom-4 right-4 bg-black/50 text-white text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">
+            {heroIndex + 1}/{allPhotos.length}
           </div>
         )}
-        <div className="absolute bottom-4 left-4">
-          <span className="status-badge open">{activity.category}</span>
-          <h1 className="text-2xl font-bold text-white mt-2">{activity.name}</h1>
-        </div>
       </div>
       
       <div className="px-4 py-4 space-y-6 max-w-2xl mx-auto">
-        {/* Rating */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
+        {/* Title Block */}
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{activity.name}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {activity.category}
+            {activity.address && ` • ${activity.address.split(",").slice(-2).join(",").trim()}`}
+          </p>
+          <p className={`text-sm mt-0.5 ${activity.is_open ? "text-success" : "text-destructive"}`}>
+            {activity.is_open ? "Open" : "Closed"}
+            {activity.hours_close && !activity.is_open && ` until ${activity.hours_close}`}
+            {activity.hours_close && activity.is_open && ` · Closes at ${activity.hours_close}`}
+          </p>
+          <div className="flex items-center gap-1.5 mt-2">
             <Star className="w-5 h-5 fill-warning text-warning" />
-            <span className="text-lg font-bold">{activity.rating?.toFixed(1) || "N/A"}</span>
+            <span className="text-lg font-bold">{activity.rating?.toFixed(1) || "—"}</span>
+            <span className="text-sm text-muted-foreground">({activity.review_count.toLocaleString()})</span>
           </div>
-          <span className="text-muted-foreground">
-            out of {activity.review_count.toLocaleString()} reviews
-          </span>
-          {(activity.rating ?? 0) >= 4.5 && (
-            <span className="ml-auto text-sm text-primary font-medium">Top rated</span>
+        </div>
+
+        {/* Details List */}
+        <section className="divide-y divide-border rounded-xl border border-border bg-card overflow-hidden">
+          {activity.name && (
+            <DetailRow icon={MapPin} label="Name" value={activity.name} />
           )}
-        </div>
-        
-        {/* Quick Info */}
-        <div className="grid grid-cols-3 gap-3">
-          <InfoCard icon={MapPin} title={activity.address?.split(",")[0] || "Sydney"} subtitle={activity.address || "Sydney, NSW"} />
-          <InfoCard icon={Clock} title={activity.is_open ? "Open Now" : "Closed"} subtitle={activity.hours_close ? `Closes at ${activity.hours_close}` : "Hours vary"} highlight={activity.is_open} />
-          {activity.phone && <InfoCard icon={Phone} title="Call" subtitle={activity.phone} />}
-          {activity.website && <InfoCard icon={Globe} title="Website" subtitle={activity.website} />}
-        </div>
+          {activity.address && (
+            <DetailRow icon={MapPin} label="Address" value={activity.address} />
+          )}
+          {activity.website && (
+            <DetailRow icon={Globe} label="Website" value={activity.website} href={activity.website.startsWith("http") ? activity.website : `https://${activity.website}`} />
+          )}
+          {activity.phone && (
+            <DetailRow icon={Phone} label="Phone" value={activity.phone} href={`tel:${activity.phone}`} />
+          )}
+          <DetailRow
+            icon={Clock}
+            label="Hours"
+            value={
+              activity.hours_open && activity.hours_close
+                ? `${activity.hours_open} – ${activity.hours_close}`
+                : "Hours not available"
+            }
+          />
+        </section>
 
         {/* Check-in History */}
         {visitCount > 0 && (
@@ -475,12 +487,20 @@ export default function ActivityDetails() {
   );
 }
 
-function InfoCard({ icon: Icon, title, subtitle, highlight }: { icon: any; title: string; subtitle: string; highlight?: boolean }) {
+function DetailRow({ icon: Icon, label, value, href }: { icon: any; label: string; value: string; href?: string }) {
+  const content = href ? (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate">
+      {value}
+    </a>
+  ) : (
+    <span className="text-foreground truncate">{value}</span>
+  );
+
   return (
-    <div className="min-w-0 bg-card rounded-xl p-3 border border-border">
-      <Icon className={`w-5 h-5 mb-2 ${highlight ? "text-success" : "text-primary"}`} />
-      <p className={`font-semibold text-sm truncate ${highlight ? "text-success" : ""}`}>{title}</p>
-      <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
+    <div className="flex items-center gap-3 px-4 py-3">
+      <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+      <span className="text-sm text-muted-foreground w-16 shrink-0">{label}</span>
+      <div className="text-sm truncate flex-1">{content}</div>
     </div>
   );
 }
