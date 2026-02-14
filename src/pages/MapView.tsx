@@ -63,7 +63,7 @@ export default function MapView() {
   const userLng = userLocation?.longitude ?? SYDNEY_LNG;
 
   // Foursquare search: trigger on query text OR category filter
-  const fsQuery = filters.query || filters.category || "";
+  const fsQuery = filters.query || filters.cuisine || filters.category || "";
   const { data: foursquareVenues } = useFoursquareSearch(fsQuery, fsQuery.length >= 2);
 
   // Convert Foursquare venues to Activity-compatible objects for map display
