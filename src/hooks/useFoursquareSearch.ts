@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserLocation } from "@/hooks/useUserLocation";
 
 export interface FoursquareVenue {
   id: string;
@@ -19,8 +20,8 @@ export interface FoursquareVenue {
 
 async function searchFoursquare(
   query: string,
-  lat = -33.8688,
-  lng = 151.2093,
+  lat: number,
+  lng: number,
   radius = 10000,
   limit = 20
 ): Promise<FoursquareVenue[]> {
@@ -36,12 +37,19 @@ async function searchFoursquare(
   return data as FoursquareVenue[];
 }
 
+const SYDNEY_LAT = -33.8688;
+const SYDNEY_LNG = 151.2093;
+
 export function useFoursquareSearch(query: string, enabled = true) {
+  const { location } = useUserLocation();
+  const lat = location?.latitude ?? SYDNEY_LAT;
+  const lng = location?.longitude ?? SYDNEY_LNG;
+
   return useQuery({
-    queryKey: ["foursquare", query],
-    queryFn: () => searchFoursquare(query),
+    queryKey: ["foursquare", query, lat, lng],
+    queryFn: () => searchFoursquare(query, lat, lng),
     enabled: enabled && query.length >= 2,
-    staleTime: 1000 * 60 * 60, // 1 hour
+    staleTime: 1000 * 60 * 60,
     retry: 1,
   });
 }
