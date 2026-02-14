@@ -275,13 +275,25 @@ export default function MapView() {
       {filteredActivities.map((activity) => {
         const IconComponent = categoryIcons[activity.category] || MapPin;
         const colorClass = categoryColors[activity.category] || "bg-primary";
+        const textColor = {
+          Cafe: "text-accent", Beach: "text-secondary", Park: "text-green-500",
+          Restaurant: "text-red-500", Bar: "text-purple-500", Shopping: "text-pink-500",
+          Gym: "text-orange-500", Museum: "text-indigo-500", Bakery: "text-amber-500",
+        }[activity.category] || "text-primary";
         const isSelected = selectedActivity?.id === activity.id;
         return (
           <Marker key={activity.id} latitude={activity.latitude} longitude={activity.longitude} anchor="bottom"
             onClick={(e) => { e.originalEvent.stopPropagation(); handleMarkerClick(activity); }}
           >
-            <div className={`rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110 ${isSelected ? "w-12 h-12 ring-2 ring-white scale-110" : "w-10 h-10"}`}>
-              <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
+            <div className="flex flex-col items-center" style={{ transform: 'translateY(0)' }}>
+              <span
+                className={`${textColor} text-[11px] font-bold leading-tight max-w-[100px] truncate px-1 py-0.5 rounded bg-white/80 backdrop-blur-sm mb-0.5 text-center`}
+              >
+                {activity.name}
+              </span>
+              <div className={`rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110 ${isSelected ? "w-12 h-12 ring-2 ring-white scale-110" : "w-10 h-10"}`}>
+                <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
+              </div>
             </div>
           </Marker>
         );
