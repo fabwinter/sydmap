@@ -10,6 +10,7 @@ export interface MapBounds {
 export interface SearchFilters {
   query: string;
   category: string | null;
+  cuisine: string | null; // e.g. "Pizza", "Thai"
   isOpen: boolean;
   minRating: number | null;
   maxDistance: number | null; // km
@@ -21,6 +22,7 @@ interface SearchFiltersState {
   filters: SearchFilters;
   setQuery: (query: string) => void;
   setCategory: (category: string | null) => void;
+  setCuisine: (cuisine: string | null) => void;
   setIsOpen: (isOpen: boolean) => void;
   setMinRating: (rating: number | null) => void;
   setMaxDistance: (distance: number | null) => void;
@@ -32,6 +34,7 @@ interface SearchFiltersState {
 const initialFilters: SearchFilters = {
   query: "",
   category: null,
+  cuisine: null,
   isOpen: false,
   minRating: null,
   maxDistance: null,
@@ -43,6 +46,7 @@ export const useSearchFilters = create<SearchFiltersState>((set) => ({
   filters: initialFilters,
   setQuery: (query) => set((state) => ({ filters: { ...state.filters, query } })),
   setCategory: (category) => set((state) => ({ filters: { ...state.filters, category } })),
+  setCuisine: (cuisine) => set((state) => ({ filters: { ...state.filters, cuisine } })),
   setIsOpen: (isOpen) => set((state) => ({ filters: { ...state.filters, isOpen } })),
   setMinRating: (minRating) => set((state) => ({ filters: { ...state.filters, minRating } })),
   setMaxDistance: (maxDistance) => set((state) => ({ filters: { ...state.filters, maxDistance } })),

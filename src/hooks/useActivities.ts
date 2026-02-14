@@ -61,8 +61,14 @@ const tagToColumn: Record<string, string> = {
 function applyFilters(queryBuilder: any, filters: SearchFilters) {
   let query = queryBuilder;
 
-  if (filters.query) {
-    query = query.or(`name.ilike.%${filters.query}%,description.ilike.%${filters.query}%,category.ilike.%${filters.query}%,address.ilike.%${filters.query}%`);
+  // Combine text query + cuisine into a single ilike search
+  const searchTerms: string[] = [];
+  if (filters.query) searchTerms.push(filters.query);
+  if (filters.cuisine) searchTerms.push(filters.cuisine);
+  
+  if (searchTerms.length > 0) {
+    const term = searchTerms.join(" ");
+    query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%,category.ilike.%${term}%,address.ilike.%${term}%`);
   }
 
   if (filters.category) {
@@ -128,8 +134,9 @@ export function useFeaturedActivities(limit = 10) {
         .select("*")
         .eq("is_open", true) as any;
 
-      if (filters.query) {
-        query = query.or(`name.ilike.%${filters.query}%,description.ilike.%${filters.query}%,category.ilike.%${filters.query}%,address.ilike.%${filters.query}%`);
+      if (filters.query || filters.cuisine) {
+        const term = [filters.query, filters.cuisine].filter(Boolean).join(" ");
+        query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%,category.ilike.%${term}%,address.ilike.%${term}%`);
       }
       if (filters.category) {
         query = query.eq("category", filters.category);

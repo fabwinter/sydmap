@@ -23,6 +23,20 @@ const categories = [
   { id: "Bakery", label: "Bakeries", icon: Cake },
 ];
 
+const cuisineCategories = [
+  { id: "Pizza", label: "Pizza", icon: Utensils },
+  { id: "Thai", label: "Thai", icon: Utensils },
+  { id: "Japanese", label: "Japanese", icon: Utensils },
+  { id: "Italian", label: "Italian", icon: Utensils },
+  { id: "Mexican", label: "Mexican", icon: Utensils },
+  { id: "Chinese", label: "Chinese", icon: Utensils },
+  { id: "Indian", label: "Indian", icon: Utensils },
+  { id: "Korean", label: "Korean", icon: Utensils },
+  { id: "Vietnamese", label: "Vietnamese", icon: Utensils },
+  { id: "Seafood", label: "Seafood", icon: Utensils },
+  { id: "Brunch", label: "Brunch", icon: Coffee },
+];
+
 const experienceTags = [
   { id: "outdoor", label: "Outdoors", icon: Sun },
   { id: "indoor", label: "Indoor", icon: Home },
@@ -44,6 +58,7 @@ const travellerTags = [
 
 const allSuggestions = [
   ...categories.map((c) => ({ type: "category" as const, id: c.id, label: c.label, icon: c.icon })),
+  ...cuisineCategories.map((c) => ({ type: "cuisine" as const, id: c.id, label: c.label, icon: c.icon })),
   ...experienceTags.map((t) => ({ type: "tag" as const, id: t.id, label: t.label, icon: t.icon })),
   ...travellerTags.map((t) => ({ type: "tag" as const, id: t.id, label: t.label, icon: t.icon })),
 ];
@@ -54,7 +69,7 @@ interface SearchOverlayProps {
 }
 
 export function SearchOverlay({ className = "", variant = "home" }: SearchOverlayProps) {
-  const { filters, setQuery, setCategory, toggleTag, setMaxDistance, setMinRating, setIsOpen, clearFilters } = useSearchFilters();
+  const { filters, setQuery, setCategory, setCuisine, toggleTag, setMaxDistance, setMinRating, setIsOpen, clearFilters } = useSearchFilters();
   const { profile, isAuthenticated } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [searching, setSearching] = useState(false);
@@ -94,6 +109,9 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
     if (filters.category) {
       const cat = categories.find((c) => c.id === filters.category);
       chips.push({ key: "cat", label: cat?.label ?? filters.category, onRemove: () => setCategory(null) });
+    }
+    if (filters.cuisine) {
+      chips.push({ key: "cuisine", label: filters.cuisine, onRemove: () => setCuisine(null) });
     }
     if (filters.maxDistance !== null) {
       chips.push({ key: "dist", label: `≤${filters.maxDistance}km`, onRemove: () => setMaxDistance(null) });
@@ -151,6 +169,8 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
   const handleSuggestionClick = (suggestion: typeof allSuggestions[0]) => {
     if (suggestion.type === "category") {
       setCategory(filters.category === suggestion.id ? null : suggestion.id);
+    } else if (suggestion.type === "cuisine") {
+      setCuisine(filters.cuisine === suggestion.id ? null : suggestion.id);
     } else {
       toggleTag(suggestion.id);
     }
@@ -346,6 +366,20 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
                           className={`filter-chip flex items-center gap-1.5 text-xs ${filters.category === id ? "active" : ""}`}
                         >
                           <Icon className="w-3.5 h-3.5" />{label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Cuisine */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Cuisine</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {cuisineCategories.map(({ id, label }) => (
+                        <button key={id} onClick={() => setCuisine(filters.cuisine === id ? null : id)}
+                          className={`filter-chip flex items-center gap-1.5 text-xs ${filters.cuisine === id ? "active" : ""}`}
+                        >
+                          <Utensils className="w-3.5 h-3.5" />{label}
                         </button>
                       ))}
                     </div>
