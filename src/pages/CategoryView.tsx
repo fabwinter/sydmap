@@ -42,7 +42,7 @@ export default function CategoryView() {
     // Sort by rating descending
     result.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
 
-    return result.map(transformActivity);
+    return result.map((a) => transformActivity(a));
   }, [allActivities, section, config]);
 
   return (

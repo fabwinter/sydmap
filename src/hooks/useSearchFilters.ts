@@ -1,5 +1,12 @@
 import { create } from "zustand";
 
+export interface MapBounds {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+
 export interface SearchFilters {
   query: string;
   category: string | null;
@@ -7,6 +14,7 @@ export interface SearchFilters {
   minRating: number | null;
   maxDistance: number | null; // km
   tags: string[]; // indoor, outdoor, free, kid-friendly, etc.
+  mapBounds: MapBounds | null; // for "search this area" on map
 }
 
 interface SearchFiltersState {
@@ -17,6 +25,7 @@ interface SearchFiltersState {
   setMinRating: (rating: number | null) => void;
   setMaxDistance: (distance: number | null) => void;
   toggleTag: (tag: string) => void;
+  setMapBounds: (bounds: MapBounds | null) => void;
   clearFilters: () => void;
 }
 
@@ -27,6 +36,7 @@ const initialFilters: SearchFilters = {
   minRating: null,
   maxDistance: null,
   tags: [],
+  mapBounds: null,
 };
 
 export const useSearchFilters = create<SearchFiltersState>((set) => ({
@@ -43,5 +53,6 @@ export const useSearchFilters = create<SearchFiltersState>((set) => ({
         : [...state.filters.tags, tag];
       return { filters: { ...state.filters, tags } };
     }),
+  setMapBounds: (mapBounds) => set((state) => ({ filters: { ...state.filters, mapBounds } })),
   clearFilters: () => set({ filters: initialFilters }),
 }));
