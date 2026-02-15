@@ -326,3 +326,13 @@
     }
   }
 }
+
+/* Prevent pinch-zoom and drag on all pages; maps override this */
+html, body {
+  touch-action: pan-y;
+  overscroll-behavior: none;
+}
+
+.mapboxgl-map {
+  touch-action: auto;
+}

@@ -298,6 +298,17 @@ export default function ActivityDetails() {
         <section>
           <h2 className="section-header">Location</h2>
           <LocationMap latitude={activity.latitude} longitude={activity.longitude} name={activity.name} />
+          {activity.latitude && activity.longitude && (
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${activity.latitude},${activity.longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-border bg-card hover:border-primary/40 transition-colors text-sm font-medium text-foreground"
+            >
+              <MapPin className="w-4 h-4 text-primary" />
+              Get Directions
+            </a>
+          )}
         </section>
         
         {/* Reviews */}

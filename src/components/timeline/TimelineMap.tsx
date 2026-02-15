@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import MapGL, { Marker, Popup, GeolocateControl, NavigationControl, MapRef } from "react-map-gl/mapbox";
 import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star } from "lucide-react";
 import { useState, useCallback } from "react";
@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MAPBOX_TOKEN } from "@/config/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
+import mapboxgl from "mapbox-gl";
 import type { GroupedCheckIns } from "@/hooks/useCheckInTimeline";
 
 const categoryIcons: Record<string, any> = {
@@ -17,6 +18,12 @@ const categoryColors: Record<string, string> = {
   cafe: "bg-accent", restaurant: "bg-red-500", bar: "bg-purple-500",
   beach: "bg-secondary", park: "bg-green-500", shopping: "bg-pink-500",
   gym: "bg-orange-500", museum: "bg-indigo-500", bakery: "bg-amber-500",
+};
+
+const categoryTextColors: Record<string, string> = {
+  cafe: "text-accent", restaurant: "text-red-500", bar: "text-purple-500",
+  beach: "text-secondary", park: "text-green-500", shopping: "text-pink-500",
+  gym: "text-orange-500", museum: "text-indigo-500", bakery: "text-amber-500",
 };
 
 interface TimelineMapProps {
@@ -38,7 +45,6 @@ export function TimelineMap({ groups }: TimelineMapProps) {
   const mapRef = useRef<MapRef>(null);
   const [selected, setSelected] = useState<UniqueLocation | null>(null);
 
-  // Deduplicate activities from check-ins
   const locations = useMemo(() => {
     const map = new Map<string, UniqueLocation>();
     for (const group of groups) {
@@ -71,6 +77,14 @@ export function TimelineMap({ groups }: TimelineMapProps) {
     return { lat, lng };
   }, [locations]);
 
+  // Auto-zoom to fit all locations
+  useEffect(() => {
+    if (!mapRef.current || locations.length === 0) return;
+    const bounds = new mapboxgl.LngLatBounds();
+    locations.forEach((loc) => bounds.extend([loc.longitude, loc.latitude]));
+    mapRef.current.fitBounds(bounds, { padding: 60, maxZoom: 15, duration: 1000 });
+  }, [locations]);
+
   const handleMarkerClick = useCallback((loc: UniqueLocation) => {
     setSelected(loc);
   }, []);
@@ -100,6 +114,7 @@ export function TimelineMap({ groups }: TimelineMapProps) {
           const catKey = loc.category.toLowerCase();
           const IconComponent = categoryIcons[catKey] || MapPin;
           const colorClass = categoryColors[catKey] || "bg-primary";
+          const textColor = categoryTextColors[catKey] || "text-primary";
           const isSelected = selected?.activityId === loc.activityId;
 
           return (
@@ -113,8 +128,15 @@ export function TimelineMap({ groups }: TimelineMapProps) {
                 handleMarkerClick(loc);
               }}
             >
-              <div className={`rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transition-transform ${isSelected ? "w-12 h-12 ring-2 ring-white scale-110" : "w-10 h-10"}`}>
-                <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
+              <div className="flex flex-col items-center" style={{ transform: 'translateY(0)' }}>
+                <span
+                  className={`${textColor} text-[11px] font-bold leading-tight max-w-[100px] truncate px-1 py-0.5 rounded bg-white/80 backdrop-blur-sm mb-0.5 text-center`}
+                >
+                  {loc.name}
+                </span>
+                <div className={`rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110 ${isSelected ? "w-12 h-12 ring-2 ring-white scale-110" : "w-10 h-10"}`}>
+                  <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
+                </div>
               </div>
             </Marker>
           );
