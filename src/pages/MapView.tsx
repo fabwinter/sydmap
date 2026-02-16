@@ -420,14 +420,31 @@ export default function MapView() {
                 {isLoading ? "Loading..." : `${filteredActivities.length} places`}
               </span>
               <div className="flex items-center gap-2">
-                {isAdmin && (
-                  <button
-                    onClick={() => { setBulkMode(!bulkMode); setBulkSelected(new Set()); }}
-                    className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full transition-colors ${bulkMode ? "bg-destructive text-destructive-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
-                  >
-                    {bulkMode ? <CheckSquare className="w-3 h-3" /> : <Square className="w-3 h-3" />}
-                    {bulkMode ? "Selecting" : "Select"}
-                  </button>
+               {isAdmin && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => { setBulkMode(!bulkMode); setBulkSelected(new Set()); }}
+                      className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full transition-colors ${bulkMode ? "bg-destructive text-destructive-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                    >
+                      {bulkMode ? <CheckSquare className="w-3 h-3" /> : <Square className="w-3 h-3" />}
+                      {bulkMode ? "Selecting" : "Select"}
+                    </button>
+                    {bulkMode && (
+                      <button
+                        onClick={() => {
+                          const dbIds = filteredActivities.filter(a => !a.id.startsWith("fs-")).map(a => a.id);
+                          if (bulkSelected.size === dbIds.length) {
+                            setBulkSelected(new Set());
+                          } else {
+                            setBulkSelected(new Set(dbIds));
+                          }
+                        }}
+                        className="text-xs font-medium px-2 py-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      >
+                        {bulkSelected.size === filteredActivities.filter(a => !a.id.startsWith("fs-")).length ? "Deselect All" : "Select All"}
+                      </button>
+                    )}
+                  </div>
                 )}
                 <Link to="/" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
                   <LayoutList className="w-4 h-4" />List View
@@ -536,11 +553,20 @@ export default function MapView() {
           {bulkMode && (
             <BulkActionBar
               selectedCount={bulkSelected.size}
+              totalCount={filteredActivities.filter(a => !a.id.startsWith("fs-")).length}
               onDelete={() => {
                 if (!confirm(`Delete ${bulkSelected.size} activities? This cannot be undone.`)) return;
                 bulkDeleteMutation.mutate(Array.from(bulkSelected));
               }}
               onClear={() => { setBulkSelected(new Set()); setBulkMode(false); }}
+              onSelectAll={() => {
+                const dbIds = filteredActivities.filter(a => !a.id.startsWith("fs-")).map(a => a.id);
+                if (bulkSelected.size === dbIds.length) {
+                  setBulkSelected(new Set());
+                } else {
+                  setBulkSelected(new Set(dbIds));
+                }
+              }}
               isDeleting={bulkDeleteMutation.isPending}
             />
           )}
