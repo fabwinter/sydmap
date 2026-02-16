@@ -1,5 +1,4 @@
-import { Star, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Star, MapPin, CheckSquare, Square } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { type Activity } from "@/hooks/useActivities";
 import { cn } from "@/lib/utils";
@@ -11,6 +10,9 @@ interface VenueListProps {
   selectedActivity: Activity | null;
   onSelectActivity: (activity: Activity) => void;
   onNavigateToDetails: (activity: Activity) => void;
+  bulkMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
 }
 
 const categoryColors: Record<string, string> = {
@@ -18,9 +20,7 @@ const categoryColors: Record<string, string> = {
   Beach: "bg-secondary",
   Park: "bg-green-500",
   Restaurant: "bg-red-500",
-  Bar: "bg-purple-500",
   Shopping: "bg-pink-500",
-  Gym: "bg-orange-500",
   Museum: "bg-indigo-500",
   Bakery: "bg-amber-500",
 };
@@ -29,19 +29,14 @@ const listContainerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
+    transition: { staggerChildren: 0.1 },
   },
 };
 
 const listItemVariants = {
-  hidden: { 
-    opacity: 0, 
-    y: 20 
-  },
-  visible: { 
-    opacity: 1, 
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
     y: 0,
     transition: {
       duration: 0.4,
@@ -51,9 +46,7 @@ const listItemVariants = {
   exit: {
     opacity: 0,
     y: -10,
-    transition: {
-      duration: 0.2,
-    },
+    transition: { duration: 0.2 },
   },
 };
 
@@ -63,6 +56,9 @@ export function VenueList({
   selectedActivity,
   onSelectActivity,
   onNavigateToDetails,
+  bulkMode = false,
+  selectedIds = new Set(),
+  onToggleSelect,
 }: VenueListProps) {
   if (isLoading) {
     return (
@@ -101,6 +97,7 @@ export function VenueList({
           >
             {activities.map((activity) => {
               const isSelected = selectedActivity?.id === activity.id;
+              const isBulkSelected = selectedIds.has(activity.id);
               return (
                 <motion.div
                   key={activity.id}
@@ -108,16 +105,34 @@ export function VenueList({
                   layout
                   className={cn(
                     "bg-card rounded-xl p-4 cursor-pointer transition-all border-2",
-                    isSelected
+                    bulkMode && isBulkSelected
+                      ? "border-destructive shadow-md bg-destructive/5"
+                      : isSelected
                       ? "border-primary shadow-md"
                       : "border-transparent hover:border-border hover:shadow-sm"
                   )}
-                  onClick={() => onNavigateToDetails(activity)}
+                  onClick={() => {
+                    if (bulkMode && onToggleSelect && !activity.id.startsWith("fs-")) {
+                      onToggleSelect(activity.id);
+                    } else {
+                      onNavigateToDetails(activity);
+                    }
+                  }}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex gap-4">
-                    {/* Thumbnail - larger */}
+                    {/* Bulk select checkbox */}
+                    {bulkMode && !activity.id.startsWith("fs-") && (
+                      <div className="flex items-center shrink-0">
+                        {isBulkSelected ? (
+                          <CheckSquare className="w-5 h-5 text-destructive" />
+                        ) : (
+                          <Square className="w-5 h-5 text-muted-foreground" />
+                        )}
+                      </div>
+                    )}
+                    {/* Thumbnail */}
                     <div className="w-28 h-28 rounded-xl bg-muted overflow-hidden shrink-0">
                       {activity.hero_image_url ? (
                         <img
@@ -131,7 +146,6 @@ export function VenueList({
                         </div>
                       )}
                     </div>
-
                     {/* Content */}
                     <div className="flex-1 min-w-0 py-1">
                       <div className="flex items-center gap-2 mb-1.5">

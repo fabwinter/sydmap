@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -22,6 +22,7 @@ import {
   Pencil,
   Trash2,
   Loader2,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,6 +53,11 @@ export default function ActivityDetails() {
   const [editingCheckIn, setEditingCheckIn] = useState<string | null>(null);
   const [editRating, setEditRating] = useState(0);
   const [editComment, setEditComment] = useState("");
+  const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
+  const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
+  const [editExistingPhoto, setEditExistingPhoto] = useState<string | null>(null);
+  const [isUploadingEditPhoto, setIsUploadingEditPhoto] = useState(false);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const queryClient = useQueryClient();
 
@@ -81,10 +87,12 @@ export default function ActivityDetails() {
   });
 
   const updateCheckIn = useMutation({
-    mutationFn: async ({ checkInId, rating, comment }: { checkInId: string; rating: number; comment: string }) => {
+    mutationFn: async ({ checkInId, rating, comment, photoUrl }: { checkInId: string; rating: number; comment: string; photoUrl?: string | null }) => {
+      const updateData: any = { rating, comment: comment.trim() || null };
+      if (photoUrl !== undefined) updateData.photo_url = photoUrl;
       const { error } = await supabase
         .from("check_ins")
-        .update({ rating, comment: comment.trim() || null })
+        .update(updateData)
         .eq("id", checkInId);
       if (error) throw error;
     },
@@ -409,15 +417,89 @@ export default function ActivityDetails() {
                   rows={2}
                   className="w-full bg-muted rounded-xl px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                 />
+                {/* Photo upload/preview for edit */}
+                <input
+                  ref={editFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 5 * 1024 * 1024) { toast.error("Photo must be under 5MB"); return; }
+                    setEditPhotoFile(file);
+                    const reader = new FileReader();
+                    reader.onload = (ev) => setEditPhotoPreview(ev.target?.result as string);
+                    reader.readAsDataURL(file);
+                    setEditExistingPhoto(null);
+                  }}
+                />
+                {(editPhotoPreview || editExistingPhoto) ? (
+                  <div className="relative">
+                    <img
+                      src={editPhotoPreview || editExistingPhoto!}
+                      alt="Check-in photo"
+                      className="w-full h-32 rounded-lg object-cover"
+                    />
+                    <div className="absolute top-1 right-1 flex gap-1">
+                      <button
+                        onClick={() => editFileInputRef.current?.click()}
+                        className="p-1 rounded-full bg-black/50 text-white hover:bg-black/70"
+                        title="Change photo"
+                      >
+                        <Camera className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={() => { setEditPhotoFile(null); setEditPhotoPreview(null); setEditExistingPhoto(null); }}
+                        className="p-1 rounded-full bg-black/50 text-white hover:bg-black/70"
+                        title="Remove photo"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => editFileInputRef.current?.click()}
+                    className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-border rounded-xl hover:border-primary hover:bg-primary/5 transition-colors text-sm text-muted-foreground"
+                  >
+                    <Camera className="w-4 h-4" /> Add photo
+                  </button>
+                )}
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1" onClick={() => setEditingCheckIn(null)}>Cancel</Button>
+                  <Button size="sm" variant="outline" className="flex-1" onClick={() => { setEditingCheckIn(null); setEditPhotoFile(null); setEditPhotoPreview(null); setEditExistingPhoto(null); }}>Cancel</Button>
                   <Button
                     size="sm"
                     className="flex-1"
-                    disabled={updateCheckIn.isPending || editRating === 0}
-                    onClick={() => updateCheckIn.mutate({ checkInId: currentVisit.id, rating: editRating, comment: editComment })}
+                    disabled={updateCheckIn.isPending || isUploadingEditPhoto || editRating === 0}
+                    onClick={async () => {
+                      let photoUrl: string | null | undefined = undefined;
+                      // Upload new photo if selected
+                      if (editPhotoFile) {
+                        setIsUploadingEditPhoto(true);
+                        try {
+                          const { data: profile } = await supabase.from("profiles").select("id").eq("user_id", user!.id).single();
+                          if (!profile) throw new Error("Profile not found");
+                          const ext = editPhotoFile.name.split(".").pop() || "jpg";
+                          const path = `${profile.id}/${Date.now()}.${ext}`;
+                          const { error: uploadError } = await supabase.storage.from("check-in-photos").upload(path, editPhotoFile, { contentType: editPhotoFile.type });
+                          if (uploadError) throw uploadError;
+                          const { data: urlData } = supabase.storage.from("check-in-photos").getPublicUrl(path);
+                          photoUrl = urlData.publicUrl;
+                        } catch (err: any) {
+                          toast.error(err.message || "Photo upload failed");
+                          setIsUploadingEditPhoto(false);
+                          return;
+                        }
+                        setIsUploadingEditPhoto(false);
+                      } else if (!editExistingPhoto && currentVisit.photo_url) {
+                        // Photo was removed
+                        photoUrl = null;
+                      }
+                      updateCheckIn.mutate({ checkInId: currentVisit.id, rating: editRating, comment: editComment, photoUrl });
+                    }}
                   >
-                    {updateCheckIn.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
+                    {(updateCheckIn.isPending || isUploadingEditPhoto) ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
                   </Button>
                 </div>
               </div>
@@ -452,6 +534,9 @@ export default function ActivityDetails() {
                       setEditingCheckIn(currentVisit.id);
                       setEditRating(currentVisit.rating);
                       setEditComment(currentVisit.comment || "");
+                      setEditExistingPhoto(currentVisit.photo_url || null);
+                      setEditPhotoFile(null);
+                      setEditPhotoPreview(null);
                     }}
                     className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
