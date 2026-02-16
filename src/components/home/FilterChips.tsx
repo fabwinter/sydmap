@@ -1,8 +1,9 @@
 import { useState } from "react";
 import {
-  Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake,
+  Coffee, Waves, TreePine, Utensils, Landmark, ShoppingBag, Cake,
   SlidersHorizontal, X, Baby, Sun, Home, DollarSign, Dog, Accessibility,
-  Wifi, Car, Users, Heart, Moon, Palette, Mountain, ChevronDown, UtensilsCrossed,
+  Wifi, Car, Mountain, Palette, GraduationCap, Gamepad2, Tent, Bike,
+  UtensilsCrossed,
 } from "lucide-react";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { Slider } from "@/components/ui/slider";
@@ -15,10 +16,8 @@ const categories = [
   { id: "Beach", label: "Beaches", icon: Waves },
   { id: "Park", label: "Parks", icon: TreePine },
   { id: "Restaurant", label: "Restaurants", icon: Utensils },
-  { id: "Bar", label: "Bars", icon: Wine },
   { id: "Museum", label: "Museums", icon: Landmark },
   { id: "Shopping", label: "Shopping", icon: ShoppingBag },
-  { id: "Gym", label: "Gyms", icon: Dumbbell },
   { id: "Bakery", label: "Bakeries", icon: Cake },
 ];
 
@@ -40,7 +39,6 @@ const experienceTags = [
   { id: "outdoor", label: "Outdoors", icon: Sun },
   { id: "indoor", label: "Indoor", icon: Home },
   { id: "free", label: "Free", icon: DollarSign },
-  { id: "kid-friendly", label: "Kid Friendly", icon: Baby },
   { id: "pet-friendly", label: "Pet Friendly", icon: Dog },
   { id: "accessible", label: "Accessible", icon: Accessibility },
   { id: "wifi", label: "WiFi", icon: Wifi },
@@ -48,21 +46,33 @@ const experienceTags = [
   { id: "outdoor-seating", label: "Outdoor Seating", icon: Mountain },
 ];
 
-const travellerTags = [
-  { id: "date-night", label: "Date Night", icon: Heart },
-  { id: "groups", label: "Groups", icon: Users },
-  { id: "nightlife", label: "Nightlife", icon: Moon },
+const familyTags = [
+  { id: "play-area", label: "Play Area", icon: Gamepad2 },
+  { id: "pram-accessible", label: "Pram Accessible", icon: Baby },
+  { id: "change-rooms", label: "Change Rooms", icon: Baby },
+  { id: "high-chairs", label: "High Chairs", icon: Baby },
+  { id: "educational", label: "Educational", icon: GraduationCap },
+  { id: "nature-adventure", label: "Nature & Adventure", icon: Tent },
+  { id: "active-play", label: "Active Play", icon: Bike },
   { id: "arts-culture", label: "Arts & Culture", icon: Palette },
 ];
 
+const ageGroups = [
+  { id: "baby", label: "Baby (0–2)", icon: Baby },
+  { id: "toddler", label: "Toddler (3–5)", icon: Baby },
+  { id: "kids", label: "Kids (6–12)", icon: Gamepad2 },
+  { id: "teens", label: "Teens (13–17)", icon: GraduationCap },
+];
+
 export function FilterChips() {
-  const { filters, setCategory, setCuisine, toggleTag, setMaxDistance, setMinRating, clearFilters } = useSearchFilters();
+  const { filters, setCategory, setCuisine, toggleTag, toggleAgeGroup, setMaxDistance, setMinRating, clearFilters } = useSearchFilters();
   const [isOpen, setIsOpen] = useState(false);
 
   const activeFilterCount =
     (filters.category ? 1 : 0) +
     (filters.cuisine ? 1 : 0) +
     filters.tags.length +
+    filters.ageGroups.length +
     (filters.maxDistance !== null ? 1 : 0) +
     (filters.minRating !== null ? 1 : 0) +
     (filters.isOpen ? 1 : 0);
@@ -170,11 +180,30 @@ export function FilterChips() {
                   </div>
                 </div>
 
-                {/* Traveller type */}
+                {/* Age groups */}
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground mb-3">Traveller type</h3>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Kids age group</h3>
                   <div className="flex flex-wrap gap-2">
-                    {travellerTags.map(({ id, label, icon: Icon }) => (
+                    {ageGroups.map(({ id, label, icon: Icon }) => (
+                      <button
+                        key={id}
+                        onClick={() => toggleAgeGroup(id)}
+                        className={`filter-chip flex items-center gap-1.5 text-xs ${
+                          filters.ageGroups.includes(id) ? "active" : ""
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Family amenities */}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Family amenities</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {familyTags.map(({ id, label, icon: Icon }) => (
                       <button
                         key={id}
                         onClick={() => toggleTag(id)}

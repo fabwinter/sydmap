@@ -11,10 +11,8 @@ const categories = [
   { name: "Park", color: "#22C55E" },
   { name: "Restaurant", color: "#F59E0B" },
   { name: "Museum", color: "#8B5CF6" },
-  { name: "Bar", color: "#EC4899" },
   { name: "Bakery", color: "#D97706" },
   { name: "Shopping", color: "#F472B6" },
-  { name: "Gym", color: "#FB923C" },
 ];
 
 const requirementOptions = [
