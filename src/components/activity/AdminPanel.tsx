@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Shield, Trash2, ImagePlus, Pencil, Save, X, Loader2, Link as LinkIcon, ClipboardPaste, Images } from "lucide-react";
+import { Shield, Trash2, ImagePlus, Pencil, Save, X, Loader2, Link as LinkIcon, ClipboardPaste, Images, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
@@ -237,9 +237,29 @@ export function AdminPanel({ activity }: AdminPanelProps) {
 
           {/* Current hero */}
           {activity.hero_image_url && (
-            <div className="relative">
+            <div className="relative group">
               <img src={activity.hero_image_url} alt="Hero" className="w-full h-32 rounded-lg object-cover" />
               <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 rounded">HERO</span>
+              <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => {
+                    // Toggle object-position to help reframe
+                    const img = document.querySelector('[data-hero-admin]') as HTMLImageElement;
+                    if (img) {
+                      const positions = ['center', 'top', 'bottom', 'left', 'right'];
+                      const current = img.style.objectPosition || 'center';
+                      const idx = positions.indexOf(current);
+                      const next = positions[(idx + 1) % positions.length];
+                      img.style.objectPosition = next;
+                      toast.info(`Position: ${next}`);
+                    }
+                  }}
+                  className="p-1 bg-black/60 rounded text-white text-[9px] font-bold"
+                  title="Adjust fit position"
+                >
+                  <Maximize className="w-3 h-3" />
+                </button>
+              </div>
             </div>
           )}
 
@@ -248,17 +268,31 @@ export function AdminPanel({ activity }: AdminPanelProps) {
             <div className="grid grid-cols-3 gap-2">
               {galleryPhotos.map((photo) => (
                 <div key={photo.id} className="relative group">
-                  <img src={photo.photo_url} alt="" className="w-full h-20 rounded-lg object-cover" />
+                  <img
+                    src={photo.photo_url}
+                    alt=""
+                    className="w-full h-20 rounded-lg object-cover cursor-pointer"
+                    onClick={() => {
+                      // Toggle between cover and contain on click
+                      const img = document.querySelector(`[data-photo-id="${photo.id}"]`) as HTMLImageElement;
+                      if (img) {
+                        const isCover = img.style.objectFit !== 'contain';
+                        img.style.objectFit = isCover ? 'contain' : 'cover';
+                        img.style.backgroundColor = isCover ? 'hsl(var(--muted))' : '';
+                      }
+                    }}
+                    data-photo-id={photo.id}
+                  />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-1">
                     <button
-                      onClick={() => handleSetAsHero(photo.photo_url)}
+                      onClick={(e) => { e.stopPropagation(); handleSetAsHero(photo.photo_url); }}
                       className="p-1 bg-white/90 rounded text-[9px] font-bold text-foreground"
                       title="Set as hero"
                     >
                       Hero
                     </button>
                     <button
-                      onClick={() => handleDeletePhoto(photo.id)}
+                      onClick={(e) => { e.stopPropagation(); handleDeletePhoto(photo.id); }}
                       className="p-1 bg-destructive/90 rounded"
                       title="Delete"
                     >

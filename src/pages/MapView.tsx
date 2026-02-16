@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import Map, { Marker, Popup, GeolocateControl, NavigationControl, MapRef } from "react-map-gl/mapbox";
 import { LngLatBounds } from "mapbox-gl";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, LayoutList, MapIcon, Search, Database, Cloud, Plus } from "lucide-react";
+import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, LayoutList, MapIcon, Search, Database, Cloud, Plus, CheckSquare, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -16,10 +16,13 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { VenueList } from "@/components/map/VenueList";
 import { MapFilters } from "@/components/map/MapFilters";
 import { MobileVenueCard } from "@/components/map/MobileVenueCard";
+import { BulkActionBar } from "@/components/map/BulkActionBar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { triggerHaptic } from "@/lib/haptics";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const categoryIcons: Record<string, any> = {
   Cafe: Coffee, Beach: Waves, Park: TreePine, Restaurant: Utensils, Bar: Wine,
@@ -55,9 +58,37 @@ export default function MapView() {
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [mobileView, setMobileView] = useState<"map" | "list">("map");
   const [showSearchHere, setShowSearchHere] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
   const mapRef = useRef<MapRef>(null);
   const isMobile = useIsMobile();
   const userMovedMap = useRef(false);
+  const queryClient = useQueryClient();
+
+  const toggleBulkSelect = useCallback((id: string) => {
+    setBulkSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      for (const id of ids) {
+        const { error } = await supabase.rpc("admin_delete_activity", { p_activity_id: id });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      toast.success(`Deleted ${bulkSelected.size} activities`);
+      setBulkSelected(new Set());
+      setBulkMode(false);
+    },
+    onError: (err: any) => toast.error(err.message || "Bulk delete failed"),
+  });
 
   const userLat = userLocation?.latitude ?? SYDNEY_LAT;
   const userLng = userLocation?.longitude ?? SYDNEY_LNG;
@@ -297,9 +328,17 @@ export default function MapView() {
         }[activity.category] || "text-primary";
         const isSelected = selectedActivity?.id === activity.id;
         const isFoursquare = activity.id.startsWith("fs-");
+        const isBulkSelected = bulkSelected.has(activity.id);
         return (
           <Marker key={activity.id} latitude={activity.latitude} longitude={activity.longitude} anchor="bottom"
-            onClick={(e) => { e.originalEvent.stopPropagation(); handleMarkerClick(activity); }}
+            onClick={(e) => {
+              e.originalEvent.stopPropagation();
+              if (bulkMode && !isFoursquare) {
+                toggleBulkSelect(activity.id);
+              } else {
+                handleMarkerClick(activity);
+              }
+            }}
           >
             <div className="flex flex-col items-center" style={{ transform: 'translateY(0)' }}>
               <span
@@ -308,10 +347,14 @@ export default function MapView() {
                 {activity.name}
               </span>
               <div className="relative">
-                <div className={`rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110 ${isSelected ? "w-12 h-12 ring-2 ring-white scale-110" : "w-10 h-10"}`}>
-                  <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
+                <div className={`rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110 ${isBulkSelected ? "w-12 h-12 ring-3 ring-destructive scale-110" : isSelected ? "w-12 h-12 ring-2 ring-white scale-110" : "w-10 h-10"}`}>
+                  {bulkMode && !isFoursquare ? (
+                    isBulkSelected ? <CheckSquare className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} /> : <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
+                  ) : (
+                    <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
+                  )}
                 </div>
-                {isAdmin && (
+                {isAdmin && !bulkMode && (
                   <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold ${isFoursquare ? "bg-orange-500" : "bg-green-600"}`}>
                     {isFoursquare ? "F" : "DB"}
                   </div>
@@ -376,14 +419,25 @@ export default function MapView() {
               <span className="text-sm font-medium text-muted-foreground">
                 {isLoading ? "Loading..." : `${filteredActivities.length} places`}
               </span>
-              <Link to="/" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
-                <LayoutList className="w-4 h-4" />List View
-              </Link>
+              <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <button
+                    onClick={() => { setBulkMode(!bulkMode); setBulkSelected(new Set()); }}
+                    className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full transition-colors ${bulkMode ? "bg-destructive text-destructive-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                  >
+                    {bulkMode ? <CheckSquare className="w-3 h-3" /> : <Square className="w-3 h-3" />}
+                    {bulkMode ? "Selecting" : "Select"}
+                  </button>
+                )}
+                <Link to="/" className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+                  <LayoutList className="w-4 h-4" />List View
+                </Link>
+              </div>
             </div>
             <MapFilters activityCount={filteredActivities.length} isLoading={isLoading} />
           </div>
           <div className="flex-1 overflow-y-auto">
-            <VenueList activities={filteredActivities} isLoading={isLoading} selectedActivity={selectedActivity} onSelectActivity={handleMarkerClick} onNavigateToDetails={handleNavigateToDetails} />
+            <VenueList activities={filteredActivities} isLoading={isLoading} selectedActivity={selectedActivity} onSelectActivity={handleMarkerClick} onNavigateToDetails={handleNavigateToDetails} bulkMode={bulkMode} selectedIds={bulkSelected} onToggleSelect={toggleBulkSelect} />
           </div>
         </div>
 
@@ -459,7 +513,7 @@ export default function MapView() {
                   <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 28, stiffness: 300 }} className="absolute inset-x-0 bottom-0 top-0 z-10 bg-background/95 backdrop-blur-sm rounded-t-2xl shadow-elevated flex flex-col">
                     <div className="flex justify-center py-2 shrink-0"><div className="w-10 h-1 rounded-full bg-muted-foreground/30" /></div>
                     <div className="flex-1 overflow-y-auto pb-20">
-                      <VenueList activities={filteredActivities} isLoading={isLoading} selectedActivity={selectedActivity} onSelectActivity={handleMarkerClick} onNavigateToDetails={handleNavigateToDetails} />
+                      <VenueList activities={filteredActivities} isLoading={isLoading} selectedActivity={selectedActivity} onSelectActivity={handleMarkerClick} onNavigateToDetails={handleNavigateToDetails} bulkMode={bulkMode} selectedIds={bulkSelected} onToggleSelect={toggleBulkSelect} />
                     </div>
                   </motion.div>
                 )}
@@ -477,6 +531,20 @@ export default function MapView() {
             </button>
           )}
         </div>
+
+        <AnimatePresence>
+          {bulkMode && (
+            <BulkActionBar
+              selectedCount={bulkSelected.size}
+              onDelete={() => {
+                if (!confirm(`Delete ${bulkSelected.size} activities? This cannot be undone.`)) return;
+                bulkDeleteMutation.mutate(Array.from(bulkSelected));
+              }}
+              onClear={() => { setBulkSelected(new Set()); setBulkMode(false); }}
+              isDeleting={bulkDeleteMutation.isPending}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </AppLayout>
   );
