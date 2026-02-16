@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import {
-  Search, X, SlidersHorizontal, Coffee, Waves, TreePine, Utensils, Wine, Landmark,
-  ShoppingBag, Dumbbell, Cake, Sun, Home, DollarSign, Baby, Dog, Accessibility,
-  Wifi, Car, Mountain, Heart, Users, Moon, Palette, Loader2,
+  Search, X, SlidersHorizontal, Coffee, Waves, TreePine, Utensils, Landmark,
+  ShoppingBag, Cake, Sun, Home, DollarSign, Baby, Dog, Accessibility,
+  Wifi, Car, Mountain, Palette, Loader2, GraduationCap, Gamepad2, Tent, Bike,
 } from "lucide-react";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,10 +16,8 @@ const categories = [
   { id: "Beach", label: "Beaches", icon: Waves },
   { id: "Park", label: "Parks", icon: TreePine },
   { id: "Restaurant", label: "Restaurants", icon: Utensils },
-  { id: "Bar", label: "Bars", icon: Wine },
   { id: "Museum", label: "Museums", icon: Landmark },
   { id: "Shopping", label: "Shopping", icon: ShoppingBag },
-  { id: "Gym", label: "Gyms", icon: Dumbbell },
   { id: "Bakery", label: "Bakeries", icon: Cake },
 ];
 
@@ -41,7 +39,6 @@ const experienceTags = [
   { id: "outdoor", label: "Outdoors", icon: Sun },
   { id: "indoor", label: "Indoor", icon: Home },
   { id: "free", label: "Free", icon: DollarSign },
-  { id: "kid-friendly", label: "Kid Friendly", icon: Baby },
   { id: "pet-friendly", label: "Pet Friendly", icon: Dog },
   { id: "accessible", label: "Accessible", icon: Accessibility },
   { id: "wifi", label: "WiFi", icon: Wifi },
@@ -49,18 +46,29 @@ const experienceTags = [
   { id: "outdoor-seating", label: "Outdoor Seating", icon: Mountain },
 ];
 
-const travellerTags = [
-  { id: "date-night", label: "Date Night", icon: Heart },
-  { id: "groups", label: "Groups", icon: Users },
-  { id: "nightlife", label: "Nightlife", icon: Moon },
+const familyTags = [
+  { id: "play-area", label: "Play Area", icon: Gamepad2 },
+  { id: "pram-accessible", label: "Pram Accessible", icon: Baby },
+  { id: "change-rooms", label: "Change Rooms", icon: Baby },
+  { id: "high-chairs", label: "High Chairs", icon: Baby },
+  { id: "educational", label: "Educational", icon: GraduationCap },
+  { id: "nature-adventure", label: "Nature & Adventure", icon: Tent },
+  { id: "active-play", label: "Active Play", icon: Bike },
   { id: "arts-culture", label: "Arts & Culture", icon: Palette },
+];
+
+const ageGroups = [
+  { id: "baby", label: "Baby (0–2)", icon: Baby },
+  { id: "toddler", label: "Toddler (3–5)", icon: Baby },
+  { id: "kids", label: "Kids (6–12)", icon: Gamepad2 },
+  { id: "teens", label: "Teens (13–17)", icon: GraduationCap },
 ];
 
 const allSuggestions = [
   ...categories.map((c) => ({ type: "category" as const, id: c.id, label: c.label, icon: c.icon })),
   ...cuisineCategories.map((c) => ({ type: "cuisine" as const, id: c.id, label: c.label, icon: c.icon })),
   ...experienceTags.map((t) => ({ type: "tag" as const, id: t.id, label: t.label, icon: t.icon })),
-  ...travellerTags.map((t) => ({ type: "tag" as const, id: t.id, label: t.label, icon: t.icon })),
+  ...familyTags.map((t) => ({ type: "tag" as const, id: t.id, label: t.label, icon: t.icon })),
 ];
 
 interface SearchOverlayProps {
@@ -69,7 +77,7 @@ interface SearchOverlayProps {
 }
 
 export function SearchOverlay({ className = "", variant = "home" }: SearchOverlayProps) {
-  const { filters, setQuery, setCategory, setCuisine, toggleTag, setMaxDistance, setMinRating, setIsOpen, clearFilters } = useSearchFilters();
+  const { filters, setQuery, setCategory, setCuisine, toggleTag, toggleAgeGroup, setMaxDistance, setMinRating, setIsOpen, clearFilters } = useSearchFilters();
   const { profile, isAuthenticated } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const [searching, setSearching] = useState(false);
@@ -123,8 +131,12 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
       chips.push({ key: "open", label: "Open Now", onRemove: () => setIsOpen(false) });
     }
     filters.tags.forEach((tag) => {
-      const found = [...experienceTags, ...travellerTags].find((t) => t.id === tag);
+      const found = [...experienceTags, ...familyTags].find((t) => t.id === tag);
       chips.push({ key: tag, label: found?.label ?? tag, onRemove: () => toggleTag(tag) });
+    });
+    filters.ageGroups.forEach((ag) => {
+      const found = ageGroups.find((a) => a.id === ag);
+      chips.push({ key: `age-${ag}`, label: found?.label ?? ag, onRemove: () => toggleAgeGroup(ag) });
     });
     return chips;
   }, [filters, setCategory, setMaxDistance, setMinRating, setIsOpen, toggleTag]);
@@ -343,11 +355,25 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
                     </div>
                   </div>
 
-                  {/* Traveller type */}
+                  {/* Age groups */}
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Traveller type</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Kids age group</h3>
                     <div className="flex flex-wrap gap-2">
-                      {travellerTags.map(({ id, label, icon: Icon }) => (
+                      {ageGroups.map(({ id, label, icon: Icon }) => (
+                        <button key={id} onClick={() => toggleAgeGroup(id)}
+                          className={`filter-chip flex items-center gap-1.5 text-xs ${filters.ageGroups.includes(id) ? "active" : ""}`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />{label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Family amenities */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Family amenities</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {familyTags.map(({ id, label, icon: Icon }) => (
                         <button key={id} onClick={() => toggleTag(id)}
                           className={`filter-chip flex items-center gap-1.5 text-xs ${filters.tags.includes(id) ? "active" : ""}`}
                         >

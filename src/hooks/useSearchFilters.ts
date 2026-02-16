@@ -15,6 +15,7 @@ export interface SearchFilters {
   minRating: number | null;
   maxDistance: number | null; // km
   tags: string[]; // indoor, outdoor, free, kid-friendly, etc.
+  ageGroups: string[]; // "baby", "toddler", "kids", "teens"
   mapBounds: MapBounds | null; // for "search this area" on map
 }
 
@@ -27,6 +28,7 @@ interface SearchFiltersState {
   setMinRating: (rating: number | null) => void;
   setMaxDistance: (distance: number | null) => void;
   toggleTag: (tag: string) => void;
+  toggleAgeGroup: (ageGroup: string) => void;
   setMapBounds: (bounds: MapBounds | null) => void;
   clearFilters: () => void;
 }
@@ -39,6 +41,7 @@ const initialFilters: SearchFilters = {
   minRating: null,
   maxDistance: null,
   tags: [],
+  ageGroups: [],
   mapBounds: null,
 };
 
@@ -56,6 +59,13 @@ export const useSearchFilters = create<SearchFiltersState>((set) => ({
         ? state.filters.tags.filter((t) => t !== tag)
         : [...state.filters.tags, tag];
       return { filters: { ...state.filters, tags } };
+    }),
+  toggleAgeGroup: (ageGroup) =>
+    set((state) => {
+      const ageGroups = state.filters.ageGroups.includes(ageGroup)
+        ? state.filters.ageGroups.filter((a) => a !== ageGroup)
+        : [...state.filters.ageGroups, ageGroup];
+      return { filters: { ...state.filters, ageGroups } };
     }),
   setMapBounds: (mapBounds) => set((state) => ({ filters: { ...state.filters, mapBounds } })),
   clearFilters: () => set({ filters: initialFilters }),
