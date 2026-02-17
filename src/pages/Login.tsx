@@ -22,17 +22,18 @@ export default function Login() {
 
   // Check if user is already logged in
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/home");
-      }
-    };
-    checkSession();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("[Login] onAuthStateChange:", event, !!session);
       if (session) {
-        navigate("/home");
+        console.log("[Login] Redirecting to /home");
+        navigate("/home", { replace: true });
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("[Login] getSession:", !!session);
+      if (session) {
+        navigate("/home", { replace: true });
       }
     });
 

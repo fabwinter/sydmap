@@ -16,12 +16,25 @@ export default function Landing() {
 
   // Redirect authenticated users to home
   useEffect(() => {
+    // Set up listener FIRST to catch incoming auth events
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("[Landing] onAuthStateChange:", event, !!session);
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
+        if (session) {
+          console.log("[Landing] Redirecting to /home from event:", event);
+          navigate("/home", { replace: true });
+        }
+      }
+    });
+
+    // THEN check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate("/home");
+      console.log("[Landing] getSession result:", !!session);
+      if (session) {
+        navigate("/home", { replace: true });
+      }
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      if (session) navigate("/home");
-    });
+
     return () => subscription.unsubscribe();
   }, [navigate]);
 
