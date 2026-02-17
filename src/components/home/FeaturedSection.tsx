@@ -13,13 +13,8 @@ import {
 } from "@/components/ui/carousel";
 
 function WhatsOnCard({ item }: { item: WhatsOnItem }) {
-  return (
-    <a
-      href={item.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group flex flex-col"
-    >
+  const content = (
+    <>
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
         {item.imageUrl ? (
           <img
@@ -47,6 +42,21 @@ function WhatsOnCard({ item }: { item: WhatsOnItem }) {
           <p className="text-xs text-muted-foreground line-clamp-2">{item.excerpt}</p>
         )}
       </div>
+    </>
+  );
+
+  // If imported, link internally
+  if (item.activityId) {
+    return (
+      <Link to={`/activity/${item.activityId}`} className="group flex flex-col">
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <a href={item.url} target="_blank" rel="noopener noreferrer" className="group flex flex-col">
+      {content}
     </a>
   );
 }
