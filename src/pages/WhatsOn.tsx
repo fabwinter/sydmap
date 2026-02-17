@@ -1,10 +1,24 @@
-import { Sparkles, RefreshCw, ExternalLink } from "lucide-react";
+import { Sparkles, RefreshCw, Download, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useWhatsOnToday, type WhatsOnItem } from "@/hooks/useWhatsOnToday";
+import { useWhatsOnToday, useImportWhatsOnEvents, type WhatsOnItem } from "@/hooks/useWhatsOnToday";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 function EventCard({ item }: { item: WhatsOnItem }) {
+  // If imported, link internally; otherwise external
+  if (item.activityId) {
+    return (
+      <Link
+        to={`/activity/${item.activityId}`}
+        className="group flex flex-col bg-card rounded-xl border border-border overflow-hidden hover:border-primary transition-colors"
+      >
+        <CardContent item={item} internal />
+      </Link>
+    );
+  }
+
   return (
     <a
       href={item.url}
@@ -12,6 +26,14 @@ function EventCard({ item }: { item: WhatsOnItem }) {
       rel="noopener noreferrer"
       className="group flex flex-col bg-card rounded-xl border border-border overflow-hidden hover:border-primary transition-colors"
     >
+      <CardContent item={item} />
+    </a>
+  );
+}
+
+function CardContent({ item, internal }: { item: WhatsOnItem; internal?: boolean }) {
+  return (
+    <>
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
         {item.imageUrl ? (
           <img
@@ -32,29 +54,68 @@ function EventCard({ item }: { item: WhatsOnItem }) {
             {item.category}
           </div>
         )}
+        {internal && (
+          <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-medium">
+            In App
+          </div>
+        )}
       </div>
       <div className="p-4 space-y-1.5">
-        <h3 className="font-semibold text-foreground line-clamp-2 flex items-start gap-1.5">
-          {item.title}
-          <ExternalLink className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground" />
-        </h3>
+        <h3 className="font-semibold text-foreground line-clamp-2">{item.title}</h3>
         {item.excerpt && (
           <p className="text-sm text-muted-foreground line-clamp-3">{item.excerpt}</p>
         )}
       </div>
-    </a>
+    </>
   );
 }
 
 export default function WhatsOn() {
   const { data: items, isLoading, isError, refetch } = useWhatsOnToday(50);
+  const importMutation = useImportWhatsOnEvents();
+
+  const unimportedItems = items?.filter((i) => !i.activityId) || [];
+
+  const handleImportAll = () => {
+    if (!unimportedItems.length) {
+      toast.info("All events are already imported");
+      return;
+    }
+    importMutation.mutate(unimportedItems, {
+      onSuccess: (data) => {
+        toast.success(`Imported ${data.imported} events (${data.skipped} already existed)`);
+      },
+      onError: (err) => {
+        toast.error("Import failed: " + (err instanceof Error ? err.message : "Unknown error"));
+      },
+    });
+  };
 
   return (
     <AppLayout>
       <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8 py-6 md:py-8">
-        <div className="flex items-center gap-2 mb-6">
-          <Sparkles className="w-6 h-6 text-warning" />
-          <h1 className="text-2xl font-bold">What's On in Sydney</h1>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-warning" />
+            <h1 className="text-2xl font-bold">What's On in Sydney</h1>
+          </div>
+          {items && items.length > 0 && (
+            <Button
+              onClick={handleImportAll}
+              disabled={importMutation.isPending || !unimportedItems.length}
+              size="sm"
+              className="gap-1.5"
+            >
+              {importMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              {unimportedItems.length
+                ? `Import ${unimportedItems.length} Events`
+                : "All Imported"}
+            </Button>
+          )}
         </div>
 
         {isLoading ? (

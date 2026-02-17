@@ -35,6 +35,7 @@ export type Database = {
           phone: string | null
           rating: number | null
           review_count: number
+          source_url: string | null
           updated_at: string
           website: string | null
           wheelchair_accessible: boolean
@@ -60,6 +61,7 @@ export type Database = {
           phone?: string | null
           rating?: number | null
           review_count?: number
+          source_url?: string | null
           updated_at?: string
           website?: string | null
           wheelchair_accessible?: boolean
@@ -85,6 +87,7 @@ export type Database = {
           phone?: string | null
           rating?: number | null
           review_count?: number
+          source_url?: string | null
           updated_at?: string
           website?: string | null
           wheelchair_accessible?: boolean
