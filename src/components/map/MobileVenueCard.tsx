@@ -22,6 +22,13 @@ const categoryColors: Record<string, string> = {
   Gym: "bg-orange-500",
   Museum: "bg-indigo-500",
   Bakery: "bg-amber-500",
+  Playground: "bg-yellow-500",
+  "Swimming Pool": "bg-cyan-500",
+  "tourist attraction": "bg-teal-500",
+  "Sports and Recreation": "bg-emerald-600",
+  Daycare: "bg-rose-500",
+  Education: "bg-violet-500",
+  Hotel: "bg-sky-500",
 };
 
 export function MobileVenueCard({ activity, onClose, onNavigate, onImportToDb, isImporting }: MobileVenueCardProps) {
