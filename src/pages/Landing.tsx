@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { HeroSlideshow } from "@/components/ui/HeroSlideshow";
 import { triggerHaptic } from "@/lib/haptics";
+import { supabase } from "@/integrations/supabase/client";
 
 const heroImages = [
   "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1600&h=900&fit=crop",
@@ -11,6 +13,17 @@ const heroImages = [
 
 export default function Landing() {
   const navigate = useNavigate();
+
+  // Redirect authenticated users to home
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) navigate("/home");
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      if (session) navigate("/home");
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const handleStart = () => {
     triggerHaptic("medium");
