@@ -53,6 +53,12 @@ const categoryMatchMap: Record<string, string[]> = {
   Shopping: ["shopping mall", "store", "shop", "market", "boutique"],
   Gym: ["gym", "fitness", "sport", "yoga"],
   Bakery: ["bakery", "pastry", "bread"],
+  Playground: ["playground", "play area", "play ground", "kids play"],
+  "Swimming Pool": ["swimming pool", "pool", "aquatic", "swim"],
+  "tourist attraction": ["tourist attraction", "attraction", "landmark", "point of interest", "sightseeing"],
+  "Sports and Recreation": ["sports", "recreation", "athletic", "stadium", "arena", "golf", "tennis", "cricket"],
+  Daycare: ["daycare", "child care", "childcare", "preschool", "kindergarten", "nursery"],
+  Education: ["education", "school", "learning", "academy", "tutor", "library"],
 };
 
 function matchesCategory(venue: GooglePlaceVenue, category: string): boolean {

@@ -53,6 +53,12 @@ const categoryMatchMap: Record<string, string[]> = {
   Shopping: ["shop", "store", "mall", "market", "boutique", "retail"],
   Gym: ["gym", "fitness", "sport", "yoga", "pilates", "crossfit"],
   Bakery: ["bakery", "pastry", "bread", "patisserie", "cake", "donut"],
+  Playground: ["playground", "play area", "play ground", "kids play"],
+  "Swimming Pool": ["swimming", "pool", "aquatic", "swim"],
+  "tourist attraction": ["tourist", "attraction", "landmark", "sightseeing", "point of interest"],
+  "Sports and Recreation": ["sports", "recreation", "athletic", "stadium", "arena", "golf", "tennis", "cricket"],
+  Daycare: ["daycare", "child care", "childcare", "preschool", "kindergarten", "nursery"],
+  Education: ["education", "school", "learning", "academy", "tutor", "library"],
 };
 
 function matchesCategory(venue: FoursquareVenue, category: string): boolean {
