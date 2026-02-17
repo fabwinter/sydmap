@@ -76,18 +76,44 @@ export default function MapView() {
 
   const bulkDeleteMutation = useMutation({
     mutationFn: async (ids: string[]) => {
-      for (const id of ids) {
+      // Only delete DB activities (not fs- prefixed)
+      const dbIds = ids.filter(id => !id.startsWith("fs-"));
+      for (const id of dbIds) {
         const { error } = await supabase.rpc("admin_delete_activity", { p_activity_id: id });
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["activities"] });
-      toast.success(`Deleted ${bulkSelected.size} activities`);
+      const dbCount = Array.from(bulkSelected).filter(id => !id.startsWith("fs-")).length;
+      toast.success(`Removed ${dbCount} activities from database`);
       setBulkSelected(new Set());
       setBulkMode(false);
     },
     onError: (err: any) => toast.error(err.message || "Bulk delete failed"),
+  });
+
+  const bulkImportMutation = useMutation({
+    mutationFn: async (fsActivityIds: string[]) => {
+      let imported = 0;
+      for (const actId of fsActivityIds) {
+        const fsId = actId.replace("fs-", "");
+        const venue = foursquareVenues?.find(v => v.id === fsId);
+        if (venue) {
+          await importVenue.mutateAsync(venue);
+          imported++;
+        }
+      }
+      return imported;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      queryClient.invalidateQueries({ queryKey: ["foursquare"] });
+      toast.success(`Added ${count} venues to database`);
+      setBulkSelected(new Set());
+      setBulkMode(false);
+    },
+    onError: (err: any) => toast.error(err.message || "Bulk import failed"),
   });
 
   const userLat = userLocation?.latitude ?? SYDNEY_LAT;
@@ -333,7 +359,7 @@ export default function MapView() {
           <Marker key={activity.id} latitude={activity.latitude} longitude={activity.longitude} anchor="bottom"
             onClick={(e) => {
               e.originalEvent.stopPropagation();
-              if (bulkMode && !isFoursquare) {
+              if (bulkMode) {
                 toggleBulkSelect(activity.id);
               } else {
                 handleMarkerClick(activity);
@@ -348,7 +374,7 @@ export default function MapView() {
               </span>
               <div className="relative">
                 <div className={`rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110 ${isBulkSelected ? "w-12 h-12 ring-3 ring-destructive scale-110" : isSelected ? "w-12 h-12 ring-2 ring-white scale-110" : "w-10 h-10"}`}>
-                  {bulkMode && !isFoursquare ? (
+                  {bulkMode ? (
                     isBulkSelected ? <CheckSquare className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} /> : <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
                   ) : (
                     <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
@@ -432,16 +458,16 @@ export default function MapView() {
                     {bulkMode && (
                       <button
                         onClick={() => {
-                          const dbIds = filteredActivities.filter(a => !a.id.startsWith("fs-")).map(a => a.id);
-                          if (bulkSelected.size === dbIds.length) {
+                          const allIds = filteredActivities.map(a => a.id);
+                          if (bulkSelected.size === allIds.length) {
                             setBulkSelected(new Set());
                           } else {
-                            setBulkSelected(new Set(dbIds));
+                            setBulkSelected(new Set(allIds));
                           }
                         }}
                         className="text-xs font-medium px-2 py-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       >
-                        {bulkSelected.size === filteredActivities.filter(a => !a.id.startsWith("fs-")).length ? "Deselect All" : "Select All"}
+                        {bulkSelected.size === filteredActivities.length ? "Deselect All" : "Select All"}
                       </button>
                     )}
                   </div>
@@ -553,21 +579,37 @@ export default function MapView() {
           {bulkMode && (
             <BulkActionBar
               selectedCount={bulkSelected.size}
-              totalCount={filteredActivities.filter(a => !a.id.startsWith("fs-")).length}
+              totalCount={filteredActivities.length}
               onDelete={() => {
-                if (!confirm(`Delete ${bulkSelected.size} activities? This cannot be undone.`)) return;
-                bulkDeleteMutation.mutate(Array.from(bulkSelected));
+                const dbIds = Array.from(bulkSelected).filter(id => !id.startsWith("fs-"));
+                if (dbIds.length === 0) { toast.error("No DB activities selected to remove"); return; }
+                if (!confirm(`Remove ${dbIds.length} activities from database? This cannot be undone.`)) return;
+                bulkDeleteMutation.mutate(dbIds);
               }}
               onClear={() => { setBulkSelected(new Set()); setBulkMode(false); }}
               onSelectAll={() => {
-                const dbIds = filteredActivities.filter(a => !a.id.startsWith("fs-")).map(a => a.id);
-                if (bulkSelected.size === dbIds.length) {
+                const allIds = filteredActivities.map(a => a.id);
+                if (bulkSelected.size === allIds.length) {
                   setBulkSelected(new Set());
                 } else {
-                  setBulkSelected(new Set(dbIds));
+                  setBulkSelected(new Set(allIds));
                 }
               }}
+              onAddToDb={() => {
+                const fsIds = Array.from(bulkSelected).filter(id => id.startsWith("fs-"));
+                if (fsIds.length === 0) { toast.error("No Foursquare venues selected"); return; }
+                bulkImportMutation.mutate(fsIds);
+              }}
+              onRemoveFromDb={() => {
+                const dbIds = Array.from(bulkSelected).filter(id => !id.startsWith("fs-"));
+                if (dbIds.length === 0) { toast.error("No DB activities selected"); return; }
+                if (!confirm(`Remove ${dbIds.length} activities from database?`)) return;
+                bulkDeleteMutation.mutate(dbIds);
+              }}
               isDeleting={bulkDeleteMutation.isPending}
+              isImporting={bulkImportMutation.isPending}
+              hasDbSelected={Array.from(bulkSelected).some(id => !id.startsWith("fs-"))}
+              hasFsSelected={Array.from(bulkSelected).some(id => id.startsWith("fs-"))}
             />
           )}
         </AnimatePresence>
