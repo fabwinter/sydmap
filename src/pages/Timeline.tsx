@@ -33,6 +33,9 @@ const CATEGORY_OPTIONS = [
   { value: "park", label: "Park" },
   { value: "museum", label: "Museum" },
   { value: "shopping", label: "Shopping" },
+  { value: "walks", label: "Walks" },
+  { value: "playground", label: "Playground" },
+  { value: "swimming pool", label: "Swimming Pool" },
 ];
 
 export default function Timeline() {

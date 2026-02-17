@@ -3,7 +3,7 @@ import {
   Coffee, Waves, TreePine, Utensils, Landmark, ShoppingBag, Cake,
   SlidersHorizontal, X, Baby, Sun, Home, DollarSign, Dog, Accessibility,
   Wifi, Car, Mountain, Palette, GraduationCap, TentTree, Tent, Bike,
-  UtensilsCrossed, Droplets, MapPin, Trophy, BookOpen, Heart,
+  UtensilsCrossed, Droplets, MapPin, Trophy, BookOpen, Heart, Footprints,
 } from "lucide-react";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { Slider } from "@/components/ui/slider";
@@ -25,6 +25,7 @@ const categories = [
   { id: "Sports and Recreation", label: "Sports & Rec", icon: Trophy },
   { id: "Daycare", label: "Childcare", icon: Heart },
   { id: "Education", label: "Education", icon: BookOpen },
+  { id: "Walks", label: "Walks", icon: Footprints },
 ];
 
 const cuisineCategories = [
