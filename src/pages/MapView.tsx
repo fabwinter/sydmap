@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import Map, { Marker, Popup, GeolocateControl, NavigationControl, MapRef } from "react-map-gl/mapbox";
 import { LngLatBounds } from "mapbox-gl";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, LayoutList, MapIcon, Search, Database, Cloud, Plus, CheckSquare, Square, Globe, Gamepad2, Droplets, Trophy, BookOpen, Heart, Hotel } from "lucide-react";
+import { MapPin, Star, LayoutList, MapIcon, Search, Plus, CheckSquare, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -27,21 +27,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-const categoryIcons: Record<string, any> = {
-  Cafe: Coffee, Beach: Waves, Park: TreePine, Restaurant: Utensils, Bar: Wine,
-  Shopping: ShoppingBag, Gym: Dumbbell, Museum: Landmark, Bakery: Cake,
-  Playground: Gamepad2, "Swimming Pool": Droplets, "tourist attraction": MapPin,
-  "Sports and Recreation": Trophy, Daycare: Heart, Education: BookOpen, Hotel: Hotel,
-};
-
-const categoryColors: Record<string, string> = {
-  Cafe: "bg-accent", Beach: "bg-secondary", Park: "bg-green-500",
-  Restaurant: "bg-red-500", Bar: "bg-purple-500", Shopping: "bg-pink-500",
-  Gym: "bg-orange-500", Museum: "bg-indigo-500", Bakery: "bg-amber-500",
-  Playground: "bg-yellow-500", "Swimming Pool": "bg-cyan-500", "tourist attraction": "bg-teal-500",
-  "Sports and Recreation": "bg-emerald-600", Daycare: "bg-rose-500", Education: "bg-violet-500", Hotel: "bg-sky-500",
-};
+import { getCategoryMeta } from "@/lib/categoryUtils";
 
 // Sydney CBD fallback
 const SYDNEY_LAT = -33.8688;
@@ -58,7 +44,8 @@ const tagToColumn: Record<string, keyof Activity> = {
 export default function MapView() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { data: activities, isLoading } = useAllActivities(500);
+  const [listingLimit, setListingLimit] = useState(500);
+  const { data: activities, isLoading } = useAllActivities(listingLimit);
   const { filters, setMapBounds } = useSearchFilters();
   const { location: userLocation } = useUserLocation();
   const importVenue = useImportFoursquareVenue();
@@ -229,11 +216,11 @@ export default function MapView() {
         if (!matchesQuery) return false;
       }
       // Category
-      if (filters.category && activity.category !== filters.category) return false;
+      if (filters.category && activity.category.toLowerCase() !== filters.category.toLowerCase()) return false;
       // Cuisine: when a cuisine is selected, only show food-related categories (Restaurant, Cafe, Bakery, Bar)
       if (filters.cuisine && !filters.category) {
-        const foodCategories = ["Restaurant", "Cafe", "Bakery", "Bar"];
-        if (!foodCategories.includes(activity.category)) return false;
+        const foodCategories = ["restaurant", "cafe", "bakery", "bar"];
+        if (!foodCategories.includes(activity.category.toLowerCase())) return false;
       }
       // Open now
       if (filters.isOpen && !activity.is_open) return false;
@@ -250,8 +237,8 @@ export default function MapView() {
         if (column && !activity[column]) return false;
       }
       // Outdoor/indoor category tags
-      if (filters.tags.includes("outdoor") && !["Beach", "Park"].includes(activity.category)) return false;
-      if (filters.tags.includes("indoor") && !["Museum", "Gym", "Shopping"].includes(activity.category)) return false;
+      if (filters.tags.includes("outdoor") && !["beach", "park"].includes(activity.category.toLowerCase())) return false;
+      if (filters.tags.includes("indoor") && !["museum", "gym", "shopping"].includes(activity.category.toLowerCase())) return false;
       // Map bounds (search this area)
       if (filters.mapBounds) {
         const { north, south, east, west } = filters.mapBounds;
@@ -387,15 +374,10 @@ export default function MapView() {
       <GeolocateControl position="bottom-right" style={{ marginBottom: "80px" }} trackUserLocation showUserHeading />
 
       {filteredActivities.map((activity) => {
-        const IconComponent = categoryIcons[activity.category] || MapPin;
-        const colorClass = categoryColors[activity.category] || "bg-primary";
-        const textColor = {
-          Cafe: "text-accent", Beach: "text-secondary", Park: "text-green-500",
-          Restaurant: "text-red-500", Bar: "text-purple-500", Shopping: "text-pink-500",
-          Gym: "text-orange-500", Museum: "text-indigo-500", Bakery: "text-amber-500",
-          Playground: "text-yellow-500", "Swimming Pool": "text-cyan-500", "tourist attraction": "text-teal-500",
-          "Sports and Recreation": "text-emerald-600", Daycare: "text-rose-500", Education: "text-violet-500", Hotel: "text-sky-500",
-        }[activity.category] || "text-primary";
+        const meta = getCategoryMeta(activity.category);
+        const IconComponent = meta.icon;
+        const colorClass = meta.bg;
+        const textColor = meta.text;
         const isSelected = selectedActivity?.id === activity.id;
         const isFoursquare = activity.id.startsWith("fs-");
         const isGoogle = activity.id.startsWith("g-");
@@ -442,7 +424,7 @@ export default function MapView() {
         <Popup latitude={selectedActivity.latitude} longitude={selectedActivity.longitude} anchor="bottom" onClose={() => setSelectedActivity(null)} closeButton closeOnClick={false} offset={45}>
           <div className="p-2 min-w-[200px]">
             <div className="flex items-center gap-2 mb-2">
-              <span className={`px-2 py-0.5 rounded-full text-xs text-white ${categoryColors[selectedActivity.category] || "bg-primary"}`}>{selectedActivity.category}</span>
+              <span className={`px-2 py-0.5 rounded-full text-xs text-white ${getCategoryMeta(selectedActivity.category).bg}`}>{selectedActivity.category}</span>
               {selectedActivity.is_open ? (
                 <span className="px-2 py-0.5 rounded-full text-xs bg-success/10 text-success">Open</span>
               ) : (
@@ -506,6 +488,20 @@ export default function MapView() {
                         </button>
                       );
                     })}
+                  </div>
+                )}
+                {isAdmin && (
+                  <div className="flex items-center gap-1.5 mr-2">
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">Limit:</span>
+                    <select
+                      value={listingLimit}
+                      onChange={(e) => setListingLimit(Number(e.target.value))}
+                      className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted border border-border text-foreground"
+                    >
+                      {[50, 100, 200, 500, 1000].map((n) => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
                   </div>
                 )}
                {isAdmin && (

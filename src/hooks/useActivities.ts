@@ -72,7 +72,7 @@ function applyFilters(queryBuilder: any, filters: SearchFilters) {
   }
 
   if (filters.category) {
-    query = query.eq("category", filters.category);
+    query = query.ilike("category", filters.category);
   }
 
   if (filters.isOpen) {
@@ -139,7 +139,7 @@ export function useFeaturedActivities(limit = 10) {
         query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%,category.ilike.%${term}%,address.ilike.%${term}%`);
       }
       if (filters.category) {
-        query = query.eq("category", filters.category);
+        query = query.ilike("category", filters.category);
       }
       if (filters.minRating !== null) {
         query = query.gte("rating", filters.minRating);
@@ -224,7 +224,7 @@ export function useActivitiesByCategory(category: string, limit = 20) {
       const { data, error } = await supabase
         .from("activities")
         .select("*")
-        .eq("category", category)
+        .ilike("category", category)
         .order("rating", { ascending: false })
         .limit(limit);
 
@@ -252,7 +252,7 @@ export function useSearchActivities(query: string, filters?: { category?: string
       }
 
       if (filters?.category) {
-        queryBuilder = queryBuilder.eq("category", filters.category);
+        queryBuilder = queryBuilder.ilike("category", filters.category);
       }
 
       if (filters?.isOpen) {
@@ -274,14 +274,26 @@ export function useAllActivities(limit = 100) {
   return useQuery({
     queryKey: ["activities", "all", limit],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("activities")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(limit);
+      // Supabase has a 1000-row limit per request, so paginate if needed
+      const batchSize = Math.min(limit, 1000);
+      let allData: any[] = [];
+      let offset = 0;
 
-      if (error) throw error;
-      return data;
+      while (allData.length < limit) {
+        const { data, error } = await supabase
+          .from("activities")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .range(offset, offset + batchSize - 1);
+
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        allData = allData.concat(data);
+        offset += batchSize;
+        if (data.length < batchSize) break; // no more rows
+      }
+
+      return allData.slice(0, limit);
     },
   });
 }
