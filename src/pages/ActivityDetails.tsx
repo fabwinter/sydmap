@@ -23,6 +23,7 @@ import {
   Trash2,
   Loader2,
   X,
+  Move,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -59,6 +60,7 @@ export default function ActivityDetails() {
   const [isUploadingEditPhoto, setIsUploadingEditPhoto] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const [heroIndex, setHeroIndex] = useState(0);
+  const [heroPosition, setHeroPosition] = useState("center");
   const queryClient = useQueryClient();
 
   const { data: activity, isLoading: activityLoading, error } = useActivityById(id || "");
@@ -169,7 +171,12 @@ export default function ActivityDetails() {
       {isAdmin && <AdminPanel activity={activity} />}
       {/* Hero Image Carousel */}
       <div className="relative h-72 sm:h-80">
-        <img src={allPhotos[heroIndex] || allPhotos[0]} alt={activity.name} className="w-full h-full object-cover" />
+        <img
+          src={allPhotos[heroIndex] || allPhotos[0]}
+          alt={activity.name}
+          className="w-full h-full object-cover"
+          style={{ objectPosition: heroPosition }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         <button
           onClick={() => navigate(-1)}
@@ -177,6 +184,24 @@ export default function ActivityDetails() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
+
+        {/* Admin crop/position controls */}
+        {isAdmin && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-1 bg-black/60 backdrop-blur-sm rounded-full px-2 py-1">
+            {["top", "center", "bottom"].map((pos) => (
+              <button
+                key={pos}
+                onClick={() => setHeroPosition(pos)}
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors ${
+                  heroPosition === pos ? "bg-white text-black" : "text-white/70 hover:text-white"
+                }`}
+              >
+                {pos.charAt(0).toUpperCase() + pos.slice(1)}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Carousel nav arrows */}
         {allPhotos.length > 1 && (
           <>

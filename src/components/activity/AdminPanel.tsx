@@ -1,12 +1,34 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Shield, Trash2, ImagePlus, Pencil, Save, X, Loader2, Link as LinkIcon, ClipboardPaste, Images, Maximize, Minimize } from "lucide-react";
+import { Shield, Trash2, ImagePlus, Pencil, Save, X, Loader2, Link as LinkIcon, ClipboardPaste, Images, Maximize, Minimize, Move } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { MAPBOX_TOKEN } from "@/config/mapbox";
 import type { Tables } from "@/integrations/supabase/types";
+
+const CATEGORIES = [
+  "Cafe", "Beach", "Park", "Restaurant", "Bar", "Shopping", "Gym", "Museum",
+  "Bakery", "Playground", "Swimming Pool", "tourist attraction",
+  "Sports and Recreation", "Daycare", "Education", "Hotel", "Walks",
+];
+
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const res = await fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${MAPBOX_TOKEN}&limit=1&country=au`
+    );
+    const data = await res.json();
+    if (data.features?.length > 0) {
+      const [lng, lat] = data.features[0].center;
+      return { lat, lng };
+    }
+  } catch {}
+  return null;
+}
 
 type Activity = Tables<"activities">;
 
@@ -151,9 +173,21 @@ export function AdminPanel({ activity }: AdminPanelProps) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      const updates: any = { ...edits };
+      // Geocode if address changed
+      if (edits.address && edits.address !== activity.address) {
+        const coords = await geocodeAddress(edits.address);
+        if (coords) {
+          updates.latitude = coords.lat;
+          updates.longitude = coords.lng;
+          toast.info("📍 Map pin updated from address");
+        } else {
+          toast.warning("Could not geocode address — map pin unchanged");
+        }
+      }
       const { error } = await supabase.rpc("admin_update_activity", {
         p_activity_id: activity.id,
-        p_updates: edits as any,
+        p_updates: updates,
       });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["activity", activity.id] });
@@ -353,7 +387,19 @@ export function AdminPanel({ activity }: AdminPanelProps) {
           {isEditing ? (
             <div className="space-y-3">
               <Field label="Name" value={edits.name} onChange={(v) => setEdits({ ...edits, name: v })} />
-              <Field label="Category" value={edits.category} onChange={(v) => setEdits({ ...edits, category: v })} />
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Category</label>
+                <Select value={edits.category} onValueChange={(v) => setEdits({ ...edits, category: v })}>
+                  <SelectTrigger className="w-full bg-muted text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-[9999]">
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <Field label="Description" value={edits.description} onChange={(v) => setEdits({ ...edits, description: v })} multiline />
               <Field label="Address" value={edits.address} onChange={(v) => setEdits({ ...edits, address: v })} />
               <Field label="Phone" value={edits.phone} onChange={(v) => setEdits({ ...edits, phone: v })} />
