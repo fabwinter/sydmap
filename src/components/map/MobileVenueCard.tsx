@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { type Activity } from "@/hooks/useActivities";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { getCategoryMeta } from "@/lib/categoryUtils";
 
 interface MobileVenueCardProps {
   activity: Activity | null;
@@ -11,25 +12,6 @@ interface MobileVenueCardProps {
   onImportToDb?: (activity: Activity) => void;
   isImporting?: boolean;
 }
-
-const categoryColors: Record<string, string> = {
-  Cafe: "bg-accent",
-  Beach: "bg-secondary",
-  Park: "bg-green-500",
-  Restaurant: "bg-red-500",
-  Bar: "bg-purple-500",
-  Shopping: "bg-pink-500",
-  Gym: "bg-orange-500",
-  Museum: "bg-indigo-500",
-  Bakery: "bg-amber-500",
-  Playground: "bg-yellow-500",
-  "Swimming Pool": "bg-cyan-500",
-  "tourist attraction": "bg-teal-500",
-  "Sports and Recreation": "bg-emerald-600",
-  Daycare: "bg-rose-500",
-  Education: "bg-violet-500",
-  Hotel: "bg-sky-500",
-};
 
 export function MobileVenueCard({ activity, onClose, onNavigate, onImportToDb, isImporting }: MobileVenueCardProps) {
   const isAdmin = useIsAdmin();
@@ -71,7 +53,7 @@ export function MobileVenueCard({ activity, onClose, onNavigate, onImportToDb, i
             </div>
             <div className="flex-1 min-w-0 pr-6">
               <div className="flex items-center gap-2 mb-1">
-                <span className={`px-2 py-0.5 rounded-full text-xs text-white ${categoryColors[activity.category] || "bg-primary"}`}>
+                <span className={`px-2 py-0.5 rounded-full text-xs text-white ${getCategoryMeta(activity.category).bg}`}>
                   {activity.category}
                 </span>
                 {activity.is_open ? (

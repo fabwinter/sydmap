@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   Coffee, Waves, TreePine, Utensils, Landmark, ShoppingBag, Cake,
   SlidersHorizontal, X, Baby, Sun, Home, DollarSign, Dog, Accessibility,
-  Wifi, Car, Mountain, Palette, GraduationCap, Gamepad2, Tent, Bike,
+  Wifi, Car, Mountain, Palette, GraduationCap, TentTree, Tent, Bike,
   UtensilsCrossed, Droplets, MapPin, Trophy, BookOpen, Heart,
 } from "lucide-react";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
@@ -19,7 +19,7 @@ const categories = [
   { id: "Museum", label: "Museums", icon: Landmark },
   { id: "Shopping", label: "Shopping", icon: ShoppingBag },
   { id: "Bakery", label: "Bakeries", icon: Cake },
-  { id: "Playground", label: "Playgrounds", icon: Gamepad2 },
+  { id: "Playground", label: "Playgrounds", icon: TentTree },
   { id: "Swimming Pool", label: "Pools", icon: Droplets },
   { id: "tourist attraction", label: "Attractions", icon: MapPin },
   { id: "Sports and Recreation", label: "Sports & Rec", icon: Trophy },
@@ -53,7 +53,7 @@ const experienceTags = [
 ];
 
 const familyTags = [
-  { id: "play-area", label: "Play Area", icon: Gamepad2 },
+  { id: "play-area", label: "Play Area", icon: TentTree },
   { id: "pram-accessible", label: "Pram Accessible", icon: Baby },
   { id: "change-rooms", label: "Change Rooms", icon: Baby },
   { id: "high-chairs", label: "High Chairs", icon: Baby },
@@ -66,7 +66,7 @@ const familyTags = [
 const ageGroups = [
   { id: "baby", label: "Baby (0–2)", icon: Baby },
   { id: "toddler", label: "Toddler (3–5)", icon: Baby },
-  { id: "kids", label: "Kids (6–12)", icon: Gamepad2 },
+  { id: "kids", label: "Kids (6–12)", icon: TentTree },
   { id: "teens", label: "Teens (13–17)", icon: GraduationCap },
 ];
 
