@@ -112,7 +112,7 @@ export function VenueList({
                       : "border-transparent hover:border-border hover:shadow-sm"
                   )}
                   onClick={() => {
-                    if (bulkMode && onToggleSelect && !activity.id.startsWith("fs-")) {
+                    if (bulkMode && onToggleSelect) {
                       onToggleSelect(activity.id);
                     } else {
                       onNavigateToDetails(activity);
@@ -123,7 +123,7 @@ export function VenueList({
                 >
                   <div className="flex gap-4">
                     {/* Bulk select checkbox */}
-                    {bulkMode && !activity.id.startsWith("fs-") && (
+                    {bulkMode && (
                       <div className="flex items-center shrink-0">
                         {isBulkSelected ? (
                           <CheckSquare className="w-5 h-5 text-destructive" />
