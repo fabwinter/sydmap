@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import Map, { Marker, Popup, GeolocateControl, NavigationControl, MapRef } from "react-map-gl/mapbox";
 import { LngLatBounds } from "mapbox-gl";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, LayoutList, MapIcon, Search, Database, Cloud, Plus, CheckSquare, Square } from "lucide-react";
+import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, LayoutList, MapIcon, Search, Database, Cloud, Plus, CheckSquare, Square, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -12,6 +12,10 @@ import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { useUserLocation, calculateDistance } from "@/hooks/useUserLocation";
 import { useFoursquareSearch, type FoursquareVenue, normalizeFoursquareCategory } from "@/hooks/useFoursquareSearch";
 import { useImportFoursquareVenue } from "@/hooks/useImportFoursquareVenue";
+import { useGooglePlacesSearch, type GooglePlaceVenue, normalizeGoogleCategory } from "@/hooks/useGooglePlacesSearch";
+import { useImportGoogleVenue } from "@/hooks/useImportGoogleVenue";
+
+type SourceFilter = "all" | "db" | "foursquare" | "google";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { VenueList } from "@/components/map/VenueList";
 import { MapFilters } from "@/components/map/MapFilters";
@@ -54,12 +58,14 @@ export default function MapView() {
   const { filters, setMapBounds } = useSearchFilters();
   const { location: userLocation } = useUserLocation();
   const importVenue = useImportFoursquareVenue();
+  const importGoogleVenue = useImportGoogleVenue();
   const isAdmin = useIsAdmin();
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [mobileView, setMobileView] = useState<"map" | "list">("map");
   const [showSearchHere, setShowSearchHere] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const mapRef = useRef<MapRef>(null);
   const isMobile = useIsMobile();
   const userMovedMap = useRef(false);
@@ -94,14 +100,17 @@ export default function MapView() {
   });
 
   const bulkImportMutation = useMutation({
-    mutationFn: async (fsActivityIds: string[]) => {
+    mutationFn: async (activityIds: string[]) => {
       let imported = 0;
-      for (const actId of fsActivityIds) {
-        const fsId = actId.replace("fs-", "");
-        const venue = foursquareVenues?.find(v => v.id === fsId);
-        if (venue) {
-          await importVenue.mutateAsync(venue);
-          imported++;
+      for (const actId of activityIds) {
+        if (actId.startsWith("fs-")) {
+          const fsId = actId.replace("fs-", "");
+          const venue = foursquareVenues?.find(v => v.id === fsId);
+          if (venue) { await importVenue.mutateAsync(venue); imported++; }
+        } else if (actId.startsWith("g-")) {
+          const gId = actId.replace("g-", "");
+          const venue = googleVenues?.find(v => v.id === gId);
+          if (venue) { await importGoogleVenue.mutateAsync(venue); imported++; }
         }
       }
       return imported;
@@ -109,6 +118,7 @@ export default function MapView() {
     onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       queryClient.invalidateQueries({ queryKey: ["foursquare"] });
+      queryClient.invalidateQueries({ queryKey: ["google-places"] });
       toast.success(`Added ${count} venues to database`);
       setBulkSelected(new Set());
       setBulkMode(false);
@@ -129,44 +139,48 @@ export default function MapView() {
     if (filters.cuisine && filters.category) parts.push(filters.category);
     return parts.join(" ") || "";
   }, [filters.query, filters.cuisine, filters.category]);
-  const { data: foursquareVenues } = useFoursquareSearch(fsQuery, fsQuery.length >= 2);
-
-  // Convert Foursquare venues to Activity-compatible objects for map display
+  const { data: foursquareVenues } = useFoursquareSearch(fsQuery, fsQuery.length >= 2 && (sourceFilter === "all" || sourceFilter === "foursquare"));
+  const { data: googleVenues } = useGooglePlacesSearch(fsQuery, fsQuery.length >= 2 && (sourceFilter === "all" || sourceFilter === "google"));
   const foursquareAsActivities: Activity[] = useMemo(() => {
     if (!foursquareVenues?.length) return [];
-    // Exclude venues already in local DB by foursquare_id
     const localFsIds = new Set(activities?.filter(a => a.foursquare_id).map(a => a.foursquare_id) ?? []);
     return foursquareVenues
       .filter(v => !localFsIds.has(v.id))
       .map((v): Activity => {
         const normalizedCategory = normalizeFoursquareCategory(v.category, v.tags, v.name);
         return {
-          id: `fs-${v.id}`,
-          name: v.name,
-          category: normalizedCategory,
-          latitude: v.latitude,
-          longitude: v.longitude,
-          address: v.address || null,
-          description: v.description || null,
-          rating: v.rating,
-          review_count: 0,
-          hero_image_url: v.photos?.[0] || null,
-          is_open: true,
-          phone: v.phone || null,
-          website: v.website || null,
-          hours_open: null,
-          hours_close: null,
-          parking: false,
-          wheelchair_accessible: false,
-          wifi: false,
-          outdoor_seating: false,
-          pet_friendly: false,
-          foursquare_id: v.id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          id: `fs-${v.id}`, name: v.name, category: normalizedCategory,
+          latitude: v.latitude, longitude: v.longitude, address: v.address || null,
+          description: v.description || null, rating: v.rating, review_count: 0,
+          hero_image_url: v.photos?.[0] || null, is_open: true, phone: v.phone || null,
+          website: v.website || null, hours_open: null, hours_close: null,
+          parking: false, wheelchair_accessible: false, wifi: false,
+          outdoor_seating: false, pet_friendly: false, foursquare_id: v.id,
+          created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
         };
       });
   }, [foursquareVenues, activities]);
+
+  // Convert Google venues to Activity-compatible objects
+  const googleAsActivities: Activity[] = useMemo(() => {
+    if (!googleVenues?.length) return [];
+    const localGoogleIds = new Set(activities?.filter(a => a.foursquare_id?.startsWith("google-")).map(a => a.foursquare_id) ?? []);
+    return googleVenues
+      .filter(v => !localGoogleIds.has(`google-${v.id}`))
+      .map((v): Activity => {
+        const normalizedCategory = normalizeGoogleCategory(v.category, v.tags, v.name);
+        return {
+          id: `g-${v.id}`, name: v.name, category: normalizedCategory,
+          latitude: v.latitude, longitude: v.longitude, address: v.address || null,
+          description: v.description || null, rating: v.rating, review_count: 0,
+          hero_image_url: v.photos?.[0] || null, is_open: true, phone: v.phone || null,
+          website: v.website || null, hours_open: null, hours_close: null,
+          parking: false, wheelchair_accessible: false, wifi: false,
+          outdoor_seating: false, pet_friendly: false, foursquare_id: `google-${v.id}`,
+          created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+        };
+      });
+  }, [googleVenues, activities]);
 
   const urlLat = searchParams.get("lat");
   const urlLng = searchParams.get("lng");
@@ -188,7 +202,16 @@ export default function MapView() {
 
   // Apply all filters from shared state
   const filteredActivities = useMemo(() => {
-    const allActivities = [...(activities || []), ...foursquareAsActivities];
+    let allActivities: Activity[] = [];
+    if (sourceFilter === "all") {
+      allActivities = [...(activities || []), ...foursquareAsActivities, ...googleAsActivities];
+    } else if (sourceFilter === "db") {
+      allActivities = [...(activities || [])];
+    } else if (sourceFilter === "foursquare") {
+      allActivities = [...foursquareAsActivities];
+    } else if (sourceFilter === "google") {
+      allActivities = [...googleAsActivities];
+    }
 
     return allActivities.filter((activity) => {
       // Text search
@@ -235,7 +258,7 @@ export default function MapView() {
       }
       return true;
     });
-  }, [activities, foursquareAsActivities, filters, userLat, userLng]);
+  }, [activities, foursquareAsActivities, googleAsActivities, filters, userLat, userLng, sourceFilter]);
 
   // Auto-fit map bounds when filters change (but not mapBounds itself)
   const filterKey = JSON.stringify({ ...filters, mapBounds: null });
@@ -284,8 +307,23 @@ export default function MapView() {
         }
       }
     }
+    // If it's a Google venue (g- prefix), import it first
+    if (activity.id.startsWith("g-")) {
+      const gId = activity.id.replace("g-", "");
+      const venue = googleVenues?.find(v => v.id === gId);
+      if (venue) {
+        try {
+          const realId = await importGoogleVenue.mutateAsync(venue);
+          navigate(`/activity/${realId}`);
+          return;
+        } catch (e) {
+          toast.error("Failed to load venue details");
+          return;
+        }
+      }
+    }
     navigate(`/activity/${activity.id}`);
-  }, [navigate, foursquareVenues, importVenue]);
+  }, [navigate, foursquareVenues, googleVenues, importVenue, importGoogleVenue]);
 
   const handleSearchHere = useCallback(() => {
     if (!mapRef.current) return;
@@ -354,7 +392,10 @@ export default function MapView() {
         }[activity.category] || "text-primary";
         const isSelected = selectedActivity?.id === activity.id;
         const isFoursquare = activity.id.startsWith("fs-");
+        const isGoogle = activity.id.startsWith("g-");
         const isBulkSelected = bulkSelected.has(activity.id);
+        const sourceBadgeColor = isGoogle ? "bg-blue-500" : isFoursquare ? "bg-orange-500" : "bg-green-600";
+        const sourceBadgeLabel = isGoogle ? "G" : isFoursquare ? "F" : "DB";
         return (
           <Marker key={activity.id} latitude={activity.latitude} longitude={activity.longitude} anchor="bottom"
             onClick={(e) => {
@@ -381,8 +422,8 @@ export default function MapView() {
                   )}
                 </div>
                 {isAdmin && !bulkMode && (
-                  <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold ${isFoursquare ? "bg-orange-500" : "bg-green-600"}`}>
-                    {isFoursquare ? "F" : "DB"}
+                  <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold ${sourceBadgeColor}`}>
+                    {sourceBadgeLabel}
                   </div>
                 )}
               </div>
@@ -409,22 +450,22 @@ export default function MapView() {
               <span className="text-xs">({selectedActivity.review_count} reviews)</span>
             </div>
             {isAdmin && selectedActivity.id.startsWith("fs-") && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full mt-2 gap-1 text-xs"
-                disabled={importVenue.isPending}
+              <Button size="sm" variant="outline" className="w-full mt-2 gap-1 text-xs" disabled={importVenue.isPending}
                 onClick={async () => {
                   const fsId = selectedActivity.id.replace("fs-", "");
                   const venue = foursquareVenues?.find(v => v.id === fsId);
-                  if (venue) {
-                    try {
-                      await importVenue.mutateAsync(venue);
-                      toast.success("Added to database!");
-                    } catch { toast.error("Failed to import"); }
-                  }
-                }}
-              >
+                  if (venue) { try { await importVenue.mutateAsync(venue); toast.success("Added to database!"); } catch { toast.error("Failed to import"); } }
+                }}>
+                <Plus className="w-3 h-3" /> Add to DB
+              </Button>
+            )}
+            {isAdmin && selectedActivity.id.startsWith("g-") && (
+              <Button size="sm" variant="outline" className="w-full mt-2 gap-1 text-xs" disabled={importGoogleVenue.isPending}
+                onClick={async () => {
+                  const gId = selectedActivity.id.replace("g-", "");
+                  const venue = googleVenues?.find(v => v.id === gId);
+                  if (venue) { try { await importGoogleVenue.mutateAsync(venue); toast.success("Added to database!"); } catch { toast.error("Failed to import"); } }
+                }}>
                 <Plus className="w-3 h-3" /> Add to DB
               </Button>
             )}
@@ -446,6 +487,21 @@ export default function MapView() {
                 {isLoading ? "Loading..." : `${filteredActivities.length} places`}
               </span>
               <div className="flex items-center gap-2">
+               {isAdmin && (
+                  <div className="flex items-center gap-1 mr-2">
+                    {(["all", "db", "foursquare", "google"] as SourceFilter[]).map((src) => {
+                      const labels: Record<SourceFilter, string> = { all: "All", db: "DB", foursquare: "FSQ", google: "G" };
+                      const colors: Record<SourceFilter, string> = { all: "bg-foreground text-background", db: "bg-green-600 text-white", foursquare: "bg-orange-500 text-white", google: "bg-blue-500 text-white" };
+                      return (
+                        <button key={src} onClick={() => setSourceFilter(src)}
+                          className={`text-[10px] font-bold px-2 py-1 rounded-full transition-colors ${sourceFilter === src ? colors[src] : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                        >
+                          {labels[src]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
                {isAdmin && (
                   <div className="flex items-center gap-1">
                     <button
@@ -536,15 +592,16 @@ export default function MapView() {
                 activity={selectedActivity}
                 onClose={() => setSelectedActivity(null)}
                 onNavigate={handleNavigateToDetails}
-                isImporting={importVenue.isPending}
+                isImporting={importVenue.isPending || importGoogleVenue.isPending}
                 onImportToDb={async (activity) => {
-                  const fsId = activity.id.replace("fs-", "");
-                  const venue = foursquareVenues?.find(v => v.id === fsId);
-                  if (venue) {
-                    try {
-                      await importVenue.mutateAsync(venue);
-                      toast.success("Added to database!");
-                    } catch { toast.error("Failed to import"); }
+                  if (activity.id.startsWith("fs-")) {
+                    const fsId = activity.id.replace("fs-", "");
+                    const venue = foursquareVenues?.find(v => v.id === fsId);
+                    if (venue) { try { await importVenue.mutateAsync(venue); toast.success("Added to database!"); } catch { toast.error("Failed to import"); } }
+                  } else if (activity.id.startsWith("g-")) {
+                    const gId = activity.id.replace("g-", "");
+                    const venue = googleVenues?.find(v => v.id === gId);
+                    if (venue) { try { await importGoogleVenue.mutateAsync(venue); toast.success("Added to database!"); } catch { toast.error("Failed to import"); } }
                   }
                 }}
               />
@@ -596,20 +653,20 @@ export default function MapView() {
                 }
               }}
               onAddToDb={() => {
-                const fsIds = Array.from(bulkSelected).filter(id => id.startsWith("fs-"));
-                if (fsIds.length === 0) { toast.error("No Foursquare venues selected"); return; }
-                bulkImportMutation.mutate(fsIds);
+                const externalIds = Array.from(bulkSelected).filter(id => id.startsWith("fs-") || id.startsWith("g-"));
+                if (externalIds.length === 0) { toast.error("No external venues selected"); return; }
+                bulkImportMutation.mutate(externalIds);
               }}
               onRemoveFromDb={() => {
-                const dbIds = Array.from(bulkSelected).filter(id => !id.startsWith("fs-"));
+                const dbIds = Array.from(bulkSelected).filter(id => !id.startsWith("fs-") && !id.startsWith("g-"));
                 if (dbIds.length === 0) { toast.error("No DB activities selected"); return; }
                 if (!confirm(`Remove ${dbIds.length} activities from database?`)) return;
                 bulkDeleteMutation.mutate(dbIds);
               }}
               isDeleting={bulkDeleteMutation.isPending}
               isImporting={bulkImportMutation.isPending}
-              hasDbSelected={Array.from(bulkSelected).some(id => !id.startsWith("fs-"))}
-              hasFsSelected={Array.from(bulkSelected).some(id => id.startsWith("fs-"))}
+              hasDbSelected={Array.from(bulkSelected).some(id => !id.startsWith("fs-") && !id.startsWith("g-"))}
+              hasFsSelected={Array.from(bulkSelected).some(id => id.startsWith("fs-") || id.startsWith("g-"))}
             />
           )}
         </AnimatePresence>

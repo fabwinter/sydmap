@@ -4,6 +4,7 @@ import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { RecommendedSection } from "@/components/home/RecommendedSection";
 import { CuratedSections } from "@/components/home/CuratedSections";
 import { FoursquareSection } from "@/components/home/FoursquareSection";
+import { GoogleSection } from "@/components/home/GoogleSection";
 
 const Index = () => {
   return (
@@ -14,6 +15,9 @@ const Index = () => {
           
           {/* Foursquare live results - shown when searching */}
           <FoursquareSection />
+          
+          {/* Google Places live results - shown when searching */}
+          <GoogleSection />
           
           <div id="featured-section">
             <FeaturedSection />
