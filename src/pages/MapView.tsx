@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import Map, { Marker, Popup, GeolocateControl, NavigationControl, MapRef } from "react-map-gl/mapbox";
 import { LngLatBounds } from "mapbox-gl";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, LayoutList, MapIcon, Search, Database, Cloud, Plus, CheckSquare, Square, Globe } from "lucide-react";
+import { MapPin, Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake, Star, LayoutList, MapIcon, Search, Database, Cloud, Plus, CheckSquare, Square, Globe, Gamepad2, Droplets, Trophy, BookOpen, Heart, Hotel } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -31,12 +31,16 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 const categoryIcons: Record<string, any> = {
   Cafe: Coffee, Beach: Waves, Park: TreePine, Restaurant: Utensils, Bar: Wine,
   Shopping: ShoppingBag, Gym: Dumbbell, Museum: Landmark, Bakery: Cake,
+  Playground: Gamepad2, "Swimming Pool": Droplets, "tourist attraction": MapPin,
+  "Sports and Recreation": Trophy, Daycare: Heart, Education: BookOpen, Hotel: Hotel,
 };
 
 const categoryColors: Record<string, string> = {
   Cafe: "bg-accent", Beach: "bg-secondary", Park: "bg-green-500",
   Restaurant: "bg-red-500", Bar: "bg-purple-500", Shopping: "bg-pink-500",
   Gym: "bg-orange-500", Museum: "bg-indigo-500", Bakery: "bg-amber-500",
+  Playground: "bg-yellow-500", "Swimming Pool": "bg-cyan-500", "tourist attraction": "bg-teal-500",
+  "Sports and Recreation": "bg-emerald-600", Daycare: "bg-rose-500", Education: "bg-violet-500", Hotel: "bg-sky-500",
 };
 
 // Sydney CBD fallback
@@ -389,6 +393,8 @@ export default function MapView() {
           Cafe: "text-accent", Beach: "text-secondary", Park: "text-green-500",
           Restaurant: "text-red-500", Bar: "text-purple-500", Shopping: "text-pink-500",
           Gym: "text-orange-500", Museum: "text-indigo-500", Bakery: "text-amber-500",
+          Playground: "text-yellow-500", "Swimming Pool": "text-cyan-500", "tourist attraction": "text-teal-500",
+          "Sports and Recreation": "text-emerald-600", Daycare: "text-rose-500", Education: "text-violet-500", Hotel: "text-sky-500",
         }[activity.category] || "text-primary";
         const isSelected = selectedActivity?.id === activity.id;
         const isFoursquare = activity.id.startsWith("fs-");
