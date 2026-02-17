@@ -1,6 +1,6 @@
 import {
   Coffee, Waves, TreePine, Utensils, Wine, ShoppingBag, Dumbbell, Landmark, Cake,
-  MapPin, Droplets, Trophy, BookOpen, Heart, Hotel, TentTree,
+  MapPin, Droplets, Trophy, BookOpen, Heart, Hotel, TentTree, Footprints,
 } from "lucide-react";
 
 /**
@@ -24,6 +24,7 @@ const categoryDefs = [
   { key: "Daycare", icon: Heart, bg: "bg-rose-500", text: "text-rose-500" },
   { key: "Education", icon: BookOpen, bg: "bg-violet-500", text: "text-violet-500" },
   { key: "Hotel", icon: Hotel, bg: "bg-sky-500", text: "text-sky-500" },
+  { key: "Walks", icon: Footprints, bg: "bg-lime-600", text: "text-lime-600" },
 ];
 
 // Build a case-insensitive lookup map

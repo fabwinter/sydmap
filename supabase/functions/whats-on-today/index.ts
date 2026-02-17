@@ -6,8 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const RSS_URL = "https://www.whatsonsydney.com/rssloader?catid=14";
-const CACHE_SECONDS = 600; // 10 minutes
+const CACHE_SECONDS = 600;
 
 interface WhatsOnItem {
   id: string;
@@ -16,95 +15,186 @@ interface WhatsOnItem {
   category?: string;
   excerpt?: string;
   imageUrl?: string;
-  date?: string;
-  source: "whatsonsydney";
+  source: string;
 }
 
-// Simple in-memory cache
 let cache: { items: WhatsOnItem[]; fetchedAt: string } | null = null;
 let cacheTime = 0;
 
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ").trim();
-}
-
-function extractFirstImageFromHtml(html: string): string | undefined {
-  // Try <img src="...">
-  const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return imgMatch?.[1] || undefined;
+  return html.replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function simpleHash(str: string): string {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
     hash |= 0;
   }
   return Math.abs(hash).toString(36);
 }
 
+function makeAbsolute(url: string, base: string): string {
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("//")) return "https:" + url;
+  if (url.startsWith("/")) return base + url;
+  return url;
+}
+
 function getTagContent(item: string, tag: string): string | undefined {
-  // Handle both <tag>...</tag> and <tag><![CDATA[...]]></tag>
   const regex = new RegExp(`<${tag}[^>]*>\\s*(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?\\s*</${tag}>`, "i");
   const match = item.match(regex);
   return match?.[1]?.trim() || undefined;
 }
 
-function parseItems(xml: string): WhatsOnItem[] {
-  const items: WhatsOnItem[] = [];
-  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
-  let match;
-
-  while ((match = itemRegex.exec(xml)) !== null) {
-    const block = match[1];
-    const title = getTagContent(block, "title");
-    const link = getTagContent(block, "link");
-    if (!title || !link) continue;
-
-    const guid = getTagContent(block, "guid");
-    const pubDate = getTagContent(block, "pubDate");
-    const category = getTagContent(block, "category");
-    const description = getTagContent(block, "description") || "";
-
-    // Try enclosure url first
-    let imageUrl: string | undefined;
-    const enclosureMatch = block.match(/<enclosure[^>]+url=["']([^"']+)["']/i);
-    if (enclosureMatch) {
-      imageUrl = enclosureMatch[1];
-    }
-    // Try media:content
-    if (!imageUrl) {
-      const mediaMatch = block.match(/<media:content[^>]+url=["']([^"']+)["']/i);
-      if (mediaMatch) imageUrl = mediaMatch[1];
-    }
-    // Try first img in description
-    if (!imageUrl) {
-      imageUrl = extractFirstImageFromHtml(description);
-    }
-
-    let date: string | undefined;
-    if (pubDate) {
-      try {
-        date = new Date(pubDate).toISOString();
-      } catch {
-        // ignore
-      }
-    }
-
-    items.push({
-      id: simpleHash(guid || link),
-      title: stripHtml(title),
-      url: link.trim(),
-      category: category ? stripHtml(category) : undefined,
-      excerpt: description ? stripHtml(description).slice(0, 200) : undefined,
-      imageUrl,
-      date,
-      source: "whatsonsydney",
+// ── Source 1: ellaslist.com.au ──
+async function fetchEllaslist(): Promise<WhatsOnItem[]> {
+  try {
+    const BASE = "https://www.ellaslist.com.au";
+    const res = await fetch(BASE + "/sydney/events/this-week", {
+      headers: { "User-Agent": "SYDMAP/1.0", "Accept": "text/html" },
     });
-  }
+    if (!res.ok) return [];
+    const html = await res.text();
+    const items: WhatsOnItem[] = [];
+    const seen = new Set<string>();
 
-  return items;
+    const skipSlugs = new Set(["this-week", "today", "this-weekend", "tomorrow", "freebies",
+      "rainy-day", "book-ahead", "editors-picks", "featured", "kids-shows",
+      "baby-and-toddler", "school-holidays", "indoors", "sensory-friendly"]);
+
+    // Collect featured images keyed by slug
+    const imageMap = new Map<string, string>();
+    const imgPattern = /href=["']\/sydney\/events\/([a-z0-9-]+)["'][^>]*>[\s\S]*?<img[^>]*src=["']([^"']*\/system\/events\/featured_images\/[^"']+)["']/gi;
+    let m;
+    while ((m = imgPattern.exec(html)) !== null) {
+      if (!skipSlugs.has(m[1])) imageMap.set(m[1], makeAbsolute(m[2], BASE));
+    }
+
+    // Collect h2 titles keyed by slug
+    const h2Pattern = /<h2[^>]*>\s*<a[^>]*href=["']\/sydney\/events\/([a-z0-9-]+)["'][^>]*>\s*([\s\S]*?)\s*<\/a>\s*<\/h2>/gi;
+    while ((m = h2Pattern.exec(html)) !== null && items.length < 15) {
+      const slug = m[1];
+      const title = stripHtml(m[2]);
+      if (skipSlugs.has(slug) || seen.has(slug) || title.length < 5) continue;
+      seen.add(slug);
+      items.push({
+        id: simpleHash(BASE + "/sydney/events/" + slug),
+        title,
+        url: BASE + "/sydney/events/" + slug,
+        category: "Kids & Family",
+        imageUrl: imageMap.get(slug),
+        source: "ellaslist",
+      });
+    }
+
+    console.log(`ellaslist: found ${items.length} items`);
+    return items;
+  } catch (e) {
+    console.error("ellaslist error:", e);
+    return [];
+  }
+}
+
+// ── Source 2: whatsonsydney.com kids-world RSS ──
+async function fetchWhatsOnSydneyKids(): Promise<WhatsOnItem[]> {
+  try {
+    const res = await fetch("https://www.whatsonsydney.com/rssloader?catid=14", {
+      headers: { "User-Agent": "SYDMAP/1.0" },
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+    const items: WhatsOnItem[] = [];
+    const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+    let match;
+
+    while ((match = itemRegex.exec(xml)) !== null && items.length < 15) {
+      const block = match[1];
+      const title = getTagContent(block, "title");
+      const link = getTagContent(block, "link");
+      if (!title || !link) continue;
+
+      const description = getTagContent(block, "description") || "";
+      let imageUrl: string | undefined;
+      const encMatch = block.match(/<enclosure[^>]+url=["']([^"']+)["']/i);
+      if (encMatch) imageUrl = encMatch[1];
+      if (!imageUrl) {
+        const mediaMatch = block.match(/<media:content[^>]+url=["']([^"']+)["']/i);
+        if (mediaMatch) imageUrl = mediaMatch[1];
+      }
+      if (!imageUrl) {
+        const imgMatch = description.match(/<img[^>]+src=["']([^"']+)["']/i);
+        if (imgMatch) imageUrl = imgMatch[1];
+      }
+
+      items.push({
+        id: simpleHash(link),
+        title: stripHtml(title),
+        url: link.trim(),
+        category: "Kids Events",
+        excerpt: description ? stripHtml(description).slice(0, 200) : undefined,
+        imageUrl,
+        source: "whatsonsydney",
+      });
+    }
+
+    console.log(`whatsonsydney: found ${items.length} items`);
+    return items;
+  } catch (e) {
+    console.error("whatsonsydney error:", e);
+    return [];
+  }
+}
+
+// ── Source 3: GetYourGuide ──
+async function fetchGetYourGuide(): Promise<WhatsOnItem[]> {
+  try {
+    const res = await fetch(
+      "https://www.getyourguide.com/s/?q=Family-friendly+activities%2C+Sydney&searchSource=3&src=search_bar",
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+          "Accept": "text/html",
+          "Accept-Language": "en-AU,en;q=0.9",
+        },
+      }
+    );
+    if (!res.ok) return [];
+    const html = await res.text();
+    const items: WhatsOnItem[] = [];
+    const seen = new Set<string>();
+    const BASE = "https://www.getyourguide.com";
+
+    const actPattern = /href=["'](\/[^"']*-t(\d+)\/?)[^"']*["']/gi;
+    let am;
+    while ((am = actPattern.exec(html)) !== null && items.length < 15) {
+      const path = am[1].split("?")[0];
+      const url = BASE + path;
+      if (seen.has(url)) continue;
+      seen.add(url);
+
+      const slugMatch = path.match(/\/([^/]+)-t\d+/);
+      if (!slugMatch) continue;
+      const title = slugMatch[1].replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      if (title.length < 8) continue;
+
+      items.push({
+        id: simpleHash(url),
+        title,
+        url,
+        category: "Tours & Activities",
+        source: "getyourguide",
+      });
+    }
+
+    console.log(`getyourguide: found ${items.length} items`);
+    return items;
+  } catch (e) {
+    console.error("getyourguide error:", e);
+    return [];
+  }
 }
 
 Deno.serve(async (req) => {
@@ -116,47 +206,43 @@ Deno.serve(async (req) => {
     const now = Date.now();
     if (cache && now - cacheTime < CACHE_SECONDS * 1000) {
       return new Response(JSON.stringify(cache), {
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-          "Cache-Control": `public, s-maxage=${CACHE_SECONDS}, stale-while-revalidate=${CACHE_SECONDS}`,
-        },
+        headers: { ...corsHeaders, "Content-Type": "application/json",
+          "Cache-Control": `public, s-maxage=${CACHE_SECONDS}, stale-while-revalidate=${CACHE_SECONDS}` },
       });
     }
 
-    const res = await fetch(RSS_URL, {
-      headers: { "User-Agent": "SYDMAP/1.0" },
-    });
+    const [ellaslist, whatsOnKids, gyg] = await Promise.all([
+      fetchEllaslist(),
+      fetchWhatsOnSydneyKids(),
+      fetchGetYourGuide(),
+    ]);
 
-    if (!res.ok) {
-      throw new Error(`RSS fetch failed: ${res.status}`);
+    // Interleave sources for variety
+    const allItems: WhatsOnItem[] = [];
+    const maxLen = Math.max(ellaslist.length, whatsOnKids.length, gyg.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i < ellaslist.length) allItems.push(ellaslist[i]);
+      if (i < whatsOnKids.length) allItems.push(whatsOnKids[i]);
+      if (i < gyg.length) allItems.push(gyg[i]);
     }
 
-    const xml = await res.text();
-    const items = parseItems(xml);
-
-    const result = { items, fetchedAt: new Date().toISOString() };
+    const result = { items: allItems, fetchedAt: new Date().toISOString() };
     cache = result;
     cacheTime = now;
 
     return new Response(JSON.stringify(result), {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "application/json",
-        "Cache-Control": `public, s-maxage=${CACHE_SECONDS}, stale-while-revalidate=${CACHE_SECONDS}`,
-      },
+      headers: { ...corsHeaders, "Content-Type": "application/json",
+        "Cache-Control": `public, s-maxage=${CACHE_SECONDS}, stale-while-revalidate=${CACHE_SECONDS}` },
     });
   } catch (error) {
     console.error("whats-on-today error:", error);
-    // Return cached data if available even on error
     if (cache) {
       return new Response(JSON.stringify(cache), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     return new Response(JSON.stringify({ error: error.message, items: [] }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

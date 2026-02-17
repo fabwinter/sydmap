@@ -9,7 +9,7 @@ export interface WhatsOnItem {
   excerpt?: string;
   imageUrl?: string;
   date?: string;
-  source: "whatsonsydney";
+  source: string;
 }
 
 async function fetchWhatsOnToday(): Promise<WhatsOnItem[]> {

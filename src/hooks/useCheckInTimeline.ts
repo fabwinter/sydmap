@@ -19,86 +19,65 @@ export function useCheckInTimeline(search?: string, category?: string) {
   return useQuery({
     queryKey: ["check-in-timeline", user?.id, search, category],
     queryFn: async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user!.id)
-        .single();
-
-      if (!profile) return [];
+      // Use the DB function to get profile id in one call
+      const { data: profileId } = await supabase.rpc("get_profile_id_from_auth");
+      if (!profileId) return [];
 
       let query = supabase
         .from("check_ins")
         .select(`
-          *,
-          activities (*)
+          id, activity_id, rating, comment, photo_url, created_at,
+          activities!inner ( id, name, category, address, hero_image_url )
         `)
-        .eq("user_id", profile.id)
-        .order("created_at", { ascending: false });
+        .eq("user_id", profileId)
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      // Server-side category filter
+      if (category && category !== "all") {
+        query = query.ilike("activities.category", category);
+      }
 
       const { data, error } = await query;
-
       if (error) throw error;
 
       let items = (data || []) as TimelineCheckIn[];
 
-      // Client-side filtering for search and category
+      // Client-side search only
       if (search) {
         const lowerSearch = search.toLowerCase();
         items = items.filter(
           (item) =>
             item.activities?.name?.toLowerCase().includes(lowerSearch) ||
-            item.activities?.address?.toLowerCase().includes(lowerSearch) ||
-            item.activities?.category?.toLowerCase().includes(lowerSearch)
-        );
-      }
-
-      if (category && category !== "all") {
-        items = items.filter(
-          (item) => item.activities?.category?.toLowerCase() === category.toLowerCase()
+            item.activities?.address?.toLowerCase().includes(lowerSearch)
         );
       }
 
       // Group by date
       const grouped = new Map<string, TimelineCheckIn[]>();
       for (const item of items) {
-        const date = new Date(item.created_at).toLocaleDateString("en-AU", {
-          weekday: "short",
-          month: "short",
-          day: "numeric",
-        });
         const dateKey = new Date(item.created_at).toISOString().split("T")[0];
-        if (!grouped.has(dateKey)) {
-          grouped.set(dateKey, []);
-        }
+        if (!grouped.has(dateKey)) grouped.set(dateKey, []);
         grouped.get(dateKey)!.push(item);
       }
+
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
 
       const result: GroupedCheckIns[] = [];
       for (const [dateKey, checkIns] of grouped) {
         const d = new Date(dateKey);
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-
         let label: string;
-        if (d.toDateString() === today.toDateString()) {
-          label = "Today";
-        } else if (d.toDateString() === yesterday.toDateString()) {
-          label = "Yesterday";
-        } else {
-          label = d.toLocaleDateString("en-AU", {
-            weekday: "short",
-            month: "short",
-            day: "numeric",
-          });
-        }
-
+        if (d.toDateString() === today.toDateString()) label = "Today";
+        else if (d.toDateString() === yesterday.toDateString()) label = "Yesterday";
+        else label = d.toLocaleDateString("en-AU", { weekday: "short", month: "short", day: "numeric" });
         result.push({ date: dateKey, label, checkIns });
       }
 
       return result;
     },
     enabled: !!user,
+    staleTime: 2 * 60 * 1000,
   });
 }
