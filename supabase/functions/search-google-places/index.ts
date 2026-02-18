@@ -80,28 +80,42 @@ Deno.serve(async (req) => {
     ].join(",");
 
     console.log("Calling Google Places API with query:", query);
-    const googleRes = await fetch(
-      "https://places.googleapis.com/v1/places:searchText",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Goog-Api-Key": apiKey,
-          "X-Goog-FieldMask": fieldMask,
-        },
-        body: JSON.stringify(body),
-      }
-    );
 
-    if (!googleRes.ok) {
-      const errText = await googleRes.text();
-      console.error("Google Places API error:", googleRes.status, errText);
+    let googleRes: Response | null = null;
+    let lastErrText = "";
+    for (let attempt = 0; attempt < 3; attempt++) {
+      googleRes = await fetch(
+        "https://places.googleapis.com/v1/places:searchText",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask": fieldMask,
+          },
+          body: JSON.stringify(body),
+        }
+      );
+
+      if (googleRes.status === 429) {
+        lastErrText = await googleRes.text();
+        const waitMs = Math.pow(2, attempt) * 2000 + Math.random() * 1000;
+        console.warn(`Rate limited (429), waiting ${Math.round(waitMs)}ms (attempt ${attempt + 1}/3)`);
+        await new Promise((r) => setTimeout(r, waitMs));
+        continue;
+      }
+      break;
+    }
+
+    if (!googleRes || !googleRes.ok) {
+      if (!lastErrText && googleRes) lastErrText = await googleRes.text();
+      console.error("Google Places API error:", googleRes?.status, lastErrText);
       if (cached) {
         return new Response(JSON.stringify(cached.data), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      return new Response(JSON.stringify({ error: "Google Places API error", details: errText }), {
+      return new Response(JSON.stringify({ error: "Google Places API error", details: lastErrText }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

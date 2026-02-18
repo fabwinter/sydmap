@@ -109,7 +109,8 @@ export function useGooglePlacesSearch(query: string, enabled = true, options?: {
     queryFn: () => searchGooglePlaces(query, lat, lng, radiusMeters, 20),
     enabled: enabled && query.length >= 2,
     staleTime: 1000 * 60 * 60,
-    retry: 1,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(2000 * Math.pow(2, attempt), 15000),
   });
 
   const data = useMemo(() => {
