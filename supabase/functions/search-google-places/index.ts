@@ -12,6 +12,11 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Google Places API is temporarily disabled to control costs
+    return new Response(JSON.stringify([]), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+
     const { query, lat = -33.8688, lng = 151.2093, radius = 10000, limit = 20 } = await req.json();
 
     if (!query) {

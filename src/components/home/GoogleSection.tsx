@@ -63,6 +63,8 @@ const SYDNEY_LAT = -33.8688;
 const SYDNEY_LNG = 151.2093;
 
 export function GoogleSection() {
+  // Google Places API temporarily disabled
+  return null;
   const { filters } = useSearchFilters();
   const { location } = useUserLocation();
   const userLat = location?.latitude ?? SYDNEY_LAT;
