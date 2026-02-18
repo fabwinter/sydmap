@@ -2,7 +2,6 @@ import { MapPin, Star, ExternalLink, Plus } from "lucide-react";
 import { useFoursquareSearch, type FoursquareVenue } from "@/hooks/useFoursquareSearch";
 import { useImportFoursquareVenue } from "@/hooks/useImportFoursquareVenue";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
-import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Carousel,
@@ -16,14 +15,15 @@ import { calculateDistance, formatDistance, useUserLocation } from "@/hooks/useU
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { VenueDetailsSheet, type VenueDetails } from "./VenueDetailsSheet";
 
-function VenueCard({ venue, userLat, userLng, onImport, importing }: { venue: FoursquareVenue; userLat: number; userLng: number; onImport: (v: FoursquareVenue) => void; importing: boolean }) {
+function VenueCard({ venue, userLat, userLng, onSelect }: { venue: FoursquareVenue; userLat: number; userLng: number; onSelect: (v: FoursquareVenue) => void }) {
   const [imgError, setImgError] = useState(false);
   const photo = venue.photos?.[0];
   const dist = calculateDistance(userLat, userLng, venue.latitude, venue.longitude);
 
   return (
-    <div className="group flex flex-col text-left w-full">
+    <div className="group flex flex-col text-left w-full cursor-pointer" onClick={() => onSelect(venue)}>
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
         {photo && !imgError ? (
           <img src={photo} alt={venue.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onError={() => setImgError(true)} />
@@ -55,16 +55,6 @@ function VenueCard({ venue, userLat, userLng, onImport, importing }: { venue: Fo
             {formatDistance(dist)}
           </span>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="w-full mt-2 gap-1.5 text-xs"
-          onClick={() => onImport(venue)}
-          disabled={importing}
-        >
-          <Plus className="w-3.5 h-3.5" />
-          {importing ? "Adding..." : "Add to DB"}
-        </Button>
       </div>
     </div>
   );
@@ -75,12 +65,12 @@ const SYDNEY_LNG = 151.2093;
 
 export function FoursquareSection() {
   const { filters } = useSearchFilters();
-  const navigate = useNavigate();
   const { location } = useUserLocation();
   const userLat = location?.latitude ?? SYDNEY_LAT;
   const userLng = location?.longitude ?? SYDNEY_LNG;
   const isAdmin = useIsAdmin();
   const [importingId, setImportingId] = useState<string | null>(null);
+  const [selectedVenue, setSelectedVenue] = useState<FoursquareVenue | null>(null);
 
   const fsQuery = (() => {
     const parts: string[] = [];
@@ -94,12 +84,13 @@ export function FoursquareSection() {
   const { data: venues, isLoading, error } = useFoursquareSearch(fsQuery, fsQuery.length >= 2);
   const importVenue = useImportFoursquareVenue();
 
-  const handleImport = async (venue: FoursquareVenue) => {
-    setImportingId(venue.id);
+  const handleImport = async () => {
+    if (!selectedVenue) return;
+    setImportingId(selectedVenue.id);
     try {
-      const activityId = await importVenue.mutateAsync(venue);
-      toast.success(`"${venue.name}" added to database`);
-      navigate(`/activity/${activityId}`);
+      await importVenue.mutateAsync(selectedVenue);
+      toast.success(`"${selectedVenue.name}" added to database`);
+      setSelectedVenue(null);
     } catch (e) {
       console.error("Failed to import venue:", e);
       toast.error("Failed to add venue");
@@ -108,7 +99,11 @@ export function FoursquareSection() {
     }
   };
 
-  // Only show for admins
+  const sheetVenue: VenueDetails | null = selectedVenue ? {
+    ...selectedVenue,
+    source: "foursquare" as const,
+  } : null;
+
   if (!isAdmin) return null;
   if (fsQuery.length < 2) return null;
   if (error || (venues && venues.length === 0)) return null;
@@ -144,7 +139,7 @@ export function FoursquareSection() {
             <CarouselContent className="-ml-3 md:-ml-4">
               {venues.map((venue) => (
                 <CarouselItem key={venue.id} className="pl-3 md:pl-4 basis-[200px] sm:basis-[220px] md:basis-[240px] lg:basis-[260px]">
-                  <VenueCard venue={venue} userLat={userLat} userLng={userLng} onImport={handleImport} importing={importingId === venue.id} />
+                  <VenueCard venue={venue} userLat={userLat} userLng={userLng} onSelect={setSelectedVenue} />
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -155,6 +150,16 @@ export function FoursquareSection() {
       ) : (
         <p className="text-muted-foreground text-sm">No Foursquare results found</p>
       )}
+
+      <VenueDetailsSheet
+        venue={sheetVenue}
+        open={!!selectedVenue}
+        onOpenChange={(open) => { if (!open) setSelectedVenue(null); }}
+        userLat={userLat}
+        userLng={userLng}
+        onImport={handleImport}
+        importing={importingId === selectedVenue?.id}
+      />
     </section>
   );
 }
