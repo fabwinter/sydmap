@@ -112,7 +112,7 @@ export function useFoursquareSearch(query: string, enabled = true) {
   const lat = location?.latitude ?? SYDNEY_LAT;
   const lng = location?.longitude ?? SYDNEY_LNG;
   // Use maxDistance as API radius (convert km to meters), default 10km
-  const radiusMeters = filters.maxDistance ? filters.maxDistance * 1000 : 10000;
+  const radiusMeters = filters.maxDistance ? filters.maxDistance * 1000 : 50000;
 
   const rawQuery = useQuery({
     queryKey: ["foursquare", query, lat, lng, radiusMeters],
