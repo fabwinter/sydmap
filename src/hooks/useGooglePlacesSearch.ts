@@ -102,7 +102,7 @@ export function useGooglePlacesSearch(query: string, enabled = true) {
   const { filters } = useSearchFilters();
   const lat = location?.latitude ?? SYDNEY_LAT;
   const lng = location?.longitude ?? SYDNEY_LNG;
-  const radiusMeters = filters.maxDistance ? filters.maxDistance * 1000 : 10000;
+  const radiusMeters = filters.maxDistance ? filters.maxDistance * 1000 : 50000;
 
   const rawQuery = useQuery({
     queryKey: ["google-places", query, lat, lng, radiusMeters],
