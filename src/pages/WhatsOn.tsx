@@ -11,7 +11,7 @@ function EventCard({ item }: { item: WhatsOnItem }) {
   if (item.activityId) {
     return (
       <Link
-        to={`/activity/${item.activityId}`}
+        to={`/event/${item.activityId}`}
         className="group flex flex-col bg-card rounded-xl border border-border overflow-hidden hover:border-primary transition-colors"
       >
         <CardContent item={item} internal />

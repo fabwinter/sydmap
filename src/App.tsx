@@ -14,6 +14,7 @@ import Chat from "./pages/Chat";
 import ActivityDetails from "./pages/ActivityDetails";
 import CategoryView from "./pages/CategoryView";
 import WhatsOn from "./pages/WhatsOn";
+import EventDetails from "./pages/EventDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/activity/:id" element={<ActivityDetails />} />
           <Route path="/explore" element={<CategoryView />} />
           <Route path="/whats-on" element={<WhatsOn />} />
+          <Route path="/event/:id" element={<EventDetails />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
