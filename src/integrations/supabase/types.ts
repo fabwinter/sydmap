@@ -20,15 +20,23 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          event_cost: string | null
+          event_dates: string | null
           foursquare_id: string | null
           hero_image_url: string | null
           hours_close: string | null
           hours_open: string | null
           id: string
+          is_event: boolean
           is_open: boolean
           latitude: number
           longitude: number
           name: string
+          organizer_facebook: string | null
+          organizer_instagram: string | null
+          organizer_name: string | null
+          organizer_phone: string | null
+          organizer_website: string | null
           outdoor_seating: boolean
           parking: boolean
           pet_friendly: boolean
@@ -37,6 +45,7 @@ export type Database = {
           region: string | null
           review_count: number
           source_url: string | null
+          ticket_url: string | null
           updated_at: string
           website: string | null
           wheelchair_accessible: boolean
@@ -47,15 +56,23 @@ export type Database = {
           category: string
           created_at?: string
           description?: string | null
+          event_cost?: string | null
+          event_dates?: string | null
           foursquare_id?: string | null
           hero_image_url?: string | null
           hours_close?: string | null
           hours_open?: string | null
           id?: string
+          is_event?: boolean
           is_open?: boolean
           latitude: number
           longitude: number
           name: string
+          organizer_facebook?: string | null
+          organizer_instagram?: string | null
+          organizer_name?: string | null
+          organizer_phone?: string | null
+          organizer_website?: string | null
           outdoor_seating?: boolean
           parking?: boolean
           pet_friendly?: boolean
@@ -64,6 +81,7 @@ export type Database = {
           region?: string | null
           review_count?: number
           source_url?: string | null
+          ticket_url?: string | null
           updated_at?: string
           website?: string | null
           wheelchair_accessible?: boolean
@@ -74,15 +92,23 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          event_cost?: string | null
+          event_dates?: string | null
           foursquare_id?: string | null
           hero_image_url?: string | null
           hours_close?: string | null
           hours_open?: string | null
           id?: string
+          is_event?: boolean
           is_open?: boolean
           latitude?: number
           longitude?: number
           name?: string
+          organizer_facebook?: string | null
+          organizer_instagram?: string | null
+          organizer_name?: string | null
+          organizer_phone?: string | null
+          organizer_website?: string | null
           outdoor_seating?: boolean
           parking?: boolean
           pet_friendly?: boolean
@@ -91,6 +117,7 @@ export type Database = {
           region?: string | null
           review_count?: number
           source_url?: string | null
+          ticket_url?: string | null
           updated_at?: string
           website?: string | null
           wheelchair_accessible?: boolean

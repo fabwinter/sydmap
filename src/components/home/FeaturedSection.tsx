@@ -48,7 +48,7 @@ function WhatsOnCard({ item }: { item: WhatsOnItem }) {
   // If imported, link internally
   if (item.activityId) {
     return (
-      <Link to={`/activity/${item.activityId}`} className="group flex flex-col">
+      <Link to={`/event/${item.activityId}`} className="group flex flex-col">
         {content}
       </Link>
     );
