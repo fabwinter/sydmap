@@ -13,12 +13,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8">
           <ControlPanel />
           
-          {/* Foursquare live results - shown when searching */}
-          <FoursquareSection />
-          
-          {/* Google Places live results - shown when searching */}
-          <GoogleSection />
-          
+          {/* DB listings first */}
           <div id="featured-section">
             <FeaturedSection />
           </div>
@@ -26,6 +21,10 @@ const Index = () => {
           <RecommendedSection />
           
           <CuratedSections />
+          
+          {/* External sources below DB - admin only */}
+          <FoursquareSection />
+          <GoogleSection />
         </div>
       </div>
     </AppLayout>
