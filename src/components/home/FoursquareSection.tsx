@@ -1,4 +1,4 @@
-import { MapPin, Star, ExternalLink, Loader2 } from "lucide-react";
+import { MapPin, Star, ExternalLink, Plus } from "lucide-react";
 import { useFoursquareSearch, type FoursquareVenue } from "@/hooks/useFoursquareSearch";
 import { useImportFoursquareVenue } from "@/hooks/useImportFoursquareVenue";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
@@ -13,25 +13,20 @@ import {
 } from "@/components/ui/carousel";
 import { useState } from "react";
 import { calculateDistance, formatDistance, useUserLocation } from "@/hooks/useUserLocation";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
-function VenueCard({ venue, userLat, userLng, onSelect }: { venue: FoursquareVenue; userLat: number; userLng: number; onSelect: (v: FoursquareVenue) => void }) {
+function VenueCard({ venue, userLat, userLng, onImport, importing }: { venue: FoursquareVenue; userLat: number; userLng: number; onImport: (v: FoursquareVenue) => void; importing: boolean }) {
   const [imgError, setImgError] = useState(false);
   const photo = venue.photos?.[0];
   const dist = calculateDistance(userLat, userLng, venue.latitude, venue.longitude);
 
   return (
-    <button
-      onClick={() => onSelect(venue)}
-      className="group flex flex-col text-left w-full cursor-pointer"
-    >
+    <div className="group flex flex-col text-left w-full">
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
         {photo && !imgError ? (
-          <img
-            src={photo}
-            alt={venue.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            onError={() => setImgError(true)}
-          />
+          <img src={photo} alt={venue.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onError={() => setImgError(true)} />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center">
             <MapPin className="w-12 h-12 text-muted-foreground/50" />
@@ -60,8 +55,18 @@ function VenueCard({ venue, userLat, userLng, onSelect }: { venue: FoursquareVen
             {formatDistance(dist)}
           </span>
         </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full mt-2 gap-1.5 text-xs"
+          onClick={() => onImport(venue)}
+          disabled={importing}
+        >
+          <Plus className="w-3.5 h-3.5" />
+          {importing ? "Adding..." : "Add to DB"}
+        </Button>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -74,7 +79,9 @@ export function FoursquareSection() {
   const { location } = useUserLocation();
   const userLat = location?.latitude ?? SYDNEY_LAT;
   const userLng = location?.longitude ?? SYDNEY_LNG;
-  // Build combined query from all active filters
+  const isAdmin = useIsAdmin();
+  const [importingId, setImportingId] = useState<string | null>(null);
+
   const fsQuery = (() => {
     const parts: string[] = [];
     if (filters.query) parts.push(filters.query);
@@ -83,19 +90,26 @@ export function FoursquareSection() {
     if (filters.cuisine && filters.category) parts.push(filters.category);
     return parts.join(" ") || "";
   })();
+
   const { data: venues, isLoading, error } = useFoursquareSearch(fsQuery, fsQuery.length >= 2);
   const importVenue = useImportFoursquareVenue();
 
-  const handleSelect = async (venue: FoursquareVenue) => {
+  const handleImport = async (venue: FoursquareVenue) => {
+    setImportingId(venue.id);
     try {
       const activityId = await importVenue.mutateAsync(venue);
+      toast.success(`"${venue.name}" added to database`);
       navigate(`/activity/${activityId}`);
     } catch (e) {
       console.error("Failed to import venue:", e);
+      toast.error("Failed to add venue");
+    } finally {
+      setImportingId(null);
     }
   };
 
-  // Show when there's an active search query or category filter
+  // Only show for admins
+  if (!isAdmin) return null;
   if (fsQuery.length < 2) return null;
   if (error || (venues && venues.length === 0)) return null;
 
@@ -129,11 +143,8 @@ export function FoursquareSection() {
           <Carousel opts={{ align: "start", loop: false }} className="w-full">
             <CarouselContent className="-ml-3 md:-ml-4">
               {venues.map((venue) => (
-                <CarouselItem
-                  key={venue.id}
-                  className="pl-3 md:pl-4 basis-[200px] sm:basis-[220px] md:basis-[240px] lg:basis-[260px]"
-                >
-                  <VenueCard venue={venue} userLat={userLat} userLng={userLng} onSelect={handleSelect} />
+                <CarouselItem key={venue.id} className="pl-3 md:pl-4 basis-[200px] sm:basis-[220px] md:basis-[240px] lg:basis-[260px]">
+                  <VenueCard venue={venue} userLat={userLat} userLng={userLng} onImport={handleImport} importing={importingId === venue.id} />
                 </CarouselItem>
               ))}
             </CarouselContent>

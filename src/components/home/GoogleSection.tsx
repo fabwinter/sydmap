@@ -1,4 +1,4 @@
-import { MapPin, Star, ExternalLink } from "lucide-react";
+import { MapPin, Star, ExternalLink, Plus } from "lucide-react";
 import { useGooglePlacesSearch, type GooglePlaceVenue } from "@/hooks/useGooglePlacesSearch";
 import { useImportGoogleVenue } from "@/hooks/useImportGoogleVenue";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
@@ -13,14 +13,17 @@ import {
 } from "@/components/ui/carousel";
 import { useState } from "react";
 import { calculateDistance, formatDistance, useUserLocation } from "@/hooks/useUserLocation";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
-function VenueCard({ venue, userLat, userLng, onSelect }: { venue: GooglePlaceVenue; userLat: number; userLng: number; onSelect: (v: GooglePlaceVenue) => void }) {
+function VenueCard({ venue, userLat, userLng, onImport, importing }: { venue: GooglePlaceVenue; userLat: number; userLng: number; onImport: (v: GooglePlaceVenue) => void; importing: boolean }) {
   const [imgError, setImgError] = useState(false);
   const photo = venue.photos?.[0];
   const dist = calculateDistance(userLat, userLng, venue.latitude, venue.longitude);
 
   return (
-    <button onClick={() => onSelect(venue)} className="group flex flex-col text-left w-full cursor-pointer">
+    <div className="group flex flex-col text-left w-full">
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
         {photo && !imgError ? (
           <img src={photo} alt={venue.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onError={() => setImgError(true)} />
@@ -32,7 +35,7 @@ function VenueCard({ venue, userLat, userLng, onSelect }: { venue: GooglePlaceVe
         <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-white text-xs font-semibold text-foreground shadow-sm">
           {venue.category}
         </div>
-        <div className="absolute top-3 right-3 z-10 px-2 py-1 rounded-full bg-blue-500 text-[10px] font-bold text-white">
+        <div className="absolute top-3 right-3 z-10 px-2 py-1 rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
           G
         </div>
       </div>
@@ -51,8 +54,18 @@ function VenueCard({ venue, userLat, userLng, onSelect }: { venue: GooglePlaceVe
             {formatDistance(dist)}
           </span>
         </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full mt-2 gap-1.5 text-xs"
+          onClick={() => onImport(venue)}
+          disabled={importing}
+        >
+          <Plus className="w-3.5 h-3.5" />
+          {importing ? "Adding..." : "Add to DB"}
+        </Button>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -65,6 +78,8 @@ export function GoogleSection() {
   const { location } = useUserLocation();
   const userLat = location?.latitude ?? SYDNEY_LAT;
   const userLng = location?.longitude ?? SYDNEY_LNG;
+  const isAdmin = useIsAdmin();
+  const [importingId, setImportingId] = useState<string | null>(null);
 
   const gQuery = (() => {
     const parts: string[] = [];
@@ -78,15 +93,22 @@ export function GoogleSection() {
   const { data: venues, isLoading, error } = useGooglePlacesSearch(gQuery, gQuery.length >= 2);
   const importVenue = useImportGoogleVenue();
 
-  const handleSelect = async (venue: GooglePlaceVenue) => {
+  const handleImport = async (venue: GooglePlaceVenue) => {
+    setImportingId(venue.id);
     try {
       const activityId = await importVenue.mutateAsync(venue);
+      toast.success(`"${venue.name}" added to database`);
       navigate(`/activity/${activityId}`);
     } catch (e) {
       console.error("Failed to import Google venue:", e);
+      toast.error("Failed to add venue");
+    } finally {
+      setImportingId(null);
     }
   };
 
+  // Only show for admins
+  if (!isAdmin) return null;
   if (gQuery.length < 2) return null;
   if (error || (venues && venues.length === 0)) return null;
 
@@ -94,7 +116,7 @@ export function GoogleSection() {
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <ExternalLink className="w-5 h-5 text-blue-500" />
+          <ExternalLink className="w-5 h-5 text-primary" />
           <h2 className="section-header mb-0">Google Places</h2>
         </div>
         <span className="text-xs text-muted-foreground">Powered by Google</span>
@@ -121,7 +143,7 @@ export function GoogleSection() {
             <CarouselContent className="-ml-3 md:-ml-4">
               {venues.map((venue) => (
                 <CarouselItem key={venue.id} className="pl-3 md:pl-4 basis-[200px] sm:basis-[220px] md:basis-[240px] lg:basis-[260px]">
-                  <VenueCard venue={venue} userLat={userLat} userLng={userLng} onSelect={handleSelect} />
+                  <VenueCard venue={venue} userLat={userLat} userLng={userLng} onImport={handleImport} importing={importingId === venue.id} />
                 </CarouselItem>
               ))}
             </CarouselContent>

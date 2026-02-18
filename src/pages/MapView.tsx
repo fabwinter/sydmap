@@ -195,14 +195,15 @@ export default function MapView() {
 
   // Apply all filters from shared state
   const filteredActivities = useMemo(() => {
+    const effectiveSource = isAdmin ? sourceFilter : "db";
     let allActivities: Activity[] = [];
-    if (sourceFilter === "all") {
+    if (effectiveSource === "all") {
       allActivities = [...(activities || []), ...foursquareAsActivities, ...googleAsActivities];
-    } else if (sourceFilter === "db") {
+    } else if (effectiveSource === "db") {
       allActivities = [...(activities || [])];
-    } else if (sourceFilter === "foursquare") {
+    } else if (effectiveSource === "foursquare") {
       allActivities = [...foursquareAsActivities];
-    } else if (sourceFilter === "google") {
+    } else if (effectiveSource === "google") {
       allActivities = [...googleAsActivities];
     }
 
