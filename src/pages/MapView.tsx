@@ -126,12 +126,13 @@ export default function MapView() {
     if (filters.query) parts.push(filters.query);
     if (filters.cuisine) parts.push(filters.cuisine);
     if (filters.category && !filters.cuisine) parts.push(filters.category);
-    // If only category is set (e.g. "Restaurant"), use it; if cuisine is set, combine (e.g. "Chinese Restaurant")
     if (filters.cuisine && filters.category) parts.push(filters.category);
-    return parts.join(" ") || "";
+    // Fallback: when no filters are set, use a broad query so external APIs still return results on the map
+    return parts.join(" ") || "things to do";
   }, [filters.query, filters.cuisine, filters.category]);
-  const { data: foursquareVenues } = useFoursquareSearch(fsQuery, fsQuery.length >= 2 && (sourceFilter === "all" || sourceFilter === "foursquare"));
-  const { data: googleVenues } = useGooglePlacesSearch(fsQuery, fsQuery.length >= 2 && (sourceFilter === "all" || sourceFilter === "google"));
+  const wantExternal = sourceFilter === "all" || sourceFilter === "foursquare" || sourceFilter === "google";
+  const { data: foursquareVenues } = useFoursquareSearch(fsQuery, wantExternal && (sourceFilter === "all" || sourceFilter === "foursquare"));
+  const { data: googleVenues } = useGooglePlacesSearch(fsQuery, wantExternal && (sourceFilter === "all" || sourceFilter === "google"));
   const foursquareAsActivities: Activity[] = useMemo(() => {
     if (!foursquareVenues?.length) return [];
     const localFsIds = new Set(activities?.filter(a => a.foursquare_id).map(a => a.foursquare_id) ?? []);
