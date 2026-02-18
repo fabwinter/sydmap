@@ -102,7 +102,7 @@ export function ChatWidget() {
           </div>
         ) : (
           <>
-            {messages.map((message) => (
+            {messages.map((message, msgIndex) => (
               <div key={message.id}>
                 <div
                   className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
@@ -129,6 +129,20 @@ export function ChatWidget() {
                 {/* Venue cards */}
                 {message.role === "assistant" && message.content.length > 20 && (
                   <ChatVenueCards messageContent={message.content} />
+                )}
+                {/* Quick reply buttons */}
+                {message.role === "assistant" && (message as any).quickReplies?.length > 0 && msgIndex === messages.length - 1 && !isLoading && (
+                  <div className="flex flex-wrap gap-1.5 mt-2 ml-1">
+                    {(message as any).quickReplies.map((reply: string, i: number) => (
+                      <button
+                        key={i}
+                        onClick={() => handleSend(reply)}
+                        className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded-full text-[11px] font-medium transition-colors border border-primary/20"
+                      >
+                        {reply}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             ))}

@@ -34,6 +34,7 @@ export type Database = {
           pet_friendly: boolean
           phone: string | null
           rating: number | null
+          region: string | null
           review_count: number
           source_url: string | null
           updated_at: string
@@ -60,6 +61,7 @@ export type Database = {
           pet_friendly?: boolean
           phone?: string | null
           rating?: number | null
+          region?: string | null
           review_count?: number
           source_url?: string | null
           updated_at?: string
@@ -86,6 +88,7 @@ export type Database = {
           pet_friendly?: boolean
           phone?: string | null
           rating?: number | null
+          region?: string | null
           review_count?: number
           source_url?: string | null
           updated_at?: string
