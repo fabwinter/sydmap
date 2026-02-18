@@ -1,4 +1,4 @@
-import { MapPin, Star, ExternalLink } from "lucide-react";
+import { MapPin, Star, ExternalLink, AlertTriangle } from "lucide-react";
 import { useGooglePlacesSearch, type GooglePlaceVenue } from "@/hooks/useGooglePlacesSearch";
 import { useImportGoogleVenue } from "@/hooks/useImportGoogleVenue";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
@@ -15,6 +15,7 @@ import { calculateDistance, formatDistance, useUserLocation } from "@/hooks/useU
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { toast } from "sonner";
 import { VenueDetailsSheet, type VenueDetails } from "./VenueDetailsSheet";
+import { useFilteredExternalVenues } from "@/hooks/useDeduplication";
 
 function VenueCard({ venue, userLat, userLng, onSelect }: { venue: GooglePlaceVenue; userLat: number; userLng: number; onSelect: (v: GooglePlaceVenue) => void }) {
   const [imgError, setImgError] = useState(false);
@@ -80,6 +81,7 @@ export function GoogleSection() {
   })();
 
   const { data: venues, isLoading, error } = useGooglePlacesSearch(gQuery, gQuery.length >= 2);
+  const { unique: filteredVenues, duplicates } = useFilteredExternalVenues(venues, "google");
   const importVenue = useImportGoogleVenue();
 
   const handleImport = async () => {
@@ -104,7 +106,7 @@ export function GoogleSection() {
 
   if (!isAdmin) return null;
   if (gQuery.length < 2) return null;
-  if (error || (venues && venues.length === 0)) return null;
+  if (error || (filteredVenues && filteredVenues.length === 0 && duplicates.length === 0)) return null;
 
   return (
     <section className="space-y-4">
@@ -115,9 +117,17 @@ export function GoogleSection() {
         </div>
         <span className="text-xs text-muted-foreground">Powered by Google</span>
       </div>
-      <p className="text-sm text-muted-foreground -mt-2">
-        Live results for "{gQuery}"
-      </p>
+      <div className="flex items-center justify-between -mt-2">
+        <p className="text-sm text-muted-foreground">
+          Live results for "{gQuery}"
+        </p>
+        {duplicates.length > 0 && (
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+            {duplicates.length} already in DB
+          </span>
+        )}
+      </div>
 
       {isLoading ? (
         <div className="flex gap-3 md:gap-4 overflow-hidden">
@@ -131,11 +141,11 @@ export function GoogleSection() {
             </div>
           ))}
         </div>
-      ) : venues && venues.length > 0 ? (
+      ) : filteredVenues && filteredVenues.length > 0 ? (
         <div className="relative group">
           <Carousel opts={{ align: "start", loop: false }} className="w-full">
             <CarouselContent className="-ml-3 md:-ml-4">
-              {venues.map((venue) => (
+              {filteredVenues.map((venue) => (
                 <CarouselItem key={venue.id} className="pl-3 md:pl-4 basis-[200px] sm:basis-[220px] md:basis-[240px] lg:basis-[260px]">
                   <VenueCard venue={venue} userLat={userLat} userLng={userLng} onSelect={setSelectedVenue} />
                 </CarouselItem>
@@ -146,7 +156,7 @@ export function GoogleSection() {
           </Carousel>
         </div>
       ) : (
-        <p className="text-muted-foreground text-sm">No Google results found</p>
+        <p className="text-muted-foreground text-sm">All results already in database</p>
       )}
 
       <VenueDetailsSheet

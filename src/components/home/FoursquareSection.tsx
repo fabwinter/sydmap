@@ -1,4 +1,4 @@
-import { MapPin, Star, ExternalLink, Plus } from "lucide-react";
+import { MapPin, Star, ExternalLink, AlertTriangle } from "lucide-react";
 import { useFoursquareSearch, type FoursquareVenue } from "@/hooks/useFoursquareSearch";
 import { useImportFoursquareVenue } from "@/hooks/useImportFoursquareVenue";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
@@ -13,9 +13,9 @@ import {
 import { useState } from "react";
 import { calculateDistance, formatDistance, useUserLocation } from "@/hooks/useUserLocation";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { VenueDetailsSheet, type VenueDetails } from "./VenueDetailsSheet";
+import { useFilteredExternalVenues } from "@/hooks/useDeduplication";
 
 function VenueCard({ venue, userLat, userLng, onSelect }: { venue: FoursquareVenue; userLat: number; userLng: number; onSelect: (v: FoursquareVenue) => void }) {
   const [imgError, setImgError] = useState(false);
@@ -39,7 +39,6 @@ function VenueCard({ venue, userLat, userLng, onSelect }: { venue: FoursquareVen
           FSQ
         </div>
       </div>
-
       <div className="pt-2.5 space-y-0.5">
         <h3 className="font-semibold text-sm text-foreground line-clamp-1">{venue.name}</h3>
         <p className="text-xs text-muted-foreground line-clamp-1">{venue.address}</p>
@@ -82,6 +81,7 @@ export function FoursquareSection() {
   })();
 
   const { data: venues, isLoading, error } = useFoursquareSearch(fsQuery, fsQuery.length >= 2);
+  const { unique: filteredVenues, duplicates } = useFilteredExternalVenues(venues, "foursquare");
   const importVenue = useImportFoursquareVenue();
 
   const handleImport = async () => {
@@ -106,7 +106,7 @@ export function FoursquareSection() {
 
   if (!isAdmin) return null;
   if (fsQuery.length < 2) return null;
-  if (error || (venues && venues.length === 0)) return null;
+  if (error || (filteredVenues && filteredVenues.length === 0 && duplicates.length === 0)) return null;
 
   return (
     <section className="space-y-4">
@@ -117,9 +117,17 @@ export function FoursquareSection() {
         </div>
         <span className="text-xs text-muted-foreground">Powered by Foursquare</span>
       </div>
-      <p className="text-sm text-muted-foreground -mt-2">
-        Live results for "{fsQuery}"
-      </p>
+      <div className="flex items-center justify-between -mt-2">
+        <p className="text-sm text-muted-foreground">
+          Live results for "{fsQuery}"
+        </p>
+        {duplicates.length > 0 && (
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+            {duplicates.length} already in DB
+          </span>
+        )}
+      </div>
 
       {isLoading ? (
         <div className="flex gap-3 md:gap-4 overflow-hidden">
@@ -133,11 +141,11 @@ export function FoursquareSection() {
             </div>
           ))}
         </div>
-      ) : venues && venues.length > 0 ? (
+      ) : filteredVenues && filteredVenues.length > 0 ? (
         <div className="relative group">
           <Carousel opts={{ align: "start", loop: false }} className="w-full">
             <CarouselContent className="-ml-3 md:-ml-4">
-              {venues.map((venue) => (
+              {filteredVenues.map((venue) => (
                 <CarouselItem key={venue.id} className="pl-3 md:pl-4 basis-[200px] sm:basis-[220px] md:basis-[240px] lg:basis-[260px]">
                   <VenueCard venue={venue} userLat={userLat} userLng={userLng} onSelect={setSelectedVenue} />
                 </CarouselItem>
@@ -148,7 +156,7 @@ export function FoursquareSection() {
           </Carousel>
         </div>
       ) : (
-        <p className="text-muted-foreground text-sm">No Foursquare results found</p>
+        <p className="text-muted-foreground text-sm">All results already in database</p>
       )}
 
       <VenueDetailsSheet
