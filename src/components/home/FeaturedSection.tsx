@@ -38,6 +38,9 @@ function WhatsOnCard({ item }: { item: WhatsOnItem }) {
       </div>
       <div className="pt-2.5 space-y-0.5">
         <h3 className="font-semibold text-sm text-foreground line-clamp-2">{item.title}</h3>
+        {item.date && (
+          <p className="text-xs text-primary font-medium">{item.date}</p>
+        )}
         {item.excerpt && (
           <p className="text-xs text-muted-foreground line-clamp-2">{item.excerpt}</p>
         )}
@@ -85,7 +88,7 @@ export function FeaturedSection() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-warning" />
-          <h2 className="section-header mb-0">What's On Today</h2>
+          <h2 className="section-header mb-0">What's On</h2>
         </div>
         <Link
           to="/whats-on"
