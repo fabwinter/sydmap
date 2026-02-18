@@ -154,7 +154,7 @@ export default function ActivityDetails() {
     );
   }
 
-  const heroUrl = activity.hero_image_url || "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&h=500&fit=crop";
+  const heroUrl = activity.hero_image_url || "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1600&h=900&fit=crop&q=90";
   const galleryUrls = (photos?.map(p => p.photo_url) || []).filter(url => url !== heroUrl);
   const allPhotos = [heroUrl, ...galleryUrls];
 
@@ -170,7 +170,7 @@ export default function ActivityDetails() {
     <div className="min-h-screen bg-background pb-24">
       {isAdmin && <AdminPanel activity={activity} />}
       {/* Hero Image Carousel */}
-      <div className="relative h-72 sm:h-80">
+      <div className="relative h-72 sm:h-80 md:h-[28rem] lg:h-[32rem]">
         <img
           src={allPhotos[heroIndex] || allPhotos[0]}
           alt={activity.name}
