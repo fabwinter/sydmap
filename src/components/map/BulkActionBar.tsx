@@ -9,6 +9,12 @@ const CATEGORIES = [
   "Sports and Recreation", "Daycare", "Education", "Hotel", "Walks",
 ];
 
+const REGIONS = [
+  "South Sydney", "Sydney Inner West", "Sydney Inner East",
+  "Upper North Shore", "City centre", "Western Sydney",
+  "Online", "Lower North Shore", "Sydney West", "Sydney East",
+];
+
 const AMENITIES = [
   { key: "wifi", label: "WiFi" },
   { key: "parking", label: "Parking" },
@@ -42,19 +48,23 @@ export function BulkActionBar({
   const [selectedCategory, setSelectedCategory] = useState("");
   const [amenityToggles, setAmenityToggles] = useState<Record<string, boolean | null>>({});
 
+  const [selectedRegion, setSelectedRegion] = useState("");
+
   if (selectedCount === 0) return null;
 
-  const hasEdits = selectedCategory !== "" || Object.values(amenityToggles).some(v => v !== null && v !== undefined);
+  const hasEdits = selectedCategory !== "" || selectedRegion !== "" || Object.values(amenityToggles).some(v => v !== null && v !== undefined);
 
   const handleApply = () => {
     if (!onBulkUpdate || !hasEdits) return;
     const updates: Record<string, any> = {};
     if (selectedCategory) updates.category = selectedCategory;
+    if (selectedRegion) updates.region = selectedRegion;
     for (const [key, val] of Object.entries(amenityToggles)) {
       if (val !== null && val !== undefined) updates[key] = val;
     }
     onBulkUpdate(updates);
     setSelectedCategory("");
+    setSelectedRegion("");
     setAmenityToggles({});
     setShowEditPanel(false);
   };
@@ -97,6 +107,21 @@ export function BulkActionBar({
               <option value="">— No change —</option>
               {CATEGORIES.map(c => (
                 <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Region dropdown */}
+          <div>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Region</label>
+            <select
+              value={selectedRegion}
+              onChange={(e) => setSelectedRegion(e.target.value)}
+              className="w-full mt-1 text-xs rounded-lg border border-border bg-background px-2 py-1.5 text-foreground"
+            >
+              <option value="">— No change —</option>
+              {REGIONS.map(r => (
+                <option key={r} value={r}>{r}</option>
               ))}
             </select>
           </div>

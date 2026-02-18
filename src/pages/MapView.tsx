@@ -184,7 +184,7 @@ export default function MapView() {
           parking: false, wheelchair_accessible: false, wifi: false,
           outdoor_seating: false, pet_friendly: false, foursquare_id: v.id,
           created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-          source_url: null,
+          source_url: null, region: null,
         };
       });
   }, [foursquareVenues, activities]);
@@ -206,7 +206,7 @@ export default function MapView() {
           parking: false, wheelchair_accessible: false, wifi: false,
           outdoor_seating: false, pet_friendly: false, foursquare_id: `google-${v.id}`,
           created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-          source_url: null,
+          source_url: null, region: null,
         };
       });
   }, [googleVenues, activities]);

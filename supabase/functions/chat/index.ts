@@ -13,43 +13,78 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, userContext } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // Fetch activities from database to provide context
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Fetch activities from database
     const { data: activities } = await supabase
       .from("activities")
-      .select("name, category, address, description, rating, review_count, hours_open, hours_close, wifi, parking, pet_friendly, outdoor_seating, wheelchair_accessible, is_open")
+      .select("name, category, address, description, rating, review_count, hours_open, hours_close, wifi, parking, pet_friendly, outdoor_seating, wheelchair_accessible, is_open, region, latitude, longitude")
       .order("rating", { ascending: false })
-      .limit(100);
+      .limit(200);
 
     const activityContext = activities
       ?.map(
         (a) =>
-          `- ${a.name} (${a.category}): ${a.address || "Sydney"}. Rating: ${a.rating ?? "N/A"}/5 (${a.review_count} reviews). ${a.description || ""}. Hours: ${a.hours_open || "N/A"}-${a.hours_close || "N/A"}. ${a.is_open ? "OPEN NOW" : "Currently closed"}. Amenities: ${[a.wifi && "WiFi", a.parking && "Parking", a.pet_friendly && "Pet Friendly", a.outdoor_seating && "Outdoor Seating", a.wheelchair_accessible && "Wheelchair Accessible"].filter(Boolean).join(", ") || "None listed"}`
+          `- ${a.name} (${a.category}): ${a.address || "Sydney"}. Region: ${a.region || "Unknown"}. Rating: ${a.rating ?? "N/A"}/5 (${a.review_count} reviews). ${a.description || ""}. Hours: ${a.hours_open || "N/A"}-${a.hours_close || "N/A"}. ${a.is_open ? "OPEN NOW" : "Currently closed"}. Lat: ${a.latitude}, Lng: ${a.longitude}. Amenities: ${[a.wifi && "WiFi", a.parking && "Parking", a.pet_friendly && "Pet Friendly", a.outdoor_seating && "Outdoor Seating", a.wheelchair_accessible && "Wheelchair Accessible"].filter(Boolean).join(", ") || "None listed"}`
       )
       .join("\n") || "No activities found in database.";
 
-    const systemPrompt = `You are the Sydney Planner AI Assistant — a friendly, knowledgeable guide to Sydney, Australia. Your ONLY purpose is to help users discover venues, activities, and experiences in Sydney.
+    // Build user context section
+    let userContextSection = "";
+    if (userContext) {
+      if (userContext.location) {
+        userContextSection += `\nUSER'S CURRENT LOCATION: Latitude ${userContext.location.latitude}, Longitude ${userContext.location.longitude}. Use this to calculate proximity and recommend nearby venues.\n`;
+      }
+      if (userContext.savedActivities?.length) {
+        userContextSection += `\nUSER'S SAVED/FAVOURITE ACTIVITIES:\n${userContext.savedActivities.map((a: any) => `- ${a.name} (${a.category})`).join("\n")}\n`;
+      }
+      if (userContext.recentCheckIns?.length) {
+        userContextSection += `\nUSER'S RECENT CHECK-INS (places they've visited):\n${userContext.recentCheckIns.map((c: any) => `- ${c.activity_name} (${c.category}) — rated ${c.rating}/5 on ${c.date}`).join("\n")}\n`;
+      }
+      if (userContext.userName) {
+        userContextSection += `\nUSER'S NAME: ${userContext.userName}\n`;
+      }
+    }
+
+    const systemPrompt = `You are the Sydney Planner AI Assistant — a warm, conversational guide to Sydney, Australia. You help users discover venues, activities, and experiences in Sydney.
 
 CRITICAL RULES:
-1. You can ONLY recommend places and activities that exist in the database provided below. Never invent or hallucinate venues.
-2. If asked about topics unrelated to Sydney activities, venues, food, or experiences, politely redirect: "I'm your Sydney Planner assistant! I can help you find amazing cafes, beaches, parks, restaurants, and more across Sydney. What are you in the mood for?"
-3. Keep responses concise and conversational. Use emojis sparingly for personality.
-4. When recommending places, ALWAYS bold the venue name using markdown **Name (Location)** format so they can be displayed as clickable cards. Include category, rating (if available), and a brief reason why.
-5. If you can't find a match in the database, say so honestly: "I don't have a perfect match right now, but here are some similar options..."
-6. Never discuss pricing, make reservations, or provide information not in the database.
-7. Format recommendations as a short list (max 3-5 items) unless the user asks for more.
+1. You can ONLY recommend places from the DATABASE below. Never invent venues.
+2. If asked about unrelated topics, redirect: "I'm your Sydney Planner! I can help you find cafes, beaches, parks, restaurants, and more. What are you in the mood for?"
+3. Be conversational and personable. Use the user's name if available. Use emojis naturally but sparingly.
+4. When recommending places, ALWAYS bold the venue name using **Name (Location)** markdown format.
+5. If no match exists, say so honestly and suggest alternatives.
+6. Format recommendations as short lists (max 3-5 items).
+
+CONVERSATIONAL STYLE — VERY IMPORTANT:
+- Ask clarifying follow-up questions to refine recommendations. Don't just dump results.
+- When a user asks something broad (e.g. "find me a restaurant"), ask follow-up questions first.
+- Examples of good follow-ups: "Do you have a cuisine in mind?", "Close to home or happy to travel?", "Looking for something new or a favourite?"
+- After giving recommendations, encourage engagement: "Don't forget to check-in and rate your experience!"
+- Reference the user's saved places and check-in history when relevant: "I see you loved X last time — want something similar?"
+
+FOLLOW-UP SUGGESTIONS:
+At the END of EVERY response, include a JSON block with 2-4 quick reply suggestions the user can tap. Format it EXACTLY like this on its own line:
+<!--QUICK_REPLIES:["suggestion 1","suggestion 2","suggestion 3"]-->
+
+Examples of good quick replies after asking about restaurants:
+<!--QUICK_REPLIES:["Italian 🍝","Close to home 🏠","Something new ✨","Show me my favourites ❤️"]-->
+
+Examples after giving a recommendation:
+<!--QUICK_REPLIES:["Tell me more about it","Find another option","Save it for later","Show on map 🗺️"]-->
+
+${userContextSection}
 
 DATABASE OF SYDNEY VENUES & ACTIVITIES:
 ${activityContext}
 
-Remember: You are ONLY a Sydney activity discovery assistant. Stay on topic and only use data from the database above.`;
+Remember: Be conversational, ask questions, personalize using their history, and ALWAYS include quick reply suggestions.`;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",

@@ -5,6 +5,7 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  quickReplies?: string[];
 }
 
 interface ChatStore {

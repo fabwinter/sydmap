@@ -90,7 +90,7 @@ export default function Chat() {
             </div>
           ) : (
             <>
-              {messages.map((message) => (
+              {messages.map((message, msgIndex) => (
                 <div key={message.id}>
                   <div
                     className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
@@ -120,6 +120,20 @@ export default function Chat() {
                   {/* Venue thumbnail cards for assistant messages */}
                   {message.role === "assistant" && message.content.length > 20 && (
                     <ChatVenueCards messageContent={message.content} />
+                  )}
+                  {/* Quick reply buttons */}
+                  {message.role === "assistant" && (message as any).quickReplies?.length > 0 && msgIndex === messages.length - 1 && !isLoading && (
+                    <div className="flex flex-wrap gap-1.5 mt-2 ml-1">
+                      {(message as any).quickReplies.map((reply: string, i: number) => (
+                        <button
+                          key={i}
+                          onClick={() => handleSend(reply)}
+                          className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-full text-xs font-medium transition-colors border border-primary/20"
+                        >
+                          {reply}
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </div>
               ))}
