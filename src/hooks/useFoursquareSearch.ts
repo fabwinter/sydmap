@@ -106,12 +106,12 @@ function applyFiltersToVenues(
  * @param query - search term (text query OR category name)
  * @param enabled - whether to run the query
  */
-export function useFoursquareSearch(query: string, enabled = true) {
+export function useFoursquareSearch(query: string, enabled = true, options?: { lat?: number; lng?: number }) {
   const { location } = useUserLocation();
   const { filters } = useSearchFilters();
-  const lat = location?.latitude ?? SYDNEY_LAT;
-  const lng = location?.longitude ?? SYDNEY_LNG;
-  // Use maxDistance as API radius (convert km to meters), default 10km
+  const lat = options?.lat ?? location?.latitude ?? SYDNEY_LAT;
+  const lng = options?.lng ?? location?.longitude ?? SYDNEY_LNG;
+  // Use maxDistance as API radius (convert km to meters), default 50km
   const radiusMeters = filters.maxDistance ? filters.maxDistance * 1000 : 50000;
 
   const rawQuery = useQuery({
