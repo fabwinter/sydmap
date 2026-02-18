@@ -1,38 +1,39 @@
-import { Sparkles, RefreshCw, Download, Loader2 } from "lucide-react";
+import { Sparkles, RefreshCw, Download, Loader2, Trash2, Calendar } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useWhatsOnToday, useImportWhatsOnEvents, type WhatsOnItem } from "@/hooks/useWhatsOnToday";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
-function EventCard({ item }: { item: WhatsOnItem }) {
-  // If imported, link internally; otherwise external
-  if (item.activityId) {
-    return (
-      <Link
-        to={`/event/${item.activityId}`}
-        className="group flex flex-col bg-card rounded-xl border border-border overflow-hidden hover:border-primary transition-colors"
-      >
-        <CardContent item={item} internal />
-      </Link>
-    );
-  }
+function EventCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean }) {
+  const queryClient = useQueryClient();
+  const [deleting, setDeleting] = useState(false);
 
-  return (
-    <a
-      href={item.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group flex flex-col bg-card rounded-xl border border-border overflow-hidden hover:border-primary transition-colors"
-    >
-      <CardContent item={item} />
-    </a>
-  );
-}
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!item.activityId) return;
+    if (!confirm(`Delete "${item.title}"?`)) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.rpc("admin_delete_activity", { p_activity_id: item.activityId });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["whats-on-today"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      toast.success("Event deleted");
+    } catch (err: any) {
+      toast.error(err.message || "Delete failed");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
-function CardContent({ item, internal }: { item: WhatsOnItem; internal?: boolean }) {
-  return (
+  const content = (
     <>
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
         {item.imageUrl ? (
@@ -54,25 +55,66 @@ function CardContent({ item, internal }: { item: WhatsOnItem; internal?: boolean
             {item.category}
           </div>
         )}
-        {internal && (
-          <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-medium">
-            In App
-          </div>
-        )}
+        <div className="absolute top-3 right-3 flex gap-1.5">
+          {item.activityId && (
+            <div className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-medium">
+              In App
+            </div>
+          )}
+          {isAdmin && item.activityId && (
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="p-1.5 rounded-full bg-destructive/90 text-white hover:bg-destructive transition-colors"
+              title="Delete event"
+            >
+              {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+            </button>
+          )}
+        </div>
       </div>
       <div className="p-4 space-y-1.5">
         <h3 className="font-semibold text-foreground line-clamp-2">{item.title}</h3>
+        {item.date && (
+          <p className="text-xs text-primary font-medium flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            {item.date}
+          </p>
+        )}
         {item.excerpt && (
           <p className="text-sm text-muted-foreground line-clamp-3">{item.excerpt}</p>
         )}
       </div>
     </>
   );
+
+  if (item.activityId) {
+    return (
+      <Link
+        to={`/event/${item.activityId}`}
+        className="group flex flex-col bg-card rounded-xl border border-border overflow-hidden hover:border-primary transition-colors"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <a
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex flex-col bg-card rounded-xl border border-border overflow-hidden hover:border-primary transition-colors"
+    >
+      {content}
+    </a>
+  );
 }
 
 export default function WhatsOn() {
   const { data: items, isLoading, isError, refetch } = useWhatsOnToday(50);
   const importMutation = useImportWhatsOnEvents();
+  const isAdmin = useIsAdmin();
 
   const unimportedItems = items?.filter((i) => !i.activityId) || [];
 
@@ -141,7 +183,7 @@ export default function WhatsOn() {
         ) : items && items.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {items.map((item) => (
-              <EventCard key={item.id} item={item} />
+              <EventCard key={item.id} item={item} isAdmin={isAdmin} />
             ))}
           </div>
         ) : (

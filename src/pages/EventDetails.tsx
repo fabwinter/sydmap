@@ -98,16 +98,23 @@ export default function EventDetails() {
       <div className="relative h-64 sm:h-80 md:h-[24rem] lg:h-[28rem]">
         {allPhotos.length === 1 ? (
           <img src={allPhotos[0]} alt={activity.name} className="w-full h-full object-cover" />
-        ) : allPhotos.length <= 4 ? (
-          /* Grid layout for 2-4 images */
-          <div className={`w-full h-full grid gap-0.5 ${
-            allPhotos.length === 2 ? "grid-cols-2" :
-            allPhotos.length === 3 ? "grid-cols-3" :
-            "grid-cols-2 grid-rows-2"
-          }`}>
-            {allPhotos.slice(0, 4).map((url, i) => (
+        ) : allPhotos.length === 2 ? (
+          <div className="w-full h-full grid grid-cols-2 gap-0.5">
+            {allPhotos.map((url, i) => (
               <img key={i} src={url} alt={`${activity.name} ${i + 1}`} className="w-full h-full object-cover" />
             ))}
+          </div>
+        ) : allPhotos.length === 3 ? (
+          <div className="w-full h-full grid grid-cols-2 gap-0.5">
+            <img src={allPhotos[0]} alt={`${activity.name} 1`} className="w-full h-full object-cover row-span-2" />
+            <img src={allPhotos[1]} alt={`${activity.name} 2`} className="w-full h-full object-cover" />
+            <img src={allPhotos[2]} alt={`${activity.name} 3`} className="w-full h-full object-cover" />
+          </div>
+        ) : allPhotos.length === 4 ? (
+          <div className="w-full h-full grid grid-cols-3 gap-0.5">
+            <img src={allPhotos[0]} alt={`${activity.name} 1`} className="w-full h-full object-cover col-span-2 row-span-2" />
+            <img src={allPhotos[1]} alt={`${activity.name} 2`} className="w-full h-full object-cover" />
+            <img src={allPhotos[2]} alt={`${activity.name} 3`} className="w-full h-full object-cover" />
           </div>
         ) : (
           /* Carousel for 5+ images */
@@ -305,7 +312,7 @@ export default function EventDetails() {
                 </a>
               </div>
               <div className="md:w-2/3">
-                <LocationMap latitude={activity.latitude} longitude={activity.longitude} name={activity.name} />
+                <LocationMap latitude={activity.latitude} longitude={activity.longitude} name={activity.name} showRefresh />
               </div>
             </div>
           </section>

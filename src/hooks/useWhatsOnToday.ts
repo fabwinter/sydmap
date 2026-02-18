@@ -18,19 +18,26 @@ async function fetchWhatsOnToday(): Promise<WhatsOnItem[]> {
   if (error) throw error;
   const items: WhatsOnItem[] = data?.items ?? [];
 
-  // Check which URLs already exist in activities
+  // Check which URLs already exist in activities and get their current data
   const urls = items.map((i) => i.url).filter(Boolean);
   if (urls.length > 0) {
     const { data: existing } = await supabase
       .from("activities")
-      .select("id, source_url")
+      .select("id, source_url, hero_image_url, event_dates, category, name")
       .in("source_url", urls);
 
     if (existing?.length) {
-      const urlToId = new Map(existing.map((e) => [e.source_url, e.id]));
+      const urlToActivity = new Map(existing.map((e) => [e.source_url, e]));
       for (const item of items) {
-        const activityId = urlToId.get(item.url);
-        if (activityId) item.activityId = activityId;
+        const activity = urlToActivity.get(item.url);
+        if (activity) {
+          item.activityId = activity.id;
+          // Use DB data for thumbnail so edits are reflected
+          if (activity.hero_image_url) item.imageUrl = activity.hero_image_url;
+          if (activity.event_dates) item.date = activity.event_dates;
+          if (activity.category) item.category = activity.category;
+          if (activity.name) item.title = activity.name;
+        }
       }
     }
   }
