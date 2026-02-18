@@ -120,6 +120,16 @@ export default function MapView() {
   const userLat = userLocation?.latitude ?? SYDNEY_LAT;
   const userLng = userLocation?.longitude ?? SYDNEY_LNG;
 
+  const urlLat = searchParams.get("lat");
+  const urlLng = searchParams.get("lng");
+  const urlZoom = searchParams.get("zoom");
+
+  const [viewState, setViewState] = useState({
+    latitude: urlLat ? parseFloat(urlLat) : SYDNEY_LAT,
+    longitude: urlLng ? parseFloat(urlLng) : SYDNEY_LNG,
+    zoom: urlZoom ? parseFloat(urlZoom) : 12,
+  });
+
   // Foursquare search: build combined query from all active filters
   const fsQuery = useMemo(() => {
     const parts: string[] = [];
@@ -131,8 +141,10 @@ export default function MapView() {
     return parts.join(" ") || "things to do";
   }, [filters.query, filters.cuisine, filters.category]);
   const wantExternal = sourceFilter === "all" || sourceFilter === "foursquare" || sourceFilter === "google";
-  const { data: foursquareVenues } = useFoursquareSearch(fsQuery, wantExternal && (sourceFilter === "all" || sourceFilter === "foursquare"));
-  const { data: googleVenues } = useGooglePlacesSearch(fsQuery, wantExternal && (sourceFilter === "all" || sourceFilter === "google"));
+  // Use the map's current center for external API calls so results match the visible area
+  const mapCenter = useMemo(() => ({ lat: viewState.latitude, lng: viewState.longitude }), [viewState.latitude, viewState.longitude]);
+  const { data: foursquareVenues } = useFoursquareSearch(fsQuery, wantExternal && (sourceFilter === "all" || sourceFilter === "foursquare"), mapCenter);
+  const { data: googleVenues } = useGooglePlacesSearch(fsQuery, wantExternal && (sourceFilter === "all" || sourceFilter === "google"), mapCenter);
   const foursquareAsActivities: Activity[] = useMemo(() => {
     if (!foursquareVenues?.length) return [];
     const localFsIds = new Set(activities?.filter(a => a.foursquare_id).map(a => a.foursquare_id) ?? []);
@@ -175,16 +187,6 @@ export default function MapView() {
         };
       });
   }, [googleVenues, activities]);
-
-  const urlLat = searchParams.get("lat");
-  const urlLng = searchParams.get("lng");
-  const urlZoom = searchParams.get("zoom");
-
-  const [viewState, setViewState] = useState({
-    latitude: urlLat ? parseFloat(urlLat) : SYDNEY_LAT,
-    longitude: urlLng ? parseFloat(urlLng) : SYDNEY_LNG,
-    zoom: urlZoom ? parseFloat(urlZoom) : 12,
-  });
 
   // Get user's location on mount (only if no URL params)
   useEffect(() => {

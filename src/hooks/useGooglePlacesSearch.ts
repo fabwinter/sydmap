@@ -97,11 +97,11 @@ function applyFiltersToVenues(
   });
 }
 
-export function useGooglePlacesSearch(query: string, enabled = true) {
+export function useGooglePlacesSearch(query: string, enabled = true, options?: { lat?: number; lng?: number }) {
   const { location } = useUserLocation();
   const { filters } = useSearchFilters();
-  const lat = location?.latitude ?? SYDNEY_LAT;
-  const lng = location?.longitude ?? SYDNEY_LNG;
+  const lat = options?.lat ?? location?.latitude ?? SYDNEY_LAT;
+  const lng = options?.lng ?? location?.longitude ?? SYDNEY_LNG;
   const radiusMeters = filters.maxDistance ? filters.maxDistance * 1000 : 50000;
 
   const rawQuery = useQuery({
