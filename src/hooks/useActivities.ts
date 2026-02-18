@@ -16,6 +16,7 @@ export interface ActivityDisplay {
   distanceKm: number;
   image: string;
   isOpen: boolean;
+  isEvent: boolean;
   closesAt?: string;
 }
 
@@ -44,6 +45,7 @@ export function transformActivity(activity: Activity, lat?: number, lng?: number
     distanceKm: dist,
     image: activity.hero_image_url ?? "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&h=600&fit=crop",
     isOpen: activity.is_open,
+    isEvent: activity.is_event,
     closesAt: extractClosingTime(activity.hours_close),
   };
 }

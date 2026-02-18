@@ -122,7 +122,7 @@ export function ActivityCard({ activity, variant = "default" }: ActivityCardProp
   if (variant === "featured") {
     return (
       <Link
-        to={`/activity/${activity.id}`}
+        to={activity.isEvent ? `/event/${activity.id}` : `/activity/${activity.id}`}
         className="group flex flex-col"
       >
         {/* Image container */}
@@ -166,7 +166,7 @@ export function ActivityCard({ activity, variant = "default" }: ActivityCardProp
   // Default card - same Airbnb style
   return (
     <Link
-      to={`/activity/${activity.id}`}
+      to={activity.isEvent ? `/event/${activity.id}` : `/activity/${activity.id}`}
       className="group flex flex-col"
     >
       {/* Image container */}
