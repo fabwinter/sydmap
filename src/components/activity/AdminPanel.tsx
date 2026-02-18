@@ -14,6 +14,7 @@ const CATEGORIES = [
   "Cafe", "Beach", "Park", "Restaurant", "Bar", "Shopping", "Gym", "Museum",
   "Bakery", "Playground", "Swimming Pool", "tourist attraction",
   "Sports and Recreation", "Daycare", "Education", "Hotel", "Walks",
+  "Kids Event", "Parent Event", "Family Event",
 ];
 
 async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
@@ -62,6 +63,16 @@ export function AdminPanel({ activity }: AdminPanelProps) {
     wheelchair_accessible: activity.wheelchair_accessible,
     outdoor_seating: activity.outdoor_seating,
     pet_friendly: activity.pet_friendly,
+    is_event: activity.is_event,
+    event_dates: activity.event_dates || "",
+    event_cost: activity.event_cost || "",
+    ticket_url: activity.ticket_url || "",
+    organizer_name: activity.organizer_name || "",
+    organizer_phone: (activity as any).organizer_phone || "",
+    organizer_website: activity.organizer_website || "",
+    organizer_facebook: activity.organizer_facebook || "",
+    organizer_instagram: activity.organizer_instagram || "",
+    source_url: activity.source_url || "",
   });
 
   // Gallery images from photos table
@@ -407,6 +418,20 @@ export function AdminPanel({ activity }: AdminPanelProps) {
               <Field label="Opens" value={edits.hours_open} onChange={(v) => setEdits({ ...edits, hours_open: v })} />
               <Field label="Closes" value={edits.hours_close} onChange={(v) => setEdits({ ...edits, hours_close: v })} />
 
+              <h4 className="text-xs font-bold uppercase text-muted-foreground pt-2">Event Details</h4>
+              <Toggle label="Is Event" checked={edits.is_event} onChange={(v) => setEdits({ ...edits, is_event: v })} />
+              <Field label="Event Dates" value={edits.event_dates} onChange={(v) => setEdits({ ...edits, event_dates: v })} placeholder="e.g. 15 Mar 2026, or 15-20 Mar 2026" />
+              <Field label="Event Cost" value={edits.event_cost} onChange={(v) => setEdits({ ...edits, event_cost: v })} placeholder="e.g. Free, $25, $10-$50" />
+              <Field label="Ticket URL" value={edits.ticket_url} onChange={(v) => setEdits({ ...edits, ticket_url: v })} />
+              <Field label="Source URL" value={edits.source_url} onChange={(v) => setEdits({ ...edits, source_url: v })} />
+
+              <h4 className="text-xs font-bold uppercase text-muted-foreground pt-2">Organizer</h4>
+              <Field label="Organizer Name" value={edits.organizer_name} onChange={(v) => setEdits({ ...edits, organizer_name: v })} />
+              <Field label="Organizer Phone" value={edits.organizer_phone} onChange={(v) => setEdits({ ...edits, organizer_phone: v })} />
+              <Field label="Organizer Website" value={edits.organizer_website} onChange={(v) => setEdits({ ...edits, organizer_website: v })} />
+              <Field label="Facebook" value={edits.organizer_facebook} onChange={(v) => setEdits({ ...edits, organizer_facebook: v })} placeholder="URL or handle" />
+              <Field label="Instagram" value={edits.organizer_instagram} onChange={(v) => setEdits({ ...edits, organizer_instagram: v })} placeholder="URL or handle" />
+
               <h4 className="text-xs font-bold uppercase text-muted-foreground pt-2">Amenities</h4>
               <Toggle label="WiFi" checked={edits.wifi} onChange={(v) => setEdits({ ...edits, wifi: v })} />
               <Toggle label="Parking" checked={edits.parking} onChange={(v) => setEdits({ ...edits, parking: v })} />
@@ -444,7 +469,7 @@ export function AdminPanel({ activity }: AdminPanelProps) {
   );
 }
 
-function Field({ label, value, onChange, multiline }: { label: string; value: string; onChange: (v: string) => void; multiline?: boolean }) {
+function Field({ label, value, onChange, multiline, placeholder }: { label: string; value: string; onChange: (v: string) => void; multiline?: boolean; placeholder?: string }) {
   return (
     <div>
       <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
@@ -453,6 +478,7 @@ function Field({ label, value, onChange, multiline }: { label: string; value: st
           value={value}
           onChange={(e) => onChange(e.target.value)}
           rows={3}
+          placeholder={placeholder}
           className="w-full bg-muted rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
         />
       ) : (
@@ -460,6 +486,7 @@ function Field({ label, value, onChange, multiline }: { label: string; value: st
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
           className="w-full bg-muted rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
       )}
