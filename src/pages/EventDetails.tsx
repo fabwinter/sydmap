@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -12,12 +13,16 @@ import {
   Share2,
   Facebook,
   Instagram,
+  Hash,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { LocationMap } from "@/components/activity/LocationMap";
 import { useActivityById } from "@/hooks/useActivities";
+import { useActivityPhotos } from "@/hooks/useReviews";
 import { useIsActivitySaved, useToggleSavedItem } from "@/hooks/useSavedItems";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -30,8 +35,10 @@ export default function EventDetails() {
   const { user } = useAuth();
   const isAdmin = useIsAdmin();
   const { data: activity, isLoading, error } = useActivityById(id || "");
+  const { data: photos } = useActivityPhotos(id || "");
   const { data: isSaved } = useIsActivitySaved(id || "");
   const toggleSaved = useToggleSavedItem();
+  const [heroIndex, setHeroIndex] = useState(0);
 
   const handleToggleSave = () => {
     if (!user) {
@@ -80,26 +87,57 @@ export default function EventDetails() {
   }
 
   const heroUrl = activity.hero_image_url || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1600&h=900&fit=crop&q=90";
+  const galleryUrls = (photos?.map(p => p.photo_url) || []).filter(url => url !== heroUrl);
+  const allPhotos = [heroUrl, ...galleryUrls];
 
   return (
     <div className="min-h-screen bg-background pb-24">
       {isAdmin && <AdminPanel activity={activity} />}
 
-      {/* Hero Image */}
+      {/* Hero Image / Carousel */}
       <div className="relative h-64 sm:h-80 md:h-[24rem] lg:h-[28rem]">
-        <img
-          src={heroUrl}
-          alt={activity.name}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+        {allPhotos.length === 1 ? (
+          <img src={allPhotos[0]} alt={activity.name} className="w-full h-full object-cover" />
+        ) : allPhotos.length <= 4 ? (
+          /* Grid layout for 2-4 images */
+          <div className={`w-full h-full grid gap-0.5 ${
+            allPhotos.length === 2 ? "grid-cols-2" :
+            allPhotos.length === 3 ? "grid-cols-3" :
+            "grid-cols-2 grid-rows-2"
+          }`}>
+            {allPhotos.slice(0, 4).map((url, i) => (
+              <img key={i} src={url} alt={`${activity.name} ${i + 1}`} className="w-full h-full object-cover" />
+            ))}
+          </div>
+        ) : (
+          /* Carousel for 5+ images */
+          <>
+            <img src={allPhotos[heroIndex]} alt={activity.name} className="w-full h-full object-cover" />
+            <button
+              onClick={() => setHeroIndex((heroIndex - 1 + allPhotos.length) % allPhotos.length)}
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 text-white hover:bg-black/60"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setHeroIndex((heroIndex + 1) % allPhotos.length)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 text-white hover:bg-black/60"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+            <div className="absolute bottom-4 right-4 bg-black/50 text-white text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">
+              {heroIndex + 1}/{allPhotos.length}
+            </div>
+          </>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
         <button
           onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
+          className="absolute top-4 left-4 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors z-10"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="absolute top-4 right-4 flex gap-2">
+        <div className="absolute top-4 right-4 flex gap-2 z-10">
           <button
             onClick={handleShare}
             className="p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors"
@@ -188,6 +226,7 @@ export default function EventDetails() {
         {/* Description */}
         {activity.description && (
           <section>
+            <h2 className="text-lg font-bold text-foreground mb-2">Overview</h2>
             <p className="text-foreground text-sm md:text-base leading-relaxed whitespace-pre-line">
               {activity.description}
             </p>
@@ -195,52 +234,54 @@ export default function EventDetails() {
         )}
 
         {/* Organizer / Contact */}
-        {(activity.organizer_name || activity.phone || activity.website) && (
+        {(activity.organizer_name || activity.phone || activity.website || activity.organizer_facebook || activity.organizer_instagram) && (
           <section className="space-y-3">
             <h2 className="text-lg font-bold text-foreground">Contact event organiser</h2>
             <div className="space-y-2.5">
               {activity.organizer_name && (
-                <p className="text-sm font-semibold text-foreground">{activity.organizer_name}</p>
+                <p className="text-sm font-semibold text-foreground uppercase tracking-wide">{activity.organizer_name}</p>
               )}
-              {activity.phone && (
-                <a href={`tel:${activity.phone}`} className="flex items-center gap-3 text-sm text-foreground hover:text-primary">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  {activity.phone}
-                </a>
-              )}
-              {(activity.website || activity.organizer_website) && (
-                <a
-                  href={(activity.organizer_website || activity.website || "").startsWith("http") ? (activity.organizer_website || activity.website) : `https://${activity.organizer_website || activity.website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-sm text-foreground hover:text-primary"
-                >
-                  <Globe className="w-4 h-4 text-muted-foreground" />
-                  Website
-                </a>
-              )}
-              {activity.organizer_facebook && (
-                <a
-                  href={activity.organizer_facebook.startsWith("http") ? activity.organizer_facebook : `https://facebook.com/${activity.organizer_facebook}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-sm text-foreground hover:text-primary"
-                >
-                  <Facebook className="w-4 h-4 text-muted-foreground" />
-                  Facebook
-                </a>
-              )}
-              {activity.organizer_instagram && (
-                <a
-                  href={activity.organizer_instagram.startsWith("http") ? activity.organizer_instagram : `https://instagram.com/${activity.organizer_instagram}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-sm text-foreground hover:text-primary"
-                >
-                  <Instagram className="w-4 h-4 text-muted-foreground" />
-                  Instagram
-                </a>
-              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {activity.phone && (
+                  <a href={`tel:${activity.phone}`} className="flex items-center gap-3 text-sm text-foreground hover:text-primary">
+                    <Phone className="w-4 h-4 text-muted-foreground" />
+                    {activity.phone}
+                  </a>
+                )}
+                {(activity.website || activity.organizer_website) && (
+                  <a
+                    href={(activity.organizer_website || activity.website || "").startsWith("http") ? (activity.organizer_website || activity.website) : `https://${activity.organizer_website || activity.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 text-sm text-foreground hover:text-primary"
+                  >
+                    <Globe className="w-4 h-4 text-muted-foreground" />
+                    Website
+                  </a>
+                )}
+                {activity.organizer_facebook && (
+                  <a
+                    href={activity.organizer_facebook.startsWith("http") ? activity.organizer_facebook : `https://facebook.com/${activity.organizer_facebook}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 text-sm text-foreground hover:text-primary"
+                  >
+                    <Facebook className="w-4 h-4 text-muted-foreground" />
+                    Facebook
+                  </a>
+                )}
+                {activity.organizer_instagram && (
+                  <a
+                    href={activity.organizer_instagram.startsWith("http") ? activity.organizer_instagram : `https://instagram.com/${activity.organizer_instagram}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 text-sm text-foreground hover:text-primary"
+                  >
+                    <Instagram className="w-4 h-4 text-muted-foreground" />
+                    Instagram
+                  </a>
+                )}
+              </div>
             </div>
           </section>
         )}
