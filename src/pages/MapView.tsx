@@ -117,6 +117,29 @@ export default function MapView() {
     onError: (err: any) => toast.error(err.message || "Bulk import failed"),
   });
 
+  const bulkUpdateMutation = useMutation({
+    mutationFn: async ({ ids, updates }: { ids: string[]; updates: Record<string, any> }) => {
+      const dbIds = ids.filter(id => !id.startsWith("fs-") && !id.startsWith("g-"));
+      let updated = 0;
+      for (const id of dbIds) {
+        const { error } = await supabase.rpc("admin_update_activity", {
+          p_activity_id: id,
+          p_updates: updates,
+        });
+        if (error) throw error;
+        updated++;
+      }
+      return updated;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      toast.success(`Updated ${count} activities`);
+      setBulkSelected(new Set());
+      setBulkMode(false);
+    },
+    onError: (err: any) => toast.error(err.message || "Bulk update failed"),
+  });
+
   const userLat = userLocation?.latitude ?? SYDNEY_LAT;
   const userLng = userLocation?.longitude ?? SYDNEY_LNG;
 
@@ -671,8 +694,14 @@ export default function MapView() {
                 if (!confirm(`Remove ${dbIds.length} activities from database?`)) return;
                 bulkDeleteMutation.mutate(dbIds);
               }}
+              onBulkUpdate={(updates) => {
+                const dbIds = Array.from(bulkSelected).filter(id => !id.startsWith("fs-") && !id.startsWith("g-"));
+                if (dbIds.length === 0) { toast.error("No DB activities selected to update"); return; }
+                bulkUpdateMutation.mutate({ ids: dbIds, updates });
+              }}
               isDeleting={bulkDeleteMutation.isPending}
               isImporting={bulkImportMutation.isPending}
+              isUpdating={bulkUpdateMutation.isPending}
               hasDbSelected={Array.from(bulkSelected).some(id => !id.startsWith("fs-") && !id.startsWith("g-"))}
               hasFsSelected={Array.from(bulkSelected).some(id => id.startsWith("fs-") || id.startsWith("g-"))}
             />
