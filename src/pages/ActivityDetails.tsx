@@ -172,15 +172,16 @@ export default function ActivityDetails() {
     { icon: Accessibility, label: "Accessible", available: activity.wheelchair_accessible },
     { icon: UtensilsCrossed, label: "Outdoor Seating", available: activity.outdoor_seating },
     { icon: PawPrint, label: "Pet Friendly", available: activity.pet_friendly },
-    { icon: Baby, label: "Family Friendly", available: true },
-    { icon: Armchair, label: "High Chairs", available: true },
-    { icon: Shirt, label: "Change Rooms", available: true },
-    { icon: Coffee, label: "Coffee", available: true },
-    { icon: Plug, label: "Power Outlets", available: true },
-    { icon: ShowerHead, label: "Showers", available: true },
-    { icon: Bike, label: "Bike Parking", available: true },
-    { icon: Sun, label: "Shade", available: true },
+    { icon: Baby, label: "Family Friendly", available: (activity as any).family_friendly },
+    { icon: Armchair, label: "High Chairs", available: (activity as any).high_chairs },
+    { icon: Shirt, label: "Change Rooms", available: (activity as any).change_rooms },
+    { icon: Coffee, label: "Coffee", available: (activity as any).coffee },
+    { icon: Plug, label: "Power Outlets", available: (activity as any).power_outlets },
+    { icon: ShowerHead, label: "Showers", available: (activity as any).showers },
+    { icon: Bike, label: "Bike Parking", available: (activity as any).bike_parking },
+    { icon: Sun, label: "Shade", available: (activity as any).shade },
   ];
+  const availableAmenities = amenities.filter(a => a.available);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -311,20 +312,21 @@ export default function ActivityDetails() {
           )}
         </section>
         
-        {/* Amenities */}
+        {availableAmenities.length > 0 && (
         <section>
           <h2 className="section-header">Amenities</h2>
-          <div className="flex gap-4 flex-wrap">
-            {amenities.map(({ icon: Icon, label, available }) => (
-              <div key={label} className={`flex flex-col items-center gap-1 ${available ? "text-foreground" : "text-muted-foreground/50"}`}>
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${available ? "bg-primary/10" : "bg-muted"}`}>
-                  <Icon className="w-5 h-5" />
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3">
+            {availableAmenities.map(({ icon: Icon, label }) => (
+              <div key={label} className="flex flex-col items-center gap-1.5 text-foreground">
+                <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-muted-foreground" />
                 </div>
-                <span className="text-xs">{label}</span>
+                <span className="text-[11px] text-center leading-tight text-muted-foreground">{label}</span>
               </div>
             ))}
           </div>
         </section>
+        )}
         
         {/* Photos */}
         {allPhotos.length > 1 && (

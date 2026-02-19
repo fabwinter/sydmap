@@ -188,6 +188,8 @@ export default function MapView() {
           is_event: false, event_dates: null, event_cost: null, ticket_url: null,
           organizer_name: null, organizer_phone: null, organizer_website: null,
           organizer_facebook: null, organizer_instagram: null,
+          family_friendly: false, high_chairs: false, change_rooms: false,
+          coffee: false, power_outlets: false, showers: false, bike_parking: false, shade: false,
         };
       });
   }, [foursquareVenues, activities]);
@@ -213,6 +215,8 @@ export default function MapView() {
           is_event: false, event_dates: null, event_cost: null, ticket_url: null,
           organizer_name: null, organizer_phone: null, organizer_website: null,
           organizer_facebook: null, organizer_instagram: null,
+          family_friendly: false, high_chairs: false, change_rooms: false,
+          coffee: false, power_outlets: false, showers: false, bike_parking: false, shade: false,
         };
       });
   }, [googleVenues, activities]);
