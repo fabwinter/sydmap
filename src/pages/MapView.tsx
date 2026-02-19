@@ -286,6 +286,18 @@ export default function MapView() {
     });
   }, [activities, foursquareAsActivities, googleAsActivities, filters, userLat, userLng, sourceFilter]);
 
+  // Auto-fit map bounds on initial load to show all pins
+  const initialFitDone = useRef(false);
+  useEffect(() => {
+    if (initialFitDone.current) return;
+    if (urlLat && urlLng) { initialFitDone.current = true; return; }
+    if (!mapRef.current || filteredActivities.length === 0) return;
+    initialFitDone.current = true;
+    const bounds = new LngLatBounds();
+    filteredActivities.forEach((a) => bounds.extend([a.longitude, a.latitude]));
+    mapRef.current.fitBounds(bounds, { padding: 80, maxZoom: 15, duration: 1000 });
+  }, [filteredActivities, urlLat, urlLng]);
+
   // Auto-fit map bounds when filters change (but not mapBounds itself)
   const filterKey = JSON.stringify({ ...filters, mapBounds: null });
   const prevFilterKey = useRef(filterKey);
