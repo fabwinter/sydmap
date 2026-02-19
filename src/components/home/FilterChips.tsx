@@ -4,6 +4,7 @@ import {
   SlidersHorizontal, X, Baby, Sun, Home, DollarSign, Dog, Accessibility,
   Wifi, Car, Mountain, Palette, GraduationCap, TentTree, Tent, Bike,
   UtensilsCrossed, Droplets, MapPin, Trophy, BookOpen, Heart, Footprints,
+  Navigation,
 } from "lucide-react";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { Slider } from "@/components/ui/slider";
@@ -71,13 +72,27 @@ const ageGroups = [
   { id: "teens", label: "Teens (13–17)", icon: GraduationCap },
 ];
 
+const regions = [
+  "City Centre",
+  "Sydney Inner West",
+  "Sydney Inner East",
+  "Sydney East",
+  "Sydney West",
+  "Western Sydney",
+  "South Sydney",
+  "Lower North Shore",
+  "Upper North Shore",
+  "Online",
+];
+
 export function FilterChips() {
-  const { filters, setCategory, setCuisine, toggleTag, toggleAgeGroup, setMaxDistance, setMinRating, clearFilters } = useSearchFilters();
+  const { filters, setCategory, setCuisine, setRegion, toggleTag, toggleAgeGroup, setMaxDistance, setMinRating, clearFilters } = useSearchFilters();
   const [isOpen, setIsOpen] = useState(false);
 
   const activeFilterCount =
     (filters.category ? 1 : 0) +
     (filters.cuisine ? 1 : 0) +
+    (filters.region ? 1 : 0) +
     filters.tags.length +
     filters.ageGroups.length +
     (filters.maxDistance !== null ? 1 : 0) +
@@ -220,6 +235,25 @@ export function FilterChips() {
                       >
                         <Icon className="w-3.5 h-3.5" />
                         {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Region */}
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Region</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {regions.map((region) => (
+                      <button
+                        key={region}
+                        onClick={() => setRegion(filters.region === region ? null : region)}
+                        className={`filter-chip flex items-center gap-1.5 text-xs ${
+                          filters.region === region ? "active" : ""
+                        }`}
+                      >
+                        <Navigation className="w-3.5 h-3.5" />
+                        {region}
                       </button>
                     ))}
                   </div>

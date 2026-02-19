@@ -13,6 +13,7 @@ export interface SearchFilters {
   query: string;
   category: string | null;
   cuisine: string | null; // e.g. "Pizza", "Thai"
+  region: string | null; // e.g. "Sydney Inner West"
   isOpen: boolean;
   minRating: number | null;
   maxDistance: number | null; // km
@@ -27,6 +28,7 @@ interface SearchFiltersState {
   setQuery: (query: string) => void;
   setCategory: (category: string | null) => void;
   setCuisine: (cuisine: string | null) => void;
+  setRegion: (region: string | null) => void;
   setIsOpen: (isOpen: boolean) => void;
   setMinRating: (rating: number | null) => void;
   setMaxDistance: (distance: number | null) => void;
@@ -42,6 +44,7 @@ const initialFilters: SearchFilters = {
   query: "",
   category: null,
   cuisine: null,
+  region: null,
   isOpen: false,
   minRating: null,
   maxDistance: null,
@@ -56,6 +59,7 @@ export const useSearchFilters = create<SearchFiltersState>((set) => ({
   setQuery: (query) => set((state) => ({ filters: { ...state.filters, query } })),
   setCategory: (category) => set((state) => ({ filters: { ...state.filters, category } })),
   setCuisine: (cuisine) => set((state) => ({ filters: { ...state.filters, cuisine } })),
+  setRegion: (region) => set((state) => ({ filters: { ...state.filters, region } })),
   setIsOpen: (isOpen) => set((state) => ({ filters: { ...state.filters, isOpen } })),
   setMinRating: (minRating) => set((state) => ({ filters: { ...state.filters, minRating } })),
   setMaxDistance: (maxDistance) => set((state) => ({ filters: { ...state.filters, maxDistance } })),
@@ -79,6 +83,6 @@ export const useSearchFilters = create<SearchFiltersState>((set) => ({
   hasActiveFilters: () => {
     const state = useSearchFilters.getState();
     const f = state.filters;
-    return !!(f.query || f.category || f.cuisine || f.isOpen || f.minRating !== null || f.maxDistance !== null || f.tags.length > 0 || f.ageGroups.length > 0);
+    return !!(f.query || f.category || f.cuisine || f.region || f.isOpen || f.minRating !== null || f.maxDistance !== null || f.tags.length > 0 || f.ageGroups.length > 0);
   },
 }));
