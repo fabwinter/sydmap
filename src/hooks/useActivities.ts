@@ -18,6 +18,8 @@ export interface ActivityDisplay {
   isOpen: boolean;
   isEvent: boolean;
   closesAt?: string;
+  region?: string;
+  address?: string;
 }
 
 // Sydney CBD as fallback
@@ -47,6 +49,8 @@ export function transformActivity(activity: Activity, lat?: number, lng?: number
     isOpen: activity.is_open,
     isEvent: activity.is_event,
     closesAt: extractClosingTime(activity.hours_close),
+    region: activity.region ?? undefined,
+    address: activity.address ?? undefined,
   };
 }
 
@@ -174,6 +178,10 @@ export function useRecommendedActivities(limit = 12) {
   const lat = location?.latitude ?? SYDNEY_LAT;
   const lng = location?.longitude ?? SYDNEY_LNG;
 
+  // When filters are active, fetch more results
+  const hasFilters = !!(filters.query || filters.category || filters.cuisine || filters.isOpen || filters.minRating !== null || filters.maxDistance !== null || filters.tags.length > 0 || filters.ageGroups.length > 0);
+  const fetchLimit = hasFilters ? 200 : limit;
+
   return useQuery({
     queryKey: ["activities", "recommended", limit, filters, lat, lng],
     queryFn: async () => {
@@ -185,17 +193,39 @@ export function useRecommendedActivities(limit = 12) {
 
       const { data, error } = await queryBuilder
         .order("review_count", { ascending: false })
-        .limit(200);
+        .limit(fetchLimit);
 
       if (error) throw error;
 
       let results = data as Activity[];
       results = filterByDistance(results, filters.maxDistance, lat, lng);
-      results = sortByDistance(results, lat, lng);
+      
+      // Apply sort based on filter
+      const sortedResults = sortActivities(results, filters.sortBy, lat, lng);
 
-      return results.slice(0, limit).map((a) => transformActivity(a, lat, lng));
+      return sortedResults.slice(0, hasFilters ? 200 : limit).map((a) => transformActivity(a, lat, lng));
     },
   });
+}
+
+/** Sort activities based on selected sort option */
+function sortActivities(activities: Activity[], sortBy: string, lat: number, lng: number): Activity[] {
+  const sorted = [...activities];
+  switch (sortBy) {
+    case "name-asc":
+      return sorted.sort((a, b) => a.name.localeCompare(b.name));
+    case "name-desc":
+      return sorted.sort((a, b) => b.name.localeCompare(a.name));
+    case "rating":
+      return sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    case "category":
+      return sorted.sort((a, b) => a.category.localeCompare(b.category));
+    case "region":
+      return sorted.sort((a, b) => (a.region ?? "").localeCompare(b.region ?? ""));
+    case "distance":
+    default:
+      return sortByDistance(sorted, lat, lng);
+  }
 }
 
 export function useActivityById(id: string) {

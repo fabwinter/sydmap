@@ -7,6 +7,8 @@ export interface MapBounds {
   west: number;
 }
 
+export type SortOption = "distance" | "rating" | "name-asc" | "name-desc" | "category" | "region";
+
 export interface SearchFilters {
   query: string;
   category: string | null;
@@ -17,6 +19,7 @@ export interface SearchFilters {
   tags: string[]; // indoor, outdoor, free, kid-friendly, etc.
   ageGroups: string[]; // "baby", "toddler", "kids", "teens"
   mapBounds: MapBounds | null; // for "search this area" on map
+  sortBy: SortOption;
 }
 
 interface SearchFiltersState {
@@ -30,7 +33,9 @@ interface SearchFiltersState {
   toggleTag: (tag: string) => void;
   toggleAgeGroup: (ageGroup: string) => void;
   setMapBounds: (bounds: MapBounds | null) => void;
+  setSortBy: (sortBy: SortOption) => void;
   clearFilters: () => void;
+  hasActiveFilters: () => boolean;
 }
 
 const initialFilters: SearchFilters = {
@@ -43,6 +48,7 @@ const initialFilters: SearchFilters = {
   tags: [],
   ageGroups: [],
   mapBounds: null,
+  sortBy: "distance",
 };
 
 export const useSearchFilters = create<SearchFiltersState>((set) => ({
@@ -68,5 +74,11 @@ export const useSearchFilters = create<SearchFiltersState>((set) => ({
       return { filters: { ...state.filters, ageGroups } };
     }),
   setMapBounds: (mapBounds) => set((state) => ({ filters: { ...state.filters, mapBounds } })),
+  setSortBy: (sortBy) => set((state) => ({ filters: { ...state.filters, sortBy } })),
   clearFilters: () => set({ filters: initialFilters }),
+  hasActiveFilters: () => {
+    const state = useSearchFilters.getState();
+    const f = state.filters;
+    return !!(f.query || f.category || f.cuisine || f.isOpen || f.minRating !== null || f.maxDistance !== null || f.tags.length > 0 || f.ageGroups.length > 0);
+  },
 }));
