@@ -17,13 +17,18 @@ export type Database = {
       activities: {
         Row: {
           address: string | null
+          bike_parking: boolean
           category: string
+          change_rooms: boolean
+          coffee: boolean
           created_at: string
           description: string | null
           event_cost: string | null
           event_dates: string | null
+          family_friendly: boolean
           foursquare_id: string | null
           hero_image_url: string | null
+          high_chairs: boolean
           hours_close: string | null
           hours_open: string | null
           id: string
@@ -41,9 +46,12 @@ export type Database = {
           parking: boolean
           pet_friendly: boolean
           phone: string | null
+          power_outlets: boolean
           rating: number | null
           region: string | null
           review_count: number
+          shade: boolean
+          showers: boolean
           source_url: string | null
           ticket_url: string | null
           updated_at: string
@@ -53,13 +61,18 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          bike_parking?: boolean
           category: string
+          change_rooms?: boolean
+          coffee?: boolean
           created_at?: string
           description?: string | null
           event_cost?: string | null
           event_dates?: string | null
+          family_friendly?: boolean
           foursquare_id?: string | null
           hero_image_url?: string | null
+          high_chairs?: boolean
           hours_close?: string | null
           hours_open?: string | null
           id?: string
@@ -77,9 +90,12 @@ export type Database = {
           parking?: boolean
           pet_friendly?: boolean
           phone?: string | null
+          power_outlets?: boolean
           rating?: number | null
           region?: string | null
           review_count?: number
+          shade?: boolean
+          showers?: boolean
           source_url?: string | null
           ticket_url?: string | null
           updated_at?: string
@@ -89,13 +105,18 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          bike_parking?: boolean
           category?: string
+          change_rooms?: boolean
+          coffee?: boolean
           created_at?: string
           description?: string | null
           event_cost?: string | null
           event_dates?: string | null
+          family_friendly?: boolean
           foursquare_id?: string | null
           hero_image_url?: string | null
+          high_chairs?: boolean
           hours_close?: string | null
           hours_open?: string | null
           id?: string
@@ -113,9 +134,12 @@ export type Database = {
           parking?: boolean
           pet_friendly?: boolean
           phone?: string | null
+          power_outlets?: boolean
           rating?: number | null
           region?: string | null
           review_count?: number
+          shade?: boolean
+          showers?: boolean
           source_url?: string | null
           ticket_url?: string | null
           updated_at?: string

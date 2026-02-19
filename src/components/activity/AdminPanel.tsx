@@ -63,6 +63,14 @@ export function AdminPanel({ activity }: AdminPanelProps) {
     wheelchair_accessible: activity.wheelchair_accessible,
     outdoor_seating: activity.outdoor_seating,
     pet_friendly: activity.pet_friendly,
+    family_friendly: (activity as any).family_friendly ?? false,
+    high_chairs: (activity as any).high_chairs ?? false,
+    change_rooms: (activity as any).change_rooms ?? false,
+    coffee: (activity as any).coffee ?? false,
+    power_outlets: (activity as any).power_outlets ?? false,
+    showers: (activity as any).showers ?? false,
+    bike_parking: (activity as any).bike_parking ?? false,
+    shade: (activity as any).shade ?? false,
     is_event: activity.is_event,
     event_dates: activity.event_dates || "",
     event_cost: activity.event_cost || "",
@@ -433,11 +441,21 @@ export function AdminPanel({ activity }: AdminPanelProps) {
               <Field label="Instagram" value={edits.organizer_instagram} onChange={(v) => setEdits({ ...edits, organizer_instagram: v })} placeholder="URL or handle" />
 
               <h4 className="text-xs font-bold uppercase text-muted-foreground pt-2">Amenities</h4>
-              <Toggle label="WiFi" checked={edits.wifi} onChange={(v) => setEdits({ ...edits, wifi: v })} />
-              <Toggle label="Parking" checked={edits.parking} onChange={(v) => setEdits({ ...edits, parking: v })} />
-              <Toggle label="Accessible" checked={edits.wheelchair_accessible} onChange={(v) => setEdits({ ...edits, wheelchair_accessible: v })} />
-              <Toggle label="Outdoor Seating" checked={edits.outdoor_seating} onChange={(v) => setEdits({ ...edits, outdoor_seating: v })} />
-              <Toggle label="Pet Friendly" checked={edits.pet_friendly} onChange={(v) => setEdits({ ...edits, pet_friendly: v })} />
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                <Toggle label="WiFi" checked={edits.wifi} onChange={(v) => setEdits({ ...edits, wifi: v })} />
+                <Toggle label="Parking" checked={edits.parking} onChange={(v) => setEdits({ ...edits, parking: v })} />
+                <Toggle label="Accessible" checked={edits.wheelchair_accessible} onChange={(v) => setEdits({ ...edits, wheelchair_accessible: v })} />
+                <Toggle label="Outdoor Seating" checked={edits.outdoor_seating} onChange={(v) => setEdits({ ...edits, outdoor_seating: v })} />
+                <Toggle label="Pet Friendly" checked={edits.pet_friendly} onChange={(v) => setEdits({ ...edits, pet_friendly: v })} />
+                <Toggle label="Family Friendly" checked={edits.family_friendly} onChange={(v) => setEdits({ ...edits, family_friendly: v })} />
+                <Toggle label="High Chairs" checked={edits.high_chairs} onChange={(v) => setEdits({ ...edits, high_chairs: v })} />
+                <Toggle label="Change Rooms" checked={edits.change_rooms} onChange={(v) => setEdits({ ...edits, change_rooms: v })} />
+                <Toggle label="Coffee" checked={edits.coffee} onChange={(v) => setEdits({ ...edits, coffee: v })} />
+                <Toggle label="Power Outlets" checked={edits.power_outlets} onChange={(v) => setEdits({ ...edits, power_outlets: v })} />
+                <Toggle label="Showers" checked={edits.showers} onChange={(v) => setEdits({ ...edits, showers: v })} />
+                <Toggle label="Bike Parking" checked={edits.bike_parking} onChange={(v) => setEdits({ ...edits, bike_parking: v })} />
+                <Toggle label="Shade" checked={edits.shade} onChange={(v) => setEdits({ ...edits, shade: v })} />
+              </div>
             </div>
           ) : (
             <div className="space-y-1 text-sm">
