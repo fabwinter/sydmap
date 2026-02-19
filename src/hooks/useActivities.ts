@@ -81,6 +81,10 @@ function applyFilters(queryBuilder: any, filters: SearchFilters) {
     query = query.ilike("category", filters.category);
   }
 
+  if (filters.region) {
+    query = query.ilike("region", filters.region);
+  }
+
   if (filters.isOpen) {
     query = query.eq("is_open", true);
   }
@@ -147,6 +151,9 @@ export function useFeaturedActivities(limit = 10) {
       if (filters.category) {
         query = query.ilike("category", filters.category);
       }
+      if (filters.region) {
+        query = query.ilike("region", filters.region);
+      }
       if (filters.minRating !== null) {
         query = query.gte("rating", filters.minRating);
       }
@@ -179,7 +186,7 @@ export function useRecommendedActivities(limit = 12) {
   const lng = location?.longitude ?? SYDNEY_LNG;
 
   // When filters are active, fetch more results
-  const hasFilters = !!(filters.query || filters.category || filters.cuisine || filters.isOpen || filters.minRating !== null || filters.maxDistance !== null || filters.tags.length > 0 || filters.ageGroups.length > 0);
+  const hasFilters = !!(filters.query || filters.category || filters.cuisine || filters.region || filters.isOpen || filters.minRating !== null || filters.maxDistance !== null || filters.tags.length > 0 || filters.ageGroups.length > 0);
   const fetchLimit = hasFilters ? 200 : limit;
 
   return useQuery({
