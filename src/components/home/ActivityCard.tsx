@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { MapPin, Star, Heart, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake } from "lucide-react";
+import { MapPin, Star, Heart, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake, Sparkles, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsActivitySaved, useToggleSavedItem } from "@/hooks/useSavedItems";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useToggleWhatsOn } from "@/hooks/useWhatsOnToday";
+import { toast } from "sonner";
 import type { ActivityDisplay } from "@/hooks/useActivities";
 
 // Re-export for backward compatibility
@@ -87,6 +90,41 @@ function ImageWithFallback({
   );
 }
 
+function WhatsOnButton({ activityId, name, showInWhatsOn }: { activityId: string; name: string; showInWhatsOn?: boolean }) {
+  const toggleWhatsOn = useToggleWhatsOn();
+  const newState = !showInWhatsOn;
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWhatsOn.mutate(
+      { activityId, show: newState },
+      {
+        onSuccess: () => toast.success(newState ? `"${name}" added to What's On` : `"${name}" removed from What's On`),
+        onError: (err) => toast.error(err.message || "Failed"),
+      }
+    );
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={toggleWhatsOn.isPending}
+      className={`absolute top-3 left-3 z-10 w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${
+        showInWhatsOn ? "bg-warning/90 text-white" : "bg-white/80 text-muted-foreground hover:text-foreground"
+      }`}
+      aria-label={showInWhatsOn ? "Remove from What's On" : "Add to What's On"}
+      title={showInWhatsOn ? "Remove from What's On" : "Add to What's On"}
+    >
+      {toggleWhatsOn.isPending ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : (
+        <Sparkles className="w-4 h-4" />
+      )}
+    </button>
+  );
+}
+
 function HeartButton({ activityId }: { activityId: string }) {
   const { isAuthenticated } = useAuth();
   const { data: isSaved } = useIsActivitySaved(activityId);
@@ -118,6 +156,7 @@ function HeartButton({ activityId }: { activityId: string }) {
 
 export function ActivityCard({ activity, variant = "default" }: ActivityCardProps) {
   const tag = getTagInfo(activity);
+  const isAdmin = useIsAdmin();
 
   if (variant === "featured") {
     return (
@@ -135,11 +174,14 @@ export function ActivityCard({ activity, variant = "default" }: ActivityCardProp
           />
           
           {/* Tag badge */}
-          {tag && (
+          {tag && !isAdmin && (
             <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-white text-xs font-semibold text-foreground shadow-sm">
               {tag.text}
             </div>
           )}
+
+          {/* Admin: What's On toggle */}
+          {isAdmin && <WhatsOnButton activityId={activity.id} name={activity.name} showInWhatsOn={activity.showInWhatsOn} />}
 
           {/* Heart button */}
           <HeartButton activityId={activity.id} />
@@ -179,11 +221,14 @@ export function ActivityCard({ activity, variant = "default" }: ActivityCardProp
         />
         
         {/* Tag badge */}
-        {tag && (
+        {tag && !isAdmin && (
           <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-white text-xs font-semibold text-foreground shadow-sm">
             {tag.text}
           </div>
         )}
+
+        {/* Admin: What's On toggle */}
+        {isAdmin && <WhatsOnButton activityId={activity.id} name={activity.name} showInWhatsOn={activity.showInWhatsOn} />}
 
         {/* Heart button */}
         <HeartButton activityId={activity.id} />

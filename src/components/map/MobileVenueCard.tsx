@@ -1,9 +1,11 @@
-import { Star, X, MapPin, Plus } from "lucide-react";
+import { Star, X, MapPin, Plus, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type Activity } from "@/hooks/useActivities";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { getCategoryMeta } from "@/lib/categoryUtils";
+import { useToggleWhatsOn } from "@/hooks/useWhatsOnToday";
+import { toast } from "sonner";
 
 interface MobileVenueCardProps {
   activity: Activity | null;
@@ -16,6 +18,20 @@ interface MobileVenueCardProps {
 export function MobileVenueCard({ activity, onClose, onNavigate, onImportToDb, isImporting }: MobileVenueCardProps) {
   const isAdmin = useIsAdmin();
   const isFoursquare = activity?.id.startsWith("fs-");
+  const toggleWhatsOn = useToggleWhatsOn();
+
+  const handleWhatsOnToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!activity) return;
+    const newState = !activity.show_in_whats_on;
+    toggleWhatsOn.mutate(
+      { activityId: activity.id, show: newState },
+      {
+        onSuccess: () => toast.success(newState ? `Added to What's On` : `Removed from What's On`),
+        onError: (err) => toast.error(err.message || "Failed"),
+      }
+    );
+  };
 
   return (
     <AnimatePresence>
@@ -72,6 +88,18 @@ export function MobileVenueCard({ activity, onClose, onNavigate, onImportToDb, i
           </div>
 
           <div className="flex gap-2 mt-3">
+            {isAdmin && !isFoursquare && (
+              <Button
+                size="sm"
+                variant={activity.show_in_whats_on ? "default" : "outline"}
+                className="gap-1 text-xs"
+                disabled={toggleWhatsOn.isPending}
+                onClick={handleWhatsOnToggle}
+              >
+                {toggleWhatsOn.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                {activity.show_in_whats_on ? "In What's On" : "What's On"}
+              </Button>
+            )}
             {isAdmin && isFoursquare && onImportToDb && (
               <Button size="sm" variant="outline" className="gap-1 text-xs" disabled={isImporting} onClick={() => onImportToDb(activity)}>
                 <Plus className="w-3 h-3" /> Add to DB
