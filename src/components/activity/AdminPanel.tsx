@@ -12,7 +12,7 @@ import type { Tables } from "@/integrations/supabase/types";
 
 const CATEGORIES = [
   "Cafe", "Beach", "Park", "Restaurant", "Bar", "Shopping", "Gym", "Museum",
-  "Bakery", "Playground", "Swimming Pool", "tourist attraction",
+  "Bakery", "Playground", "Swimming Pool", "tourist attraction", "Library",
   "Sports and Recreation", "Daycare", "Education", "Hotel", "Walks",
   "Kids Event", "Parent Event", "Family Event",
 ];
