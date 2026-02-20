@@ -24,14 +24,9 @@ interface ActivityCarouselSectionProps {
 function CarouselSkeleton() {
   return (
     <div className="flex gap-3 md:gap-4 overflow-hidden">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex-shrink-0 w-[200px] sm:w-[220px] md:w-[240px]">
-          <Skeleton className="aspect-[4/3] rounded-xl" />
-          <div className="pt-2.5 space-y-1.5">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-3 w-1/2" />
-            <Skeleton className="h-3 w-full" />
-          </div>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="flex-shrink-0 w-[220px] sm:w-[240px]">
+          <Skeleton className="aspect-[3/4] rounded-2xl" />
         </div>
       ))}
     </div>
@@ -80,7 +75,7 @@ export function ActivityCarouselSection({
               {activities.map((activity) => (
                 <CarouselItem
                   key={activity.id}
-                  className="pl-3 md:pl-4 basis-[200px] sm:basis-[220px] md:basis-[240px] lg:basis-[260px]"
+                  className="pl-3 md:pl-4 basis-[220px] sm:basis-[240px] md:basis-[260px] lg:basis-[280px]"
                 >
                   <ActivityCard activity={activity} variant="featured" />
                 </CarouselItem>
