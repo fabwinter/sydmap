@@ -1,9 +1,14 @@
-import { Sparkles, RefreshCw } from "lucide-react";
-import { useWhatsOnToday, type WhatsOnItem } from "@/hooks/useWhatsOnToday";
+import { Sparkles, RefreshCw, EyeOff, Trash2, Loader2 } from "lucide-react";
+import { useWhatsOnToday, useToggleWhatsOn, type WhatsOnItem } from "@/hooks/useWhatsOnToday";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useState } from "react";
 import {
   Carousel,
   CarouselContent,
@@ -12,7 +17,43 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-function WhatsOnCard({ item }: { item: WhatsOnItem }) {
+function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean }) {
+  const queryClient = useQueryClient();
+  const [deleting, setDeleting] = useState(false);
+  const toggleWhatsOn = useToggleWhatsOn();
+
+  const handleRemove = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!item.activityId) return;
+    toggleWhatsOn.mutate(
+      { activityId: item.activityId, show: false },
+      {
+        onSuccess: () => toast.success(`Removed from What's On`),
+        onError: (err) => toast.error(err.message || "Failed"),
+      }
+    );
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!item.activityId) return;
+    if (!confirm(`Delete "${item.title}"?`)) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.rpc("admin_delete_activity", { p_activity_id: item.activityId });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["whats-on-today"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      toast.success("Event deleted");
+    } catch (err: any) {
+      toast.error(err.message || "Delete failed");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const content = (
     <>
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
@@ -35,6 +76,26 @@ function WhatsOnCard({ item }: { item: WhatsOnItem }) {
             {item.category}
           </div>
         )}
+        {isAdmin && item.activityId && (
+          <div className="absolute top-2 right-2 z-10 flex gap-1">
+            <button
+              onClick={handleRemove}
+              disabled={toggleWhatsOn.isPending}
+              className="p-1.5 rounded-full bg-warning/90 text-white hover:bg-warning transition-colors shadow-sm"
+              title="Remove from What's On"
+            >
+              {toggleWhatsOn.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <EyeOff className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="p-1.5 rounded-full bg-destructive/90 text-white hover:bg-destructive transition-colors shadow-sm"
+              title="Delete event"
+            >
+              {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+            </button>
+          </div>
+        )}
       </div>
       <div className="pt-2.5 space-y-0.5">
         <h3 className="font-semibold text-sm text-foreground line-clamp-2">{item.title}</h3>
@@ -48,7 +109,6 @@ function WhatsOnCard({ item }: { item: WhatsOnItem }) {
     </>
   );
 
-  // If imported, link internally
   if (item.activityId) {
     return (
       <Link to={`/event/${item.activityId}`} className="group flex flex-col">
@@ -82,6 +142,7 @@ function CarouselSkeleton() {
 
 export function FeaturedSection() {
   const { data: items, isLoading, isError, refetch } = useWhatsOnToday(10);
+  const isAdmin = useIsAdmin();
 
   return (
     <section className="space-y-4">
@@ -119,7 +180,7 @@ export function FeaturedSection() {
                   key={item.id}
                   className="pl-3 md:pl-4 basis-[200px] sm:basis-[220px] md:basis-[240px] lg:basis-[260px]"
                 >
-                  <WhatsOnCard item={item} />
+                  <WhatsOnCard item={item} isAdmin={isAdmin} />
                 </CarouselItem>
               ))}
             </CarouselContent>
