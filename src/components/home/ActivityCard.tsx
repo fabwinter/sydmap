@@ -183,7 +183,7 @@ export function ActivityCard({ activity, variant = "default" }: ActivityCardProp
   const categoryColor = categoryColors[activity.category] || "bg-primary";
 
   const cardContent = (
-    <div className="relative w-full overflow-hidden rounded-2xl bg-muted aspect-[3/4] group-hover:shadow-xl transition-shadow duration-300">
+    <div className="relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group-hover:shadow-xl transition-shadow duration-300">
       {/* Full-bleed image */}
       <ImageWithFallback
         src={activity.image}
@@ -217,17 +217,17 @@ export function ActivityCard({ activity, variant = "default" }: ActivityCardProp
       <HeartButton activityId={activity.id} />
 
       {/* Info overlay — bottom */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 p-4 space-y-1">
-        <h3 className="font-bold text-base text-white leading-tight line-clamp-2">
+      <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
+        <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
           {activity.name}
         </h3>
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 text-white/80 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-0.5 text-white/80 text-xs">
             <MapPin className="w-3 h-3 flex-shrink-0" />
             <span className="line-clamp-1">{activity.distance}</span>
           </span>
           <span className="flex items-center gap-1">
-            <Star className="w-3.5 h-3.5 fill-warning text-warning flex-shrink-0" />
+            <Star className="w-3 h-3 fill-warning text-warning flex-shrink-0" />
             <span className="text-white font-bold text-xs">{activity.rating}</span>
             <span className="text-white/60 text-xs">({activity.reviewCount})</span>
           </span>
