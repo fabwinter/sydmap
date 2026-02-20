@@ -27,6 +27,7 @@ const categories = [
   { id: "Daycare", label: "Childcare", icon: Heart },
   { id: "Education", label: "Education", icon: BookOpen },
   { id: "Walks", label: "Walks", icon: Footprints },
+  { id: "Library", label: "Libraries", icon: BookOpen },
 ];
 
 const cuisineCategories = [

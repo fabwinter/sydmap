@@ -13,6 +13,7 @@ const categories = [
   { name: "Museum", color: "#8B5CF6" },
   { name: "Bakery", color: "#D97706" },
   { name: "Shopping", color: "#F472B6" },
+  { name: "Library", color: "#7C3AED" },
 ];
 
 const requirementOptions = [

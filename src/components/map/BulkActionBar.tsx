@@ -5,7 +5,7 @@ import { useState } from "react";
 
 const CATEGORIES = [
   "Cafe", "Beach", "Park", "Restaurant", "Bar", "Shopping", "Gym", "Museum",
-  "Bakery", "Playground", "Swimming Pool", "tourist attraction",
+  "Bakery", "Playground", "Swimming Pool", "tourist attraction", "Library",
   "Sports and Recreation", "Daycare", "Education", "Hotel", "Walks",
 ];
 
