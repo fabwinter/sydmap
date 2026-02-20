@@ -20,6 +20,7 @@ export interface ActivityDisplay {
   closesAt?: string;
   region?: string;
   address?: string;
+  showInWhatsOn?: boolean;
 }
 
 // Sydney CBD as fallback
@@ -51,6 +52,7 @@ export function transformActivity(activity: Activity, lat?: number, lng?: number
     closesAt: extractClosingTime(activity.hours_close),
     region: activity.region ?? undefined,
     address: activity.address ?? undefined,
+    showInWhatsOn: activity.show_in_whats_on,
   };
 }
 
