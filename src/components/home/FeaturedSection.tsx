@@ -1,4 +1,5 @@
 import { Sparkles, RefreshCw, EyeOff, Trash2, Loader2 } from "lucide-react";
+import { MapPin, Star, Heart } from "lucide-react";
 import { useWhatsOnToday, useToggleWhatsOn, type WhatsOnItem } from "@/hooks/useWhatsOnToday";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -17,10 +18,28 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
+const categoryColors: Record<string, string> = {
+  Cafe: "bg-amber-500",
+  Beach: "bg-cyan-500",
+  Park: "bg-emerald-500",
+  Restaurant: "bg-rose-500",
+  Bar: "bg-violet-500",
+  Museum: "bg-slate-500",
+  Shopping: "bg-fuchsia-500",
+  Gym: "bg-orange-500",
+  Bakery: "bg-yellow-500",
+  Outdoor: "bg-emerald-500",
+  Attraction: "bg-primary",
+  Playground: "bg-sky-500",
+  Walk: "bg-teal-500",
+  Pool: "bg-blue-500",
+};
+
 function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean }) {
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
   const toggleWhatsOn = useToggleWhatsOn();
+  const categoryColor = categoryColors[item.category || ""] || "bg-primary";
 
   const handleRemove = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -42,7 +61,9 @@ function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean })
     if (!confirm(`Delete "${item.title}"?`)) return;
     setDeleting(true);
     try {
-      const { error } = await supabase.rpc("admin_delete_activity", { p_activity_id: item.activityId });
+      const { error } = await supabase.rpc("admin_delete_activity", {
+        p_activity_id: item.activityId,
+      });
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["whats-on-today"] });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
@@ -54,72 +75,103 @@ function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean })
     }
   };
 
-  const content = (
-    <>
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
-        {item.imageUrl ? (
-          <img
-            src={item.imageUrl}
-            alt={item.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-            <Sparkles className="w-10 h-10 text-primary/50" />
-          </div>
-        )}
-        {item.category && (
-          <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-white text-xs font-semibold text-foreground shadow-sm">
-            {item.category}
-          </div>
-        )}
-        {isAdmin && item.activityId && (
-          <div className="absolute top-2 right-2 z-10 flex gap-1">
-            <button
-              onClick={handleRemove}
-              disabled={toggleWhatsOn.isPending}
-              className="p-1.5 rounded-full bg-warning/90 text-white hover:bg-warning transition-colors shadow-sm"
-              title="Remove from What's On"
-            >
-              {toggleWhatsOn.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <EyeOff className="w-3.5 h-3.5" />}
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="p-1.5 rounded-full bg-destructive/90 text-white hover:bg-destructive transition-colors shadow-sm"
-              title="Delete event"
-            >
-              {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-        )}
+  const cardInner = (
+    <div className="relative w-full overflow-hidden rounded-2xl bg-muted aspect-[3/4] group-hover:shadow-xl transition-shadow duration-300">
+      {/* Image */}
+      {item.imageUrl ? (
+        <img
+          src={item.imageUrl}
+          alt={item.title}
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = "none";
+          }}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
+          <Sparkles className="w-10 h-10 text-primary/50" />
+        </div>
+      )}
+
+      {/* Bottom gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+
+      {/* Category badge — top left */}
+      {item.category && !isAdmin && (
+        <div
+          className={`absolute top-3 left-3 z-10 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-sm ${categoryColor}`}
+        >
+          {item.category}
+        </div>
+      )}
+
+      {/* Heart (placeholder for events) */}
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-colors shadow-sm"
+        aria-label="Save"
+      >
+        <Heart className="w-4 h-4 text-white" />
+      </button>
+
+      {/* Admin buttons */}
+      {isAdmin && item.activityId && (
+        <div className="absolute top-3 left-3 z-10 flex gap-1">
+          <button
+            onClick={handleRemove}
+            disabled={toggleWhatsOn.isPending}
+            className="p-1.5 rounded-full bg-warning/90 text-white hover:bg-warning transition-colors shadow-sm"
+            title="Remove from What's On"
+          >
+            {toggleWhatsOn.isPending ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <EyeOff className="w-3.5 h-3.5" />
+            )}
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="p-1.5 rounded-full bg-destructive/90 text-white hover:bg-destructive transition-colors shadow-sm"
+            title="Delete event"
+          >
+            {deleting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="w-3.5 h-3.5" />
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Info overlay — bottom */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 p-4 space-y-1">
+        <h3 className="font-bold text-base text-white leading-tight line-clamp-2">
+          {item.title}
+        </h3>
+        <div className="flex items-center gap-3 flex-wrap">
+          {item.date && (
+            <span className="text-white/80 text-xs font-medium">{item.date}</span>
+          )}
+          {item.excerpt && !item.date && (
+            <span className="text-white/70 text-xs line-clamp-1">{item.excerpt}</span>
+          )}
+        </div>
       </div>
-      <div className="pt-2.5 space-y-0.5">
-        <h3 className="font-semibold text-sm text-foreground line-clamp-2">{item.title}</h3>
-        {item.date && (
-          <p className="text-xs text-primary font-medium">{item.date}</p>
-        )}
-        {item.excerpt && (
-          <p className="text-xs text-muted-foreground line-clamp-2">{item.excerpt}</p>
-        )}
-      </div>
-    </>
+    </div>
   );
 
   if (item.activityId) {
     return (
       <Link to={`/event/${item.activityId}`} className="group flex flex-col">
-        {content}
+        {cardInner}
       </Link>
     );
   }
 
   return (
     <a href={item.url} target="_blank" rel="noopener noreferrer" className="group flex flex-col">
-      {content}
+      {cardInner}
     </a>
   );
 }
@@ -127,13 +179,9 @@ function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean })
 function CarouselSkeleton() {
   return (
     <div className="flex gap-3 md:gap-4 overflow-hidden">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex-shrink-0 w-[200px] sm:w-[220px] md:w-[240px]">
-          <Skeleton className="aspect-[4/3] rounded-xl" />
-          <div className="pt-2.5 space-y-1.5">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-3 w-full" />
-          </div>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="flex-shrink-0 w-[220px] sm:w-[240px]">
+          <Skeleton className="aspect-[3/4] rounded-2xl" />
         </div>
       ))}
     </div>
@@ -155,11 +203,10 @@ export function FeaturedSection() {
           to="/whats-on"
           className="text-sm text-primary font-medium flex items-center gap-1 hover:underline"
         >
-          View all
+          See all
           <ChevronRight className="w-4 h-4" />
         </Link>
       </div>
-      <p className="text-sm text-muted-foreground -mt-2">Events & happenings in Sydney</p>
 
       {isLoading ? (
         <CarouselSkeleton />
@@ -178,7 +225,7 @@ export function FeaturedSection() {
               {items.map((item) => (
                 <CarouselItem
                   key={item.id}
-                  className="pl-3 md:pl-4 basis-[200px] sm:basis-[220px] md:basis-[240px] lg:basis-[260px]"
+                  className="pl-3 md:pl-4 basis-[220px] sm:basis-[240px] md:basis-[260px] lg:basis-[280px]"
                 >
                   <WhatsOnCard item={item} isAdmin={isAdmin} />
                 </CarouselItem>

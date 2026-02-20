@@ -11,7 +11,25 @@ import type { ActivityDisplay } from "@/hooks/useActivities";
 // Re-export for backward compatibility
 export type Activity = ActivityDisplay;
 
-// Category icon mapping
+// Category badge colors (bg class)
+const categoryColors: Record<string, string> = {
+  Cafe: "bg-amber-500",
+  Beach: "bg-cyan-500",
+  Park: "bg-emerald-500",
+  Restaurant: "bg-rose-500",
+  Bar: "bg-violet-500",
+  Museum: "bg-slate-500",
+  Shopping: "bg-fuchsia-500",
+  Gym: "bg-orange-500",
+  Bakery: "bg-yellow-500",
+  Outdoor: "bg-emerald-500",
+  Attraction: "bg-primary",
+  Playground: "bg-sky-500",
+  Walk: "bg-teal-500",
+  Pool: "bg-blue-500",
+};
+
+// Category icon mapping (for fallback)
 const categoryIcons: Record<string, React.ElementType> = {
   Cafe: Coffee,
   Beach: Waves,
@@ -24,7 +42,7 @@ const categoryIcons: Record<string, React.ElementType> = {
   Bakery: Cake,
 };
 
-// Category gradient colors
+// Category gradient colors (for fallback)
 const categoryGradients: Record<string, string> = {
   Cafe: "from-amber-400 to-orange-500",
   Beach: "from-cyan-400 to-blue-500",
@@ -37,32 +55,25 @@ const categoryGradients: Record<string, string> = {
   Bakery: "from-yellow-400 to-amber-500",
 };
 
-// Determine tag text based on activity properties
-function getTagInfo(activity: ActivityDisplay): { text: string; variant: "open" | "popular" | "default" } | null {
-  if (activity.isOpen) return { text: "Open", variant: "open" };
-  if (activity.reviewCount > 50) return { text: "Popular", variant: "popular" };
-  return null;
-}
-
 interface ActivityCardProps {
   activity: ActivityDisplay;
   variant?: "default" | "featured";
 }
 
-function ImageWithFallback({ 
-  src, 
-  alt, 
+function ImageWithFallback({
+  src,
+  alt,
   category,
-  className 
-}: { 
-  src: string; 
-  alt: string; 
+  className,
+}: {
+  src: string;
+  alt: string;
   category: string;
   className?: string;
 }) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const Icon = categoryIcons[category] || MapPin;
   const gradient = categoryGradients[category] || "from-slate-400 to-slate-600";
 
@@ -82,7 +93,7 @@ function ImageWithFallback({
       <img
         src={src}
         alt={alt}
-        className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        className={`${className} ${isLoading ? "opacity-0" : "opacity-100"} transition-opacity duration-300`}
         onError={() => setHasError(true)}
         onLoad={() => setIsLoading(false)}
       />
@@ -90,7 +101,15 @@ function ImageWithFallback({
   );
 }
 
-function WhatsOnButton({ activityId, name, showInWhatsOn }: { activityId: string; name: string; showInWhatsOn?: boolean }) {
+function WhatsOnButton({
+  activityId,
+  name,
+  showInWhatsOn,
+}: {
+  activityId: string;
+  name: string;
+  showInWhatsOn?: boolean;
+}) {
   const toggleWhatsOn = useToggleWhatsOn();
   const newState = !showInWhatsOn;
 
@@ -100,7 +119,12 @@ function WhatsOnButton({ activityId, name, showInWhatsOn }: { activityId: string
     toggleWhatsOn.mutate(
       { activityId, show: newState },
       {
-        onSuccess: () => toast.success(newState ? `"${name}" added to What's On` : `"${name}" removed from What's On`),
+        onSuccess: () =>
+          toast.success(
+            newState
+              ? `"${name}" added to What's On`
+              : `"${name}" removed from What's On`
+          ),
         onError: (err) => toast.error(err.message || "Failed"),
       }
     );
@@ -111,7 +135,9 @@ function WhatsOnButton({ activityId, name, showInWhatsOn }: { activityId: string
       onClick={handleClick}
       disabled={toggleWhatsOn.isPending}
       className={`absolute top-3 left-3 z-10 w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${
-        showInWhatsOn ? "bg-warning/90 text-white" : "bg-white/80 text-muted-foreground hover:text-foreground"
+        showInWhatsOn
+          ? "bg-warning/90 text-white"
+          : "bg-white/20 text-white hover:bg-white/40"
       }`}
       aria-label={showInWhatsOn ? "Remove from What's On" : "Add to What's On"}
       title={showInWhatsOn ? "Remove from What's On" : "Add to What's On"}
@@ -140,14 +166,12 @@ function HeartButton({ activityId }: { activityId: string }) {
   return (
     <button
       onClick={handleClick}
-      className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-colors shadow-sm"
+      className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-colors shadow-sm"
       aria-label={isSaved ? "Remove from saved" : "Save"}
     >
       <Heart
         className={`w-4 h-4 transition-colors ${
-          isSaved 
-            ? "fill-red-500 text-red-500" 
-            : "text-foreground/70 hover:text-foreground"
+          isSaved ? "fill-white text-white" : "text-white"
         }`}
       />
     </button>
@@ -155,99 +179,69 @@ function HeartButton({ activityId }: { activityId: string }) {
 }
 
 export function ActivityCard({ activity, variant = "default" }: ActivityCardProps) {
-  const tag = getTagInfo(activity);
   const isAdmin = useIsAdmin();
+  const categoryColor = categoryColors[activity.category] || "bg-primary";
 
-  if (variant === "featured") {
-    return (
-      <Link
-        to={activity.isEvent ? `/event/${activity.id}` : `/activity/${activity.id}`}
-        className="group flex flex-col"
-      >
-        {/* Image container */}
-        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
-          <ImageWithFallback
-            src={activity.image}
-            alt={activity.name}
-            category={activity.category}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-          
-          {/* Tag badge */}
-          {tag && !isAdmin && (
-            <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-white text-xs font-semibold text-foreground shadow-sm">
-              {tag.text}
-            </div>
-          )}
+  const cardContent = (
+    <div className="relative w-full overflow-hidden rounded-2xl bg-muted aspect-[3/4] group-hover:shadow-xl transition-shadow duration-300">
+      {/* Full-bleed image */}
+      <ImageWithFallback
+        src={activity.image}
+        alt={activity.name}
+        category={activity.category}
+        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+      />
 
-          {/* Admin: What's On toggle */}
-          {isAdmin && <WhatsOnButton activityId={activity.id} name={activity.name} showInWhatsOn={activity.showInWhatsOn} />}
+      {/* Bottom gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
 
-          {/* Heart button */}
-          <HeartButton activityId={activity.id} />
+      {/* Category badge — top left (hidden if admin sparkle shown) */}
+      {!isAdmin && (
+        <div
+          className={`absolute top-3 left-3 z-10 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-sm ${categoryColor}`}
+        >
+          {activity.category}
         </div>
+      )}
 
-        {/* Info below image */}
-        <div className="pt-2.5 space-y-0.5">
-          <h3 className="font-semibold text-sm text-foreground line-clamp-1">{activity.name}</h3>
-          <p className="text-xs text-muted-foreground">{activity.category}</p>
-          <div className="flex items-center gap-1.5 pt-0.5">
-            <Star className="w-3.5 h-3.5 fill-foreground text-foreground" />
-            <span className="text-xs font-medium text-foreground">{activity.rating}</span>
-            <span className="text-xs text-muted-foreground">({activity.reviewCount})</span>
-            <span className="text-xs text-muted-foreground ml-auto flex items-center gap-0.5">
-              <MapPin className="w-3 h-3" />
-              {activity.distance}
-            </span>
-          </div>
+      {/* Admin: What's On toggle */}
+      {isAdmin && (
+        <WhatsOnButton
+          activityId={activity.id}
+          name={activity.name}
+          showInWhatsOn={activity.showInWhatsOn}
+        />
+      )}
+
+      {/* Heart button — top right */}
+      <HeartButton activityId={activity.id} />
+
+      {/* Info overlay — bottom */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 p-4 space-y-1">
+        <h3 className="font-bold text-base text-white leading-tight line-clamp-2">
+          {activity.name}
+        </h3>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1 text-white/80 text-xs">
+            <MapPin className="w-3 h-3 flex-shrink-0" />
+            <span className="line-clamp-1">{activity.distance}</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <Star className="w-3.5 h-3.5 fill-warning text-warning flex-shrink-0" />
+            <span className="text-white font-bold text-xs">{activity.rating}</span>
+            <span className="text-white/60 text-xs">({activity.reviewCount})</span>
+          </span>
         </div>
-      </Link>
-    );
-  }
+      </div>
+    </div>
+  );
 
-  // Default card - same Airbnb style
   return (
     <Link
       to={activity.isEvent ? `/event/${activity.id}` : `/activity/${activity.id}`}
       className="group flex flex-col"
     >
-      {/* Image container */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
-        <ImageWithFallback
-          src={activity.image}
-          alt={activity.name}
-          category={activity.category}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
-        
-        {/* Tag badge */}
-        {tag && !isAdmin && (
-          <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-white text-xs font-semibold text-foreground shadow-sm">
-            {tag.text}
-          </div>
-        )}
-
-        {/* Admin: What's On toggle */}
-        {isAdmin && <WhatsOnButton activityId={activity.id} name={activity.name} showInWhatsOn={activity.showInWhatsOn} />}
-
-        {/* Heart button */}
-        <HeartButton activityId={activity.id} />
-      </div>
-
-      {/* Info below image */}
-      <div className="pt-2.5 space-y-0.5">
-        <h3 className="font-semibold text-sm text-foreground line-clamp-1">{activity.name}</h3>
-        <p className="text-xs text-muted-foreground">{activity.category}</p>
-        <div className="flex items-center gap-1.5 pt-0.5">
-          <Star className="w-3.5 h-3.5 fill-foreground text-foreground" />
-          <span className="text-xs font-medium text-foreground">{activity.rating}</span>
-          <span className="text-xs text-muted-foreground">({activity.reviewCount})</span>
-          <span className="text-xs text-muted-foreground ml-auto flex items-center gap-0.5">
-            <MapPin className="w-3 h-3" />
-            {activity.distance}
-          </span>
-        </div>
-      </div>
+      {cardContent}
     </Link>
   );
 }
