@@ -1,6 +1,6 @@
-import { Sparkles, RefreshCw, Download, Loader2, Trash2, Calendar } from "lucide-react";
+import { Sparkles, RefreshCw, Download, Loader2, Trash2, Calendar, EyeOff } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useWhatsOnToday, useImportWhatsOnEvents, type WhatsOnItem } from "@/hooks/useWhatsOnToday";
+import { useWhatsOnToday, useImportWhatsOnEvents, useToggleWhatsOn, type WhatsOnItem } from "@/hooks/useWhatsOnToday";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -13,6 +13,7 @@ import { useState } from "react";
 function EventCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean }) {
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
+  const toggleWhatsOn = useToggleWhatsOn();
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -31,6 +32,19 @@ function EventCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean }) {
     } finally {
       setDeleting(false);
     }
+  };
+
+  const handleRemoveFromWhatsOn = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!item.activityId) return;
+    toggleWhatsOn.mutate(
+      { activityId: item.activityId, show: false },
+      {
+        onSuccess: () => toast.success(`"${item.title}" removed from What's On`),
+        onError: (err) => toast.error(err.message || "Failed to remove"),
+      }
+    );
   };
 
   const content = (
@@ -60,6 +74,16 @@ function EventCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean }) {
             <div className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-xs font-medium">
               In App
             </div>
+          )}
+          {isAdmin && item.activityId && (
+            <button
+              onClick={handleRemoveFromWhatsOn}
+              disabled={toggleWhatsOn.isPending}
+              className="p-1.5 rounded-full bg-warning/90 text-white hover:bg-warning transition-colors"
+              title="Remove from What's On"
+            >
+              {toggleWhatsOn.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <EyeOff className="w-3.5 h-3.5" />}
+            </button>
           )}
           {isAdmin && item.activityId && (
             <button

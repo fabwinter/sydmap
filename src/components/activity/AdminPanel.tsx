@@ -72,6 +72,7 @@ export function AdminPanel({ activity }: AdminPanelProps) {
     bike_parking: (activity as any).bike_parking ?? false,
     shade: (activity as any).shade ?? false,
     is_event: activity.is_event,
+    show_in_whats_on: activity.show_in_whats_on,
     event_dates: activity.event_dates || "",
     event_cost: activity.event_cost || "",
     ticket_url: activity.ticket_url || "",
@@ -428,6 +429,7 @@ export function AdminPanel({ activity }: AdminPanelProps) {
 
               <h4 className="text-xs font-bold uppercase text-muted-foreground pt-2">Event Details</h4>
               <Toggle label="Is Event" checked={edits.is_event} onChange={(v) => setEdits({ ...edits, is_event: v })} />
+              <Toggle label="Show in What's On" checked={edits.show_in_whats_on} onChange={(v) => setEdits({ ...edits, show_in_whats_on: v })} />
               <Field label="Event Dates" value={edits.event_dates} onChange={(v) => setEdits({ ...edits, event_dates: v })} placeholder="e.g. 15 Mar 2026, or 15-20 Mar 2026" />
               <Field label="Event Cost" value={edits.event_cost} onChange={(v) => setEdits({ ...edits, event_cost: v })} placeholder="e.g. Free, $25, $10-$50" />
               <Field label="Ticket URL" value={edits.ticket_url} onChange={(v) => setEdits({ ...edits, ticket_url: v })} />

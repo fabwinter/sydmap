@@ -190,6 +190,7 @@ export default function MapView() {
           organizer_facebook: null, organizer_instagram: null,
           family_friendly: false, high_chairs: false, change_rooms: false,
           coffee: false, power_outlets: false, showers: false, bike_parking: false, shade: false,
+          show_in_whats_on: false,
         };
       });
   }, [foursquareVenues, activities]);
@@ -217,6 +218,7 @@ export default function MapView() {
           organizer_facebook: null, organizer_instagram: null,
           family_friendly: false, high_chairs: false, change_rooms: false,
           coffee: false, power_outlets: false, showers: false, bike_parking: false, shade: false,
+          show_in_whats_on: false,
         };
       });
   }, [googleVenues, activities]);
