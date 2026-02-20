@@ -645,15 +645,10 @@ export type Database = {
         Args: { p_activity_id: string }
         Returns: undefined
       }
-      admin_update_activity:
-        | {
-            Args: { p_activity_id: string; p_updates: Json }
-            Returns: undefined
-          }
-        | {
-            Args: { p_activity_id: string; p_updates: Json }
-            Returns: undefined
-          }
+      admin_update_activity: {
+        Args: { p_activity_id: string; p_updates: Json }
+        Returns: undefined
+      }
       bulk_import_activities: {
         Args: { activities_json: Json }
         Returns: number
