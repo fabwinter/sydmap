@@ -76,7 +76,7 @@ function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean })
   };
 
   const cardInner = (
-    <div className="relative w-full overflow-hidden rounded-2xl bg-muted aspect-[3/4] group-hover:shadow-xl transition-shadow duration-300">
+    <div className="relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group-hover:shadow-xl transition-shadow duration-300">
       {/* Image */}
       {item.imageUrl ? (
         <img
@@ -145,11 +145,11 @@ function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean })
       )}
 
       {/* Info overlay — bottom */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 p-4 space-y-1">
-        <h3 className="font-bold text-base text-white leading-tight line-clamp-2">
+      <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
+        <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
           {item.title}
         </h3>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           {item.date && (
             <span className="text-white/80 text-xs font-medium">{item.date}</span>
           )}
@@ -179,9 +179,9 @@ function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean })
 function CarouselSkeleton() {
   return (
     <div className="flex gap-3 md:gap-4 overflow-hidden">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="flex-shrink-0 w-[220px] sm:w-[240px]">
-          <Skeleton className="aspect-[3/4] rounded-2xl" />
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="flex-shrink-0 w-[82vw] sm:w-[360px]">
+          <Skeleton className="aspect-[4/3] rounded-2xl" />
         </div>
       ))}
     </div>
@@ -225,7 +225,7 @@ export function FeaturedSection() {
               {items.map((item) => (
                 <CarouselItem
                   key={item.id}
-                  className="pl-3 md:pl-4 basis-[220px] sm:basis-[240px] md:basis-[260px] lg:basis-[280px]"
+                  className="pl-3 md:pl-4 basis-[82vw] sm:basis-[360px] md:basis-[380px] lg:basis-[400px]"
                 >
                   <WhatsOnCard item={item} isAdmin={isAdmin} />
                 </CarouselItem>
