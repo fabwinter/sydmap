@@ -50,7 +50,7 @@ export function TimelineMap({ groups }: TimelineMapProps) {
     for (const group of groups) {
       for (const ci of group.checkIns) {
         const a = ci.activities;
-        if (!a) continue;
+        if (!a || !isFinite(a.latitude) || !isFinite(a.longitude)) continue;
         const existing = map.get(a.id);
         if (existing) {
           existing.visitCount++;
