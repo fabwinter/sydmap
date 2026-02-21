@@ -212,41 +212,40 @@ export default function Timeline() {
 
                           <Link
                             to={`/activity/${checkIn.activity_id}`}
-                            className="block bg-card rounded-2xl border border-border hover:border-primary/40 transition-colors overflow-hidden shadow-sm"
+                            className="block relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group"
                           >
-                            {/* Hero image */}
-                            {heroImg && (
-                              <div className="relative h-36 w-full overflow-hidden">
-                                <img
-                                  src={heroImg}
-                                  alt={checkIn.activities?.name || ""}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
+                            {heroImg ? (
+                              <img
+                                src={heroImg}
+                                alt={checkIn.activities?.name || ""}
+                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                            ) : (
+                              <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted-foreground/20" />
                             )}
-
-                            <div className="p-3.5 space-y-1.5">
-                              <h3 className="font-bold text-base leading-tight">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
+                              <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
                                 {checkIn.activities?.name || "Unknown venue"}
                               </h3>
-                              <p className="text-xs text-muted-foreground">
+                              <p className="text-xs text-white/70">
                                 {checkIn.activities?.category}
                                 {checkIn.activities?.address && ` · ${checkIn.activities.address.split(",")[0]}`}
                               </p>
                               <div className="flex items-center gap-3 pt-0.5">
                                 {checkIn.rating > 0 && (
-                                  <span className="flex items-center gap-0.5 text-sm font-semibold text-warning">
-                                    <Star className="w-3.5 h-3.5 fill-current" />
+                                  <span className="flex items-center gap-0.5 text-xs font-semibold text-warning">
+                                    <Star className="w-3 h-3 fill-current" />
                                     {checkIn.rating}
                                   </span>
                                 )}
-                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <span className="text-xs text-white/60 flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
                                   {time}
                                 </span>
                               </div>
                               {checkIn.comment && (
-                                <p className="text-sm text-muted-foreground mt-1 italic line-clamp-2">
+                                <p className="text-xs text-white/60 italic line-clamp-1 mt-0.5">
                                   "{checkIn.comment}"
                                 </p>
                               )}

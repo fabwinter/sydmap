@@ -380,21 +380,20 @@ export default function Profile() {
               </div>
               
               {recentCheckIns.length > 0 ? (
-                <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-4">
                   {recentCheckIns.slice(0, 6).map((checkIn) => (
-                    <Link key={checkIn.id} to={`/activity/${checkIn.activities?.id}`} className="activity-card">
-                      <div className="relative aspect-square">
-                        <img
-                          src={checkIn.photo_url || checkIn.activities?.hero_image_url || "/placeholder.svg"}
-                          alt={checkIn.activities?.name || "Check-in"}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        <div className="absolute bottom-2 left-2 right-2">
-                          <p className="text-white text-xs font-medium line-clamp-1">
-                            {checkIn.activities?.name || "Activity"}
-                          </p>
-                        </div>
+                    <Link key={checkIn.id} to={`/activity/${checkIn.activities?.id}`} className="block relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group">
+                      <img
+                        src={checkIn.photo_url || checkIn.activities?.hero_image_url || "/placeholder.svg"}
+                        alt={checkIn.activities?.name || "Check-in"}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
+                        <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
+                          {checkIn.activities?.name || "Activity"}
+                        </h3>
+                        <p className="text-xs text-white/70">{checkIn.activities?.category}</p>
                       </div>
                     </Link>
                   ))}
@@ -429,45 +428,42 @@ export default function Profile() {
           <TabsContent value="saved" className="space-y-4 mt-0">
             {savedLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border">
-                  <Skeleton className="w-16 h-16 rounded-lg" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/2" />
-                  </div>
-                </div>
+                <Skeleton key={i} className="aspect-[4/3] rounded-2xl" />
               ))
             ) : savedItems && savedItems.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {savedItems.map((item) => (
                   <Link
                     key={item.id}
                     to={`/activity/${item.activity_id}`}
-                    className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border hover:border-primary transition-colors"
+                    className="block relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group"
                   >
                     <img
                       src={item.activities.hero_image_url || "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&h=300&fit=crop"}
                       alt={item.activities.name}
-                      className="w-16 h-16 rounded-lg object-cover"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm truncate">{item.activities.name}</h3>
-                      <p className="text-xs text-muted-foreground">{item.activities.category}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                        <MapPin className="w-3 h-3" />
-                        {item.activities.address || "Sydney, NSW"}
-                      </p>
-                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
                     <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         handleRemoveSaved(item.activity_id);
                       }}
-                      className="p-2 rounded-full hover:bg-muted transition-colors"
+                      className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-colors shadow-sm"
                     >
-                      <Heart className="w-5 h-5 fill-destructive text-destructive" />
+                      <Heart className="w-4 h-4 fill-white text-white" />
                     </button>
+                    <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
+                      <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
+                        {item.activities.name}
+                      </h3>
+                      <p className="text-xs text-white/70">{item.activities.category}</p>
+                      <p className="text-xs text-white/60 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        {item.activities.address || "Sydney, NSW"}
+                      </p>
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -601,101 +597,43 @@ function StatItem({
 }
 
 function CheckInCard({ checkIn }: { checkIn: any }) {
-  const [expanded, setExpanded] = useState(false);
-
   return (
-    <div className="bg-card rounded-xl border border-border overflow-hidden">
-      {/* Summary row - always visible */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-3 p-3 text-left hover:bg-muted/50 transition-colors"
-      >
-        <img
-          src={checkIn.photo_url || checkIn.activities?.hero_image_url || "/placeholder.svg"}
-          alt={checkIn.activities?.name || "Check-in"}
-          className="w-16 h-16 rounded-lg object-cover shrink-0"
-        />
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm truncate">{checkIn.activities?.name || "Activity"}</p>
-          <p className="text-xs text-muted-foreground">{checkIn.activities?.category}</p>
-          <p className="text-xs text-muted-foreground mt-1">
+    <Link
+      to={`/activity/${checkIn.activities?.id}`}
+      className="block relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group"
+    >
+      <img
+        src={checkIn.photo_url || checkIn.activities?.hero_image_url || "/placeholder.svg"}
+        alt={checkIn.activities?.name || "Check-in"}
+        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
+        <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
+          {checkIn.activities?.name || "Activity"}
+        </h3>
+        <p className="text-xs text-white/70">{checkIn.activities?.category}</p>
+        <div className="flex items-center gap-3 pt-0.5">
+          <span className="flex items-center gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`w-3 h-3 ${i < checkIn.rating ? "fill-warning text-warning" : "text-white/30"}`}
+              />
+            ))}
+          </span>
+          <span className="text-xs text-white/60">
             {new Date(checkIn.created_at).toLocaleDateString("en-AU", {
-              weekday: "short",
               day: "numeric",
               month: "short",
               year: "numeric",
             })}
-          </p>
+          </span>
         </div>
-        <div className="flex flex-col items-end gap-1 shrink-0">
-          <div className="flex items-center gap-0.5">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`w-3 h-3 ${
-                  i < checkIn.rating
-                    ? "fill-warning text-warning"
-                    : "text-muted"
-                }`}
-              />
-            ))}
-          </div>
-          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
-        </div>
-      </button>
-
-      {/* Expanded details */}
-      {expanded && (
-        <div className="px-3 pb-3 space-y-3 border-t border-border pt-3">
-          {/* Comment */}
-          {checkIn.comment && (
-            <div className="flex items-start gap-2">
-              <MessageSquare className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-              <p className="text-sm text-muted-foreground italic">"{checkIn.comment}"</p>
-            </div>
-          )}
-
-          {/* Photo */}
-          {checkIn.photo_url && (
-            <div className="flex items-start gap-2">
-              <ImageIcon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-              <img
-                src={checkIn.photo_url}
-                alt="Check-in photo"
-                className="w-full max-w-xs rounded-lg object-cover"
-              />
-            </div>
-          )}
-
-          {/* Activity info */}
-          {checkIn.activities && (
-            <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{checkIn.activities.name}</span>
-                {checkIn.activities.rating && (
-                  <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                    <Star className="w-3 h-3 fill-warning text-warning" />
-                    {checkIn.activities.rating.toFixed(1)}
-                  </span>
-                )}
-              </div>
-              {checkIn.activities.address && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  {checkIn.activities.address}
-                </p>
-              )}
-              <Link
-                to={`/activity/${checkIn.activities.id}`}
-                className="inline-flex items-center gap-1 text-xs text-primary font-medium mt-1"
-              >
-                View activity
-                <ChevronRight className="w-3 h-3" />
-              </Link>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+        {checkIn.comment && (
+          <p className="text-xs text-white/60 italic line-clamp-1 mt-0.5">"{checkIn.comment}"</p>
+        )}
+      </div>
+    </Link>
   );
 }

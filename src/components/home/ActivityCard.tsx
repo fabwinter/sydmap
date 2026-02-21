@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { MapPin, Star, Heart, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake, Sparkles, Loader2 } from "lucide-react";
+import { MapPin, Star, Heart, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake, Sparkles, Loader2, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsActivitySaved, useToggleSavedItem } from "@/hooks/useSavedItems";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useToggleWhatsOn } from "@/hooks/useWhatsOnToday";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import type { ActivityDisplay } from "@/hooks/useActivities";
 
 // Re-export for backward compatibility
@@ -178,6 +180,44 @@ function HeartButton({ activityId }: { activityId: string }) {
   );
 }
 
+function AdminDeleteButton({ activityId, name }: { activityId: string; name: string }) {
+  const [deleting, setDeleting] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDeleting(true);
+    try {
+      const { error } = await supabase.rpc("admin_delete_activity", { p_activity_id: activityId });
+      if (error) throw error;
+      toast.success(`"${name}" deleted`);
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      queryClient.invalidateQueries({ queryKey: ["whats-on"] });
+    } catch (err: any) {
+      toast.error(err.message || "Delete failed");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleDelete}
+      disabled={deleting}
+      className="absolute bottom-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-destructive/80 backdrop-blur-sm hover:bg-destructive transition-colors shadow-sm"
+      aria-label="Delete activity"
+      title="Delete activity"
+    >
+      {deleting ? (
+        <Loader2 className="w-4 h-4 text-white animate-spin" />
+      ) : (
+        <Trash2 className="w-4 h-4 text-white" />
+      )}
+    </button>
+  );
+}
+
 export function ActivityCard({ activity, variant = "default" }: ActivityCardProps) {
   const isAdmin = useIsAdmin();
   const categoryColor = categoryColors[activity.category] || "bg-primary";
@@ -215,6 +255,11 @@ export function ActivityCard({ activity, variant = "default" }: ActivityCardProp
 
       {/* Heart button — top right */}
       <HeartButton activityId={activity.id} />
+
+      {/* Admin: Delete button — bottom right */}
+      {isAdmin && (
+        <AdminDeleteButton activityId={activity.id} name={activity.name} />
+      )}
 
       {/* Info overlay — bottom */}
       <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
