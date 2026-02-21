@@ -143,48 +143,46 @@ export default function Saved() {
         {/* All Saved */}
         <section>
           <h2 className="section-header">All Saved Places</h2>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {savedLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border">
-                  <Skeleton className="w-20 h-20 rounded-lg" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/2" />
-                    <Skeleton className="h-3 w-1/4" />
-                  </div>
-                </div>
+                <Skeleton key={i} className="aspect-[4/3] rounded-2xl" />
               ))
             ) : savedItems && savedItems.length > 0 ? (
               savedItems.map((item) => (
                 <Link
                   key={item.id}
                   to={`/activity/${item.activity_id}`}
-                  className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border hover:border-primary transition-colors"
+                  className="block relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group"
                 >
                   <img
                     src={item.activities.hero_image_url || "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&h=300&fit=crop"}
                     alt={item.activities.name}
-                    className="w-20 h-20 rounded-lg object-cover"
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{item.activities.name}</h3>
-                    <p className="text-sm text-muted-foreground">{item.activities.category}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                      <MapPin className="w-3 h-3" />
-                      {item.activities.address || "Sydney, NSW"}
-                    </p>
-                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
                   <button 
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       handleRemoveSaved(item.activity_id);
                     }}
-                    className="p-2 rounded-full hover:bg-muted transition-colors"
+                    className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-colors shadow-sm"
                   >
-                    <Heart className="w-5 h-5 fill-destructive text-destructive" />
+                    <Heart className="w-4 h-4 fill-white text-white" />
                   </button>
+                  <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
+                    <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
+                      {item.activities.name}
+                    </h3>
+                    <p className="text-xs text-white/70">
+                      {item.activities.category}
+                    </p>
+                    <p className="text-xs text-white/60 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {item.activities.address || "Sydney, NSW"}
+                    </p>
+                  </div>
                 </Link>
               ))
             ) : (
