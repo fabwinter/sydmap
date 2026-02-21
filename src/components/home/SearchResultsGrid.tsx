@@ -102,13 +102,7 @@ export function SearchResultsGrid({ activities, isLoading }: SearchResultsGridPr
       {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i}>
-              <Skeleton className="aspect-[4/3] rounded-xl" />
-              <div className="pt-2.5 space-y-1.5">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
-            </div>
+            <Skeleton key={i} className="aspect-[4/3] rounded-2xl" />
           ))}
         </div>
       ) : totalCount === 0 ? (
@@ -125,7 +119,7 @@ export function SearchResultsGrid({ activities, isLoading }: SearchResultsGridPr
               )}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
                 {group.items.map((activity) => (
-                  <ActivityCard key={activity.id} activity={activity} variant="featured" />
+                  <ActivityCard key={activity.id} activity={activity} />
                 ))}
               </div>
             </div>

@@ -3,6 +3,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { type Activity } from "@/hooks/useActivities";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { getCategoryMeta } from "@/lib/categoryUtils";
 
 interface VenueListProps {
   activities: Activity[];
@@ -14,16 +15,6 @@ interface VenueListProps {
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
 }
-
-const categoryColors: Record<string, string> = {
-  Cafe: "bg-accent",
-  Beach: "bg-secondary",
-  Park: "bg-green-500",
-  Restaurant: "bg-red-500",
-  Shopping: "bg-pink-500",
-  Museum: "bg-indigo-500",
-  Bakery: "bg-amber-500",
-};
 
 const listContainerVariants = {
   hidden: { opacity: 0 },
@@ -62,10 +53,10 @@ export function VenueList({
 }: VenueListProps) {
   if (isLoading) {
     return (
-      <div className="p-4 space-y-4">
+      <div className="p-4 grid grid-cols-2 gap-3">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="animate-pulse">
-            <div className="h-20 bg-muted rounded-lg" />
+            <div className="aspect-[4/3] bg-muted rounded-2xl" />
           </div>
         ))}
       </div>
@@ -93,23 +84,25 @@ export function VenueList({
             initial="hidden"
             animate="visible"
             variants={listContainerVariants}
-            className="space-y-3"
+            className="grid grid-cols-2 gap-3"
           >
             {activities.map((activity) => {
               const isSelected = selectedActivity?.id === activity.id;
               const isBulkSelected = selectedIds.has(activity.id);
+              const meta = getCategoryMeta(activity.category);
+
               return (
                 <motion.div
                   key={activity.id}
                   variants={listItemVariants}
                   layout
                   className={cn(
-                    "bg-card rounded-xl p-4 cursor-pointer transition-all border-2",
+                    "relative overflow-hidden rounded-2xl cursor-pointer group aspect-[4/3] border-2",
                     bulkMode && isBulkSelected
-                      ? "border-destructive shadow-md bg-destructive/5"
+                      ? "border-destructive shadow-md"
                       : isSelected
                       ? "border-primary shadow-md"
-                      : "border-transparent hover:border-border hover:shadow-sm"
+                      : "border-transparent"
                   )}
                   onClick={() => {
                     if (bulkMode && onToggleSelect) {
@@ -118,66 +111,55 @@ export function VenueList({
                       onNavigateToDetails(activity);
                     }
                   }}
-                  whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className="flex gap-4">
-                    {/* Bulk select checkbox */}
-                    {bulkMode && (
-                      <div className="flex items-center shrink-0">
-                        {isBulkSelected ? (
-                          <CheckSquare className="w-5 h-5 text-destructive" />
-                        ) : (
-                          <Square className="w-5 h-5 text-muted-foreground" />
-                        )}
-                      </div>
-                    )}
-                    {/* Thumbnail */}
-                    <div className="w-28 h-28 rounded-xl bg-muted overflow-hidden shrink-0">
-                      {activity.hero_image_url ? (
-                        <img
-                          src={activity.hero_image_url}
-                          alt={activity.name}
-                          className="w-full h-full object-cover"
-                        />
+                  {/* Image */}
+                  {activity.hero_image_url ? (
+                    <img
+                      src={activity.hero_image_url}
+                      alt={activity.name}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-muted flex items-center justify-center">
+                      <MapPin className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+
+                  {/* Gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+
+                  {/* Category badge */}
+                  <div className={cn("absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full text-[10px] font-semibold text-white shadow-sm", meta.bg)}>
+                    {activity.category}
+                  </div>
+
+                  {/* Bulk select */}
+                  {bulkMode && (
+                    <div className="absolute top-2 right-2 z-10">
+                      {isBulkSelected ? (
+                        <CheckSquare className="w-5 h-5 text-destructive drop-shadow" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <MapPin className="w-8 h-8 text-muted-foreground" />
-                        </div>
+                        <Square className="w-5 h-5 text-white drop-shadow" />
                       )}
                     </div>
-                    {/* Content */}
-                    <div className="flex-1 min-w-0 py-1">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <span
-                          className={cn(
-                            "px-2 py-0.5 rounded-full text-xs text-white",
-                            categoryColors[activity.category] || "bg-primary"
-                          )}
-                        >
-                          {activity.category}
+                  )}
+
+                  {/* Info overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 z-10 p-2.5 space-y-0.5">
+                    <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
+                      {activity.name}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      {activity.rating != null && (
+                        <span className="flex items-center gap-0.5">
+                          <Star className="w-3 h-3 fill-warning text-warning flex-shrink-0" />
+                          <span className="text-white font-bold text-xs">{activity.rating.toFixed(1)}</span>
                         </span>
-                        {activity.is_open ? (
-                          <span className="px-2 py-0.5 rounded-full text-xs bg-success/10 text-success">
-                            Open
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full text-xs bg-destructive/10 text-destructive">
-                            Closed
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="font-semibold text-foreground text-base truncate">
-                        {activity.name}
-                      </h3>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1.5">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3.5 h-3.5 fill-warning text-warning" />
-                          <span>{activity.rating?.toFixed(1) || "N/A"}</span>
-                        </div>
-                        <span>•</span>
-                        <span>{activity.review_count} reviews</span>
-                      </div>
+                      )}
+                      <span className="text-white/60 text-xs">
+                        {activity.review_count} reviews
+                      </span>
                     </div>
                   </div>
                 </motion.div>
