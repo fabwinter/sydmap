@@ -65,9 +65,9 @@ export default function ActivityDetails() {
   const [editingCheckIn, setEditingCheckIn] = useState<string | null>(null);
   const [editRating, setEditRating] = useState(0);
   const [editComment, setEditComment] = useState("");
-  const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
-  const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
-  const [editExistingPhoto, setEditExistingPhoto] = useState<string | null>(null);
+  const [editPhotoUrls, setEditPhotoUrls] = useState<string[]>([]);
+  const [editNewFiles, setEditNewFiles] = useState<File[]>([]);
+  const [editNewPreviews, setEditNewPreviews] = useState<string[]>([]);
   const [isUploadingEditPhoto, setIsUploadingEditPhoto] = useState(false);
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const [heroIndex, setHeroIndex] = useState(0);
