@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { MediaLightbox } from "@/components/ui/MediaLightbox";
 import { useNavigate, Link } from "react-router-dom";
 import { Settings, MapPin, Users, Coffee, Award, ChevronRight, ChevronDown, Loader2, Heart, Bookmark, Plus, Trash2, Star, MessageSquare, Image as ImageIcon, CalendarDays } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -119,6 +120,7 @@ export default function Profile() {
           comment,
           created_at,
           photo_url,
+          photo_urls,
           activities (
             id,
             name,
