@@ -73,33 +73,31 @@ export default function Timeline() {
 
    return (
      <AppLayout>
-       <div className="px-4 py-4 space-y-4 max-w-lg lg:max-w-7xl mx-auto">
-         {/* Header */}
-         <div className="flex items-center justify-between">
-           <div>
-             <h1 className="text-2xl font-bold">Timeline</h1>
-             <p className="text-sm text-muted-foreground">{totalCheckIns} places visited</p>
-           </div>
-           {/* Toggle only on mobile */}
-           <Button
-             variant="outline"
-             size="sm"
-             className="gap-2 lg:hidden"
-             onClick={() => setView(view === "list" ? "map" : "list")}
-           >
-             {view === "list" ? (
-               <><Map className="w-4 h-4" /> Map</>
-             ) : (
-               <><LayoutList className="w-4 h-4" /> List</>
-             )}
-           </Button>
-         </div>
-
-        {/* Desktop: side-by-side | Mobile: toggle */}
-        <div className="lg:flex lg:gap-6">
+       <div className="px-4 py-4 space-y-0 max-w-lg md:max-w-none mx-auto">
+        {/* Desktop/tablet: side-by-side | Mobile: toggle */}
+        <div className="md:flex md:gap-6">
           {/* List column - hidden on mobile when map view active */}
-          <div className={`${view === "map" ? "hidden" : ""} lg:block lg:flex-1 lg:overflow-y-auto lg:max-h-[calc(100vh-260px)] lg:pr-2`}>
-            {/* Search & Filters - inside list column */}
+          <div className={`${view === "map" ? "hidden" : ""} md:block md:w-[45%] lg:w-[40%] md:overflow-y-auto md:max-h-[calc(100vh-140px)] md:pr-2`}>
+            {/* Header - inside list column */}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-2xl font-bold">Timeline</h1>
+                <p className="text-sm text-muted-foreground">{totalCheckIns} places visited</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 md:hidden"
+                onClick={() => setView(view === "list" ? "map" : "list")}
+              >
+                {view === "list" ? (
+                  <><Map className="w-4 h-4" /> Map</>
+                ) : (
+                  <><LayoutList className="w-4 h-4" /> List</>
+                )}
+              </Button>
+            </div>
+            {/* Search & Filters */}
             <div className="space-y-3 mb-6">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -278,8 +276,8 @@ export default function Timeline() {
             </div>
           </div>
 
-          {/* Map column - hidden on mobile when list view active, always visible on desktop */}
-          <div className={`${view === "list" ? "hidden" : ""} lg:block lg:w-[55%] lg:sticky lg:top-4 rounded-xl overflow-hidden`} style={{ height: "calc(100vh - 260px)" }}>
+          {/* Map column - hidden on mobile when list view active, always visible on tablet/desktop */}
+          <div className={`${view === "list" ? "hidden" : ""} md:block md:flex-1 md:sticky md:top-0 rounded-xl overflow-hidden`} style={{ height: "calc(100vh - 140px)" }}>
             <TimelineMap groups={filteredGroups || []} />
           </div>
         </div>
