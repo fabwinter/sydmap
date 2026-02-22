@@ -602,18 +602,56 @@ function StatItem({
 }
 
 function CheckInCard({ checkIn }: { checkIn: any }) {
+  return <ProfileCheckInCard checkIn={checkIn} />;
+}
+
+function ProfileCheckInCard({ checkIn }: { checkIn: any }) {
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [lightbox, setLightbox] = useState<number | null>(null);
+  
+  const photos: string[] = (checkIn as any).photo_urls?.length > 0
+    ? (checkIn as any).photo_urls
+    : checkIn.photo_url ? [checkIn.photo_url] : [];
+  const allImages = photos.length > 0 ? photos : checkIn.activities?.hero_image_url ? [checkIn.activities.hero_image_url] : [];
+  const displayImg = allImages[photoIndex] || "/placeholder.svg";
+  const hasMultiple = allImages.length > 1;
+
   return (
-    <Link
-      to={`/activity/${checkIn.activities?.id}`}
-      className="block relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group"
-    >
+    <div className="relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group">
       <img
-        src={checkIn.photo_url || checkIn.activities?.hero_image_url || "/placeholder.svg"}
+        src={displayImg}
         alt={checkIn.activities?.name || "Check-in"}
-        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500"
+        onClick={() => photos.length > 0 ? setLightbox(photoIndex) : undefined}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
+
+      {hasMultiple && (
+        <>
+          <button
+            onClick={(e) => { e.preventDefault(); setPhotoIndex((photoIndex - 1 + allImages.length) % allImages.length); }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 p-1 rounded-full bg-black/40 text-white hover:bg-black/60 z-10"
+          >
+            <ChevronRight className="w-4 h-4 rotate-180" />
+          </button>
+          <button
+            onClick={(e) => { e.preventDefault(); setPhotoIndex((photoIndex + 1) % allImages.length); }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full bg-black/40 text-white hover:bg-black/60 z-10"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </>
+      )}
+
+      {hasMultiple && allImages.length <= 8 && (
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+          {allImages.map((_, i) => (
+            <span key={i} className={`w-1.5 h-1.5 rounded-full transition-colors ${i === photoIndex ? "bg-white" : "bg-white/40"}`} />
+          ))}
+        </div>
+      )}
+
+      <Link to={`/activity/${checkIn.activities?.id}`} className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
         <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
           {checkIn.activities?.name || "Activity"}
         </h3>
@@ -628,18 +666,18 @@ function CheckInCard({ checkIn }: { checkIn: any }) {
             ))}
           </span>
           <span className="text-xs text-white/60">
-            {new Date(checkIn.created_at).toLocaleDateString("en-AU", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
+            {new Date(checkIn.created_at).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}
           </span>
         </div>
         {checkIn.comment && (
           <p className="text-xs text-white/60 italic line-clamp-1 mt-0.5">"{checkIn.comment}"</p>
         )}
-      </div>
-    </Link>
+      </Link>
+
+      {lightbox !== null && (
+        <MediaLightbox urls={photos} initialIndex={lightbox} onClose={() => setLightbox(null)} />
+      )}
+    </div>
   );
 }
 
