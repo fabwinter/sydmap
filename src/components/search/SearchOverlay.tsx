@@ -197,8 +197,8 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
   };
 
   const wrapperClass = variant === "home"
-    ? "rounded-2xl bg-card border border-border shadow-sm"
-    : "bg-card rounded-xl shadow-lg";
+    ? "bg-transparent"
+    : "bg-transparent";
 
   return (
     <div ref={containerRef} className={`relative z-30 ${className}`}>
@@ -275,7 +275,7 @@ export function SearchOverlay({ className = "", variant = "home" }: SearchOverla
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-              className={`${wrapperClass} overflow-hidden -mt-3 pt-4 relative z-[30] rounded-t-none border-t-0`}
+              className="bg-card rounded-2xl border border-border shadow-lg overflow-hidden -mt-1 pt-4 relative z-[30]"
               style={{ originY: 0 }}
             >
               <div className="px-4 pb-4 max-h-[70dvh] overflow-y-auto overscroll-contain">

@@ -59,7 +59,7 @@ export function HeroFeatured() {
 
   if (isLoading || items.length === 0) {
     return (
-      <div className="relative w-full aspect-[4/5] sm:aspect-[16/9] bg-muted rounded-none">
+      <div className="relative w-full aspect-[3/4] sm:aspect-[16/9] bg-muted rounded-none">
         <Skeleton className="absolute inset-0 rounded-none" />
       </div>
     );
@@ -72,7 +72,7 @@ export function HeroFeatured() {
           <CarouselItem key={item.id} className="pl-0 basis-full">
             <Link
               to={item.linkTo}
-              className="relative block w-full aspect-[4/5] sm:aspect-[16/9] overflow-hidden group"
+              className="relative block w-full aspect-[3/4] sm:aspect-[16/9] overflow-hidden group"
             >
               <img
                 src={item.imageUrl}
