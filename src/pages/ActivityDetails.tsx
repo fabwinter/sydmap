@@ -668,6 +668,13 @@ export default function ActivityDetails() {
       {showCalendarModal && (
         <AddToCalendarModal activityId={id!} activityName={activity.name} onClose={() => setShowCalendarModal(false)} />
       )}
+      {lightboxOpen && (
+        <MediaLightbox
+          urls={lightboxOpen.urls}
+          initialIndex={lightboxOpen.index}
+          onClose={() => setLightboxOpen(null)}
+        />
+      )}
     </div>
   );
 }
