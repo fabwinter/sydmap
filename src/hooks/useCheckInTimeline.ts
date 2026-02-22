@@ -27,7 +27,7 @@ export function useCheckInTimeline(search?: string, category?: string) {
         .from("check_ins")
         .select(`
           id, activity_id, rating, comment, photo_url, created_at,
-          activities!inner ( id, name, category, address, hero_image_url )
+          activities!inner ( id, name, category, address, hero_image_url, latitude, longitude, rating )
         `)
         .eq("user_id", profileId)
         .order("created_at", { ascending: false })

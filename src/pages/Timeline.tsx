@@ -95,78 +95,78 @@ export default function Timeline() {
            </Button>
          </div>
 
-        {/* Search & Filters */}
-        <div className="space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search timeline..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="flex-1">
-                <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORY_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={hasDateFilter ? "default" : "outline"}
-                  size="sm"
-                  className="gap-1.5 shrink-0"
-                >
-                  <CalendarDays className="w-4 h-4" />
-                  {hasDateFilter
-                    ? dateRange?.to
-                      ? `${format(dateRange.from!, "d MMM")} – ${format(dateRange.to, "d MMM")}`
-                      : format(dateRange.from!, "d MMM yyyy")
-                    : "Date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  mode="range"
-                  selected={dateRange}
-                  onSelect={setDateRange}
-                  numberOfMonths={1}
-                  initialFocus
-                />
-                {hasDateFilter && (
-                  <div className="p-2 border-t border-border">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full text-xs"
-                      onClick={() => setDateRange(undefined)}
-                    >
-                      <X className="w-3 h-3 mr-1" />
-                      Clear dates
-                    </Button>
-                  </div>
-                )}
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-
         {/* Desktop: side-by-side | Mobile: toggle */}
         <div className="lg:flex lg:gap-6">
           {/* List column - hidden on mobile when map view active */}
           <div className={`${view === "map" ? "hidden" : ""} lg:block lg:flex-1 lg:overflow-y-auto lg:max-h-[calc(100vh-260px)] lg:pr-2`}>
+            {/* Search & Filters - inside list column */}
+            <div className="space-y-3 mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search timeline..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="flex-1">
+                    <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORY_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={hasDateFilter ? "default" : "outline"}
+                      size="sm"
+                      className="gap-1.5 shrink-0"
+                    >
+                      <CalendarDays className="w-4 h-4" />
+                      {hasDateFilter
+                        ? dateRange?.to
+                          ? `${format(dateRange.from!, "d MMM")} – ${format(dateRange.to, "d MMM")}`
+                          : format(dateRange.from!, "d MMM yyyy")
+                        : "Date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      numberOfMonths={1}
+                      initialFocus
+                    />
+                    {hasDateFilter && (
+                      <div className="p-2 border-t border-border">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full text-xs"
+                          onClick={() => setDateRange(undefined)}
+                        >
+                          <X className="w-3 h-3 mr-1" />
+                          Clear dates
+                        </Button>
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
             <div className="space-y-8 pb-4">
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
