@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
-import { useWhatsOnToday } from "@/hooks/useWhatsOnToday";
-import { useRecommendedActivities } from "@/hooks/useActivities";
+import { useToggleFeatured } from "@/hooks/useWhatsOnToday";
 import { useFeaturedHeroActivities } from "@/hooks/useFeaturedHero";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, Loader2 } from "lucide-react";
+import { Trash2, Loader2, EyeOff } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -29,6 +28,7 @@ interface FeaturedItem {
 function HeroCard({ item, isAdmin }: { item: FeaturedItem; isAdmin: boolean }) {
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
+  const toggleFeatured = useToggleFeatured();
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -53,6 +53,22 @@ function HeroCard({ item, isAdmin }: { item: FeaturedItem; isAdmin: boolean }) {
     }
   };
 
+  const handleRemoveFeatured = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!item.activityId) return;
+    toggleFeatured.mutate(
+      { activityId: item.activityId, show: false },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["featured-hero"] });
+          toast.success("Removed from Featured");
+        },
+        onError: (err) => toast.error(err.message || "Failed"),
+      }
+    );
+  };
+
   return (
     <Link
       to={item.linkTo}
@@ -65,20 +81,36 @@ function HeroCard({ item, isAdmin }: { item: FeaturedItem; isAdmin: boolean }) {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
-      {/* Admin delete */}
+      {/* Admin buttons */}
       {isAdmin && item.activityId && (
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="absolute top-3 right-3 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-destructive/80 backdrop-blur-sm hover:bg-destructive transition-colors shadow-sm"
-          aria-label="Delete"
-        >
-          {deleting ? (
-            <Loader2 className="w-4 h-4 text-white animate-spin" />
-          ) : (
-            <Trash2 className="w-4 h-4 text-white" />
-          )}
-        </button>
+        <div className="absolute top-3 right-3 z-20 flex gap-1.5">
+          <button
+            onClick={handleRemoveFeatured}
+            disabled={toggleFeatured.isPending}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-warning/80 backdrop-blur-sm hover:bg-warning transition-colors shadow-sm"
+            aria-label="Remove from Featured"
+            title="Remove from Featured"
+          >
+            {toggleFeatured.isPending ? (
+              <Loader2 className="w-4 h-4 text-white animate-spin" />
+            ) : (
+              <EyeOff className="w-4 h-4 text-white" />
+            )}
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-destructive/80 backdrop-blur-sm hover:bg-destructive transition-colors shadow-sm"
+            aria-label="Delete"
+            title="Delete"
+          >
+            {deleting ? (
+              <Loader2 className="w-4 h-4 text-white animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4 text-white" />
+            )}
+          </button>
+        </div>
       )}
 
       {/* Featured badge */}
@@ -103,53 +135,15 @@ function HeroCard({ item, isAdmin }: { item: FeaturedItem; isAdmin: boolean }) {
 }
 
 export function HeroFeatured() {
-  const { data: featured, isLoading: featuredLoading } = useFeaturedHeroActivities(5);
-  const { data: whatsOn, isLoading: whatsOnLoading } = useWhatsOnToday(5);
-  const { data: recommended, isLoading: recLoading } = useRecommendedActivities(5);
+  const { data: featured, isLoading } = useFeaturedHeroActivities(10);
   const isAdmin = useIsAdmin();
-
-  const isLoading = featuredLoading && whatsOnLoading && recLoading;
 
   const items: FeaturedItem[] = [];
 
-  // 1. Featured activities first
+  // Only show items with show_in_featured = true
   if (featured?.length) {
     featured.forEach((a) => {
       if (a.image) {
-        items.push({
-          id: a.id,
-          name: a.name,
-          imageUrl: a.image,
-          category: a.category,
-          address: a.address?.split(",").slice(-2).join(",").trim(),
-          linkTo: a.isEvent ? `/event/${a.id}` : `/activity/${a.id}`,
-          activityId: a.id,
-        });
-      }
-    });
-  }
-
-  // 2. Fill with What's On
-  if (whatsOn?.length && items.length < 5) {
-    whatsOn.slice(0, 5 - items.length).forEach((item) => {
-      if (item.imageUrl && !items.some(i => i.activityId === item.activityId)) {
-        items.push({
-          id: item.id,
-          name: item.title,
-          imageUrl: item.imageUrl,
-          category: item.category || undefined,
-          linkTo: item.activityId ? `/event/${item.activityId}` : (item.url || "#"),
-          isEvent: true,
-          activityId: item.activityId,
-        });
-      }
-    });
-  }
-
-  // 3. Fill with recommended
-  if (recommended?.length && items.length < 5) {
-    recommended.slice(0, 5 - items.length).forEach((a) => {
-      if (a.image && !items.some(i => i.activityId === a.id)) {
         items.push({
           id: a.id,
           name: a.name,
