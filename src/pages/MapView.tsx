@@ -45,8 +45,10 @@ export default function MapView() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [listingLimit, setListingLimit] = useState(500);
-  const { data: activities, isLoading } = useAllActivities(listingLimit);
   const { filters, setMapBounds } = useSearchFilters();
+  // When map bounds are active, fetch all activities to ensure geographic search works
+  const effectiveLimit = filters.mapBounds ? Math.max(listingLimit, 2000) : listingLimit;
+  const { data: activities, isLoading } = useAllActivities(effectiveLimit);
   const { location: userLocation } = useUserLocation();
   const importVenue = useImportFoursquareVenue();
   const importGoogleVenue = useImportGoogleVenue();
