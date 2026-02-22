@@ -1,7 +1,13 @@
 import { Link } from "react-router-dom";
-import { useWhatsOnToday, type WhatsOnItem } from "@/hooks/useWhatsOnToday";
+import { useWhatsOnToday } from "@/hooks/useWhatsOnToday";
 import { useRecommendedActivities } from "@/hooks/useActivities";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Trash2, Loader2 } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useState } from "react";
 import {
   Carousel,
   CarouselContent,
@@ -16,15 +22,91 @@ interface FeaturedItem {
   address?: string;
   linkTo: string;
   isEvent?: boolean;
+  activityId?: string;
+}
+
+function HeroCard({ item, isAdmin }: { item: FeaturedItem; isAdmin: boolean }) {
+  const queryClient = useQueryClient();
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!item.activityId) return;
+    if (!confirm(`Delete "${item.name}"?`)) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.rpc("admin_delete_activity", {
+        p_activity_id: item.activityId,
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["whats-on-today"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      queryClient.invalidateQueries({ queryKey: ["recommended-activities"] });
+      toast.success("Deleted");
+    } catch (err: any) {
+      toast.error(err.message || "Delete failed");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <Link
+      to={item.linkTo}
+      className="relative block w-full aspect-[4/5] sm:aspect-[16/9] overflow-hidden group max-h-[45dvh]"
+    >
+      <img
+        src={item.imageUrl}
+        alt={item.name}
+        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+      {/* Admin delete */}
+      {isAdmin && item.activityId && (
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="absolute top-3 right-3 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-destructive/80 backdrop-blur-sm hover:bg-destructive transition-colors shadow-sm"
+          aria-label="Delete"
+        >
+          {deleting ? (
+            <Loader2 className="w-4 h-4 text-white animate-spin" />
+          ) : (
+            <Trash2 className="w-4 h-4 text-white" />
+          )}
+        </button>
+      )}
+
+      {/* Featured badge */}
+      <div className="absolute bottom-28 sm:bottom-24 left-4 z-10">
+        <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
+          Featured
+        </span>
+      </div>
+
+      {/* Title & details */}
+      <div className="absolute bottom-4 left-4 right-4 z-10 space-y-1">
+        <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight line-clamp-2">
+          {item.name}
+        </h2>
+        <div className="flex items-center gap-3 text-white/80 text-sm">
+          {item.category && <span>{item.category}</span>}
+          {item.address && <span>📍 {item.address}</span>}
+        </div>
+      </div>
+    </Link>
+  );
 }
 
 export function HeroFeatured() {
   const { data: whatsOn, isLoading: whatsOnLoading } = useWhatsOnToday(5);
   const { data: recommended, isLoading: recLoading } = useRecommendedActivities(5);
+  const isAdmin = useIsAdmin();
 
   const isLoading = whatsOnLoading && recLoading;
 
-  // Build featured items: mix of What's On events + top recommended activities
   const items: FeaturedItem[] = [];
 
   if (whatsOn?.length) {
@@ -37,6 +119,7 @@ export function HeroFeatured() {
           category: item.category || undefined,
           linkTo: item.activityId ? `/event/${item.activityId}` : (item.url || "#"),
           isEvent: true,
+          activityId: item.activityId,
         });
       }
     });
@@ -52,6 +135,7 @@ export function HeroFeatured() {
           category: a.category,
           address: a.address?.split(",").slice(-2).join(",").trim(),
           linkTo: a.isEvent ? `/event/${a.id}` : `/activity/${a.id}`,
+          activityId: a.id,
         });
       }
     });
@@ -70,35 +154,7 @@ export function HeroFeatured() {
       <CarouselContent className="ml-0">
         {items.map((item) => (
           <CarouselItem key={item.id} className="pl-0 basis-full">
-            <Link
-              to={item.linkTo}
-              className="relative block w-full aspect-[4/5] sm:aspect-[16/9] overflow-hidden group max-h-[45dvh]"
-            >
-              <img
-                src={item.imageUrl}
-                alt={item.name}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-
-              {/* Featured badge */}
-              <div className="absolute bottom-28 sm:bottom-24 left-4 z-10">
-                <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
-                  Featured
-                </span>
-              </div>
-
-              {/* Title & details */}
-              <div className="absolute bottom-4 left-4 right-4 z-10 space-y-1">
-                <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight line-clamp-2">
-                  {item.name}
-                </h2>
-                <div className="flex items-center gap-3 text-white/80 text-sm">
-                  {item.category && <span>{item.category}</span>}
-                  {item.address && <span>📍 {item.address}</span>}
-                </div>
-              </div>
-            </Link>
+            <HeroCard item={item} isAdmin={isAdmin} />
           </CarouselItem>
         ))}
       </CarouselContent>
