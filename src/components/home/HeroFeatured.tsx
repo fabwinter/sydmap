@@ -59,7 +59,7 @@ export function HeroFeatured() {
 
   if (isLoading || items.length === 0) {
     return (
-      <div className="relative w-full aspect-[3/4] sm:aspect-[16/9] bg-muted rounded-none">
+      <div className="relative w-full aspect-[4/5] sm:aspect-[16/9] bg-muted rounded-none max-h-[45dvh]">
         <Skeleton className="absolute inset-0 rounded-none" />
       </div>
     );
@@ -72,7 +72,7 @@ export function HeroFeatured() {
           <CarouselItem key={item.id} className="pl-0 basis-full">
             <Link
               to={item.linkTo}
-              className="relative block w-full aspect-[3/4] sm:aspect-[16/9] overflow-hidden group"
+              className="relative block w-full aspect-[4/5] sm:aspect-[16/9] overflow-hidden group max-h-[45dvh]"
             >
               <img
                 src={item.imageUrl}
@@ -82,7 +82,7 @@ export function HeroFeatured() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
               {/* Featured badge */}
-              <div className="absolute bottom-24 sm:bottom-20 left-4 z-10">
+              <div className="absolute bottom-28 sm:bottom-24 left-4 z-10">
                 <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
                   Featured
                 </span>
