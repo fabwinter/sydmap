@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCheckInTimeline } from "@/hooks/useCheckInTimeline";
 import { useAuth } from "@/hooks/useAuth";
 import { TimelineMap } from "@/components/timeline/TimelineMap";
+import { MediaLightbox } from "@/components/ui/MediaLightbox";
 import {
   Select,
   SelectContent,
