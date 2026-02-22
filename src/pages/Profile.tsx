@@ -214,7 +214,7 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="max-w-lg mx-auto">
+      <div className="max-w-lg lg:max-w-4xl mx-auto">
         {/* Profile Header — modern gradient hero */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-primary/5 to-background" />
@@ -288,7 +288,7 @@ export default function Profile() {
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <div className="rounded-2xl bg-muted/60 p-6 flex flex-col items-center justify-center min-h-[120px]">
                   <Bookmark className="w-8 h-8 text-muted-foreground mb-2" />
                   <p className="font-semibold text-sm">Saved places</p>
@@ -385,7 +385,7 @@ export default function Profile() {
               </div>
               
               {recentCheckIns.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
                   {recentCheckIns.slice(0, 6).map((checkIn) => (
                     <Link key={checkIn.id} to={`/activity/${checkIn.activities?.id}`} className="block relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group">
                       <img
@@ -417,7 +417,7 @@ export default function Profile() {
           {/* Check-Ins Tab */}
           <TabsContent value="checkins">
             {recentCheckIns.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
                 {recentCheckIns.map((checkIn) => (
                   <CheckInCard key={checkIn.id} checkIn={checkIn} />
                 ))}
@@ -447,7 +447,7 @@ export default function Profile() {
                 <Skeleton key={i} className="aspect-[4/3] rounded-2xl" />
               ))
             ) : savedItems && savedItems.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
                 {savedItems.map((item) => (
                   <Link
                     key={item.id}
@@ -546,7 +546,7 @@ export default function Profile() {
                 ))}
               </div>
             ) : playlists && playlists.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {playlists.map((playlist) => (
                   <div
                     key={playlist.id}
