@@ -246,7 +246,10 @@ export default function ActivityDetails() {
         )}
       </div>
       
-      <div className="px-4 py-4 space-y-6 max-w-2xl mx-auto">
+      <div className="px-4 py-4 space-y-6 max-w-2xl md:max-w-6xl mx-auto">
+        <div className="md:flex md:gap-8">
+          {/* Left column */}
+          <div className="md:flex-1 space-y-6">
         {/* Title Block */}
         <div>
           <h1 className="text-2xl font-bold text-foreground">{activity.name}</h1>
