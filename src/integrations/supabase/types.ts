@@ -281,6 +281,7 @@ export type Database = {
           created_at: string
           id: string
           photo_url: string | null
+          photo_urls: string[] | null
           rating: number
           share_with_friends: boolean
           user_id: string
@@ -292,6 +293,7 @@ export type Database = {
           created_at?: string
           id?: string
           photo_url?: string | null
+          photo_urls?: string[] | null
           rating: number
           share_with_friends?: boolean
           user_id: string
@@ -303,6 +305,7 @@ export type Database = {
           created_at?: string
           id?: string
           photo_url?: string | null
+          photo_urls?: string[] | null
           rating?: number
           share_with_friends?: boolean
           user_id?: string
