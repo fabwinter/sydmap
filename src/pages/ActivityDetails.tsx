@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { MediaLightbox } from "@/components/ui/MediaLightbox";
+import {
   ArrowLeft,
   Heart,
   MapPin,
