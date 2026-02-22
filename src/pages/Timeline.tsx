@@ -203,60 +203,13 @@ export default function Timeline() {
                           const heroImg = checkInPhotos[0] || checkIn.activities?.hero_image_url;
 
                           return (
-                            <div key={checkIn.id} className="relative pl-8">
-                              <div className="absolute left-0 top-6 -translate-x-[calc(50%-1px)] w-4 h-4 rounded-full bg-primary border-[3px] border-background shadow-sm z-10 flex items-center justify-center">
-                                <MapPin className="w-2 h-2 text-primary-foreground" />
-                              </div>
-                              <Link
-                                to={`/activity/${checkIn.activity_id}`}
-                                className="block relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group"
-                              >
-                                {heroImg ? (
-                                  <img
-                                    src={heroImg}
-                                    alt={checkIn.activities?.name || ""}
-                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                  />
-                                ) : (
-                                  <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted-foreground/20" />
-                                )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-                                <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
-                                  <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
-                                    {checkIn.activities?.name || "Unknown venue"}
-                                  </h3>
-                                  <p className="text-xs text-white/70">
-                                    {checkIn.activities?.category}
-                                    {checkIn.activities?.address && ` · ${checkIn.activities.address.split(",")[0]}`}
-                                  </p>
-                                  <div className="flex items-center gap-3 pt-0.5">
-                                    {checkIn.rating > 0 && (
-                                      <span className="flex items-center gap-0.5 text-xs font-semibold text-warning">
-                                        <Star className="w-3 h-3 fill-current" />
-                                        {checkIn.rating}
-                                      </span>
-                                    )}
-                                    <span className="text-xs text-white/60 flex items-center gap-1">
-                                      <Clock className="w-3 h-3" />
-                                      {time}
-                                    </span>
-                                  </div>
-                                  {checkIn.comment && (
-                                    <p className="text-xs text-white/60 italic line-clamp-1 mt-0.5">
-                                      "{checkIn.comment}"
-                                    </p>
-                                  )}
-                                </div>
-                              </Link>
-                              {/* Photo thumbnails if multiple */}
-                              {checkInPhotos.length > 1 && (
-                                <div className="flex gap-1.5 mt-2 overflow-x-auto scrollbar-hide">
-                                  {checkInPhotos.map((url: string, i: number) => (
-                                    <img key={i} src={url} alt={`Photo ${i + 1}`} className="w-16 h-12 rounded-lg object-cover shrink-0" />
-                                  ))}
-                                </div>
-                              )}
-                            </div>
+                            <TimelineCheckInCard
+                              key={checkIn.id}
+                              checkIn={checkIn}
+                              time={time}
+                              photos={checkInPhotos}
+                              heroImg={heroImg}
+                            />
                           );
                         })}
                       </div>
