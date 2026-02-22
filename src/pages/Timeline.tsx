@@ -71,28 +71,29 @@ export default function Timeline() {
 
   const hasDateFilter = !!dateRange?.from;
 
-  return (
-    <AppLayout>
-      <div className="px-4 py-4 space-y-4 max-w-lg lg:max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Timeline</h1>
-            <p className="text-sm text-muted-foreground">{totalCheckIns} places visited</p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={() => setView(view === "list" ? "map" : "list")}
-          >
-            {view === "list" ? (
-              <><Map className="w-4 h-4" /> Map</>
-            ) : (
-              <><LayoutList className="w-4 h-4" /> List</>
-            )}
-          </Button>
-        </div>
+   return (
+     <AppLayout>
+       <div className="px-4 py-4 space-y-4 max-w-lg lg:max-w-7xl mx-auto">
+         {/* Header */}
+         <div className="flex items-center justify-between">
+           <div>
+             <h1 className="text-2xl font-bold">Timeline</h1>
+             <p className="text-sm text-muted-foreground">{totalCheckIns} places visited</p>
+           </div>
+           {/* Toggle only on mobile */}
+           <Button
+             variant="outline"
+             size="sm"
+             className="gap-2 lg:hidden"
+             onClick={() => setView(view === "list" ? "map" : "list")}
+           >
+             {view === "list" ? (
+               <><Map className="w-4 h-4" /> Map</>
+             ) : (
+               <><LayoutList className="w-4 h-4" /> List</>
+             )}
+           </Button>
+         </div>
 
         {/* Search & Filters */}
         <div className="space-y-3">
@@ -162,126 +163,126 @@ export default function Timeline() {
           </div>
         </div>
 
-        {view === "map" ? (
-          <div className="rounded-xl overflow-hidden" style={{ height: "calc(100vh - 280px)" }}>
-            <TimelineMap groups={filteredGroups || []} />
-          </div>
-        ) : (
-        <div className="space-y-8 pb-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
-          {isLoading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="space-y-3">
-                <Skeleton className="h-5 w-32" />
-                <div className="space-y-4 ml-4">
-                  {Array.from({ length: 2 }).map((_, j) => (
-                    <div key={j} className="flex gap-3 p-3 bg-card rounded-xl border border-border">
-                      <Skeleton className="w-20 h-20 rounded-lg shrink-0" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-3 w-1/2" />
+        {/* Desktop: side-by-side | Mobile: toggle */}
+        <div className="lg:flex lg:gap-6">
+          {/* List column - hidden on mobile when map view active */}
+          <div className={`${view === "map" ? "hidden" : ""} lg:block lg:flex-1 lg:overflow-y-auto lg:max-h-[calc(100vh-260px)] lg:pr-2`}>
+            <div className="space-y-8 pb-4">
+              {isLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="h-5 w-32" />
+                    <div className="space-y-4 ml-4">
+                      {Array.from({ length: 2 }).map((_, j) => (
+                        <div key={j} className="flex gap-3 p-3 bg-card rounded-xl border border-border">
+                          <Skeleton className="w-20 h-20 rounded-lg shrink-0" />
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-4 w-3/4" />
+                            <Skeleton className="h-3 w-1/2" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : filteredGroups && filteredGroups.length > 0 ? (
+                filteredGroups.map((group) => (
+                  <div key={group.date}>
+                    <h2 className="font-bold text-lg mb-4">{group.label}</h2>
+                    <div className="relative ml-3">
+                      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/25 rounded-full" />
+                      <div className="space-y-4">
+                        {group.checkIns.map((checkIn) => {
+                          const time = new Date(checkIn.created_at).toLocaleTimeString("en-AU", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          });
+                          const heroImg = checkIn.photo_url || checkIn.activities?.hero_image_url;
+
+                          return (
+                            <div key={checkIn.id} className="relative pl-8">
+                              <div className="absolute left-0 top-6 -translate-x-[calc(50%-1px)] w-4 h-4 rounded-full bg-primary border-[3px] border-background shadow-sm z-10 flex items-center justify-center">
+                                <MapPin className="w-2 h-2 text-primary-foreground" />
+                              </div>
+                              <Link
+                                to={`/activity/${checkIn.activity_id}`}
+                                className="block relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group"
+                              >
+                                {heroImg ? (
+                                  <img
+                                    src={heroImg}
+                                    alt={checkIn.activities?.name || ""}
+                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  />
+                                ) : (
+                                  <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted-foreground/20" />
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                                <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
+                                  <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
+                                    {checkIn.activities?.name || "Unknown venue"}
+                                  </h3>
+                                  <p className="text-xs text-white/70">
+                                    {checkIn.activities?.category}
+                                    {checkIn.activities?.address && ` · ${checkIn.activities.address.split(",")[0]}`}
+                                  </p>
+                                  <div className="flex items-center gap-3 pt-0.5">
+                                    {checkIn.rating > 0 && (
+                                      <span className="flex items-center gap-0.5 text-xs font-semibold text-warning">
+                                        <Star className="w-3 h-3 fill-current" />
+                                        {checkIn.rating}
+                                      </span>
+                                    )}
+                                    <span className="text-xs text-white/60 flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      {time}
+                                    </span>
+                                  </div>
+                                  {checkIn.comment && (
+                                    <p className="text-xs text-white/60 italic line-clamp-1 mt-0.5">
+                                      "{checkIn.comment}"
+                                    </p>
+                                  )}
+                                </div>
+                              </Link>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))
-          ) : filteredGroups && filteredGroups.length > 0 ? (
-            filteredGroups.map((group) => (
-              <div key={group.date}>
-                <h2 className="font-bold text-lg mb-4">{group.label}</h2>
-                {/* Timeline track */}
-                <div className="relative ml-3">
-                  {/* Vertical line */}
-                  <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/25 rounded-full" />
-
-                  <div className="space-y-4">
-                    {group.checkIns.map((checkIn) => {
-                      const time = new Date(checkIn.created_at).toLocaleTimeString("en-AU", {
-                        hour: "numeric",
-                        minute: "2-digit",
-                        hour12: true,
-                      });
-                      const heroImg = checkIn.photo_url || checkIn.activities?.hero_image_url;
-
-                      return (
-                        <div key={checkIn.id} className="relative pl-8">
-                          {/* Timeline dot */}
-                          <div className="absolute left-0 top-6 -translate-x-[calc(50%-1px)] w-4 h-4 rounded-full bg-primary border-[3px] border-background shadow-sm z-10 flex items-center justify-center">
-                            <MapPin className="w-2 h-2 text-primary-foreground" />
-                          </div>
-
-                          <Link
-                            to={`/activity/${checkIn.activity_id}`}
-                            className="block relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group"
-                          >
-                            {heroImg ? (
-                              <img
-                                src={heroImg}
-                                alt={checkIn.activities?.name || ""}
-                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                            ) : (
-                              <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted-foreground/20" />
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-                            <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
-                              <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
-                                {checkIn.activities?.name || "Unknown venue"}
-                              </h3>
-                              <p className="text-xs text-white/70">
-                                {checkIn.activities?.category}
-                                {checkIn.activities?.address && ` · ${checkIn.activities.address.split(",")[0]}`}
-                              </p>
-                              <div className="flex items-center gap-3 pt-0.5">
-                                {checkIn.rating > 0 && (
-                                  <span className="flex items-center gap-0.5 text-xs font-semibold text-warning">
-                                    <Star className="w-3 h-3 fill-current" />
-                                    {checkIn.rating}
-                                  </span>
-                                )}
-                                <span className="text-xs text-white/60 flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  {time}
-                                </span>
-                              </div>
-                              {checkIn.comment && (
-                                <p className="text-xs text-white/60 italic line-clamp-1 mt-0.5">
-                                  "{checkIn.comment}"
-                                </p>
-                              )}
-                            </div>
-                          </Link>
-                        </div>
-                      );
-                    })}
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="font-medium">
+                    {hasDateFilter ? "No check-ins in this date range" : "No check-ins yet"}
+                  </p>
+                  <p className="text-sm mt-1">
+                    {hasDateFilter
+                      ? "Try a different date range or clear the filter."
+                      : "Start checking in to build your timeline!"}
+                  </p>
+                  {!hasDateFilter && (
+                    <Button
+                      variant="link"
+                      className="mt-2 text-primary"
+                      onClick={() => navigate("/")}
+                    >
+                      Explore activities
+                    </Button>
+                  )}
                 </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="font-medium">
-                {hasDateFilter ? "No check-ins in this date range" : "No check-ins yet"}
-              </p>
-              <p className="text-sm mt-1">
-                {hasDateFilter
-                  ? "Try a different date range or clear the filter."
-                  : "Start checking in to build your timeline!"}
-              </p>
-              {!hasDateFilter && (
-                <Button
-                  variant="link"
-                  className="mt-2 text-primary"
-                  onClick={() => navigate("/")}
-                >
-                  Explore activities
-                </Button>
               )}
             </div>
-          )}
+          </div>
+
+          {/* Map column - hidden on mobile when list view active, always visible on desktop */}
+          <div className={`${view === "list" ? "hidden" : ""} lg:block lg:w-[55%] lg:sticky lg:top-4 rounded-xl overflow-hidden`} style={{ height: "calc(100vh - 260px)" }}>
+            <TimelineMap groups={filteredGroups || []} />
+          </div>
         </div>
-        )}
       </div>
     </AppLayout>
   );
