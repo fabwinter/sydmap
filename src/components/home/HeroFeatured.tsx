@@ -13,6 +13,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 interface FeaturedItem {
   id: string;
@@ -83,7 +84,7 @@ function HeroCard({ item, isAdmin }: { item: FeaturedItem; isAdmin: boolean }) {
 
       {/* Admin buttons */}
       {isAdmin && item.activityId && (
-        <div className="absolute top-3 right-3 z-20 flex gap-1.5">
+        <div className="absolute bottom-16 right-3 z-20 flex gap-1.5">
           <button
             onClick={handleRemoveFeatured}
             disabled={toggleFeatured.isPending}
@@ -162,7 +163,7 @@ export function HeroFeatured() {
   }
 
   return (
-    <Carousel opts={{ align: "start", loop: true }} className="w-full">
+    <Carousel opts={{ align: "start", loop: true }} plugins={[Autoplay({ delay: 5000, stopOnInteraction: true, stopOnMouseEnter: true })]} className="w-full">
       <CarouselContent className="ml-0">
         {items.map((item) => (
           <CarouselItem key={item.id} className="pl-0 basis-full">
