@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import Map, { Marker, Popup, GeolocateControl, NavigationControl, MapRef } from "react-map-gl/mapbox";
+import Map, { Popup, GeolocateControl, NavigationControl, MapRef } from "react-map-gl/mapbox";
 import { LngLatBounds } from "mapbox-gl";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MapPin, Star, LayoutList, MapIcon, Search, Plus, CheckSquare, Square } from "lucide-react";
@@ -14,6 +14,7 @@ import { useFoursquareSearch, type FoursquareVenue, normalizeFoursquareCategory 
 import { useImportFoursquareVenue } from "@/hooks/useImportFoursquareVenue";
 import { useGooglePlacesSearch, type GooglePlaceVenue, normalizeGoogleCategory } from "@/hooks/useGooglePlacesSearch";
 import { useImportGoogleVenue } from "@/hooks/useImportGoogleVenue";
+import { MapMarker } from "@/components/map/MapMarker";
 
 type SourceFilter = "all" | "db" | "foursquare" | "google";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -44,7 +45,7 @@ const tagToColumn: Record<string, keyof Activity> = {
 export default function MapView() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [listingLimit, setListingLimit] = useState(500);
+  const [listingLimit, setListingLimit] = useState(200);
   const { filters, setMapBounds } = useSearchFilters();
   // When map bounds are active, fetch all activities to ensure geographic search works
   const effectiveLimit = filters.mapBounds ? Math.max(listingLimit, 2000) : listingLimit;
@@ -398,6 +399,36 @@ export default function MapView() {
     userMovedMap.current = true;
   }, []);
 
+  // Viewport culling: only render markers visible on screen + a small buffer
+  const visibleActivities = useMemo(() => {
+    if (!mapRef.current) return filteredActivities;
+    const bounds = mapRef.current.getBounds();
+    if (!bounds) return filteredActivities;
+    const latBuffer = (bounds.getNorth() - bounds.getSouth()) * 0.1;
+    const lngBuffer = (bounds.getEast() - bounds.getWest()) * 0.1;
+    const north = bounds.getNorth() + latBuffer;
+    const south = bounds.getSouth() - latBuffer;
+    const east = bounds.getEast() + lngBuffer;
+    const west = bounds.getWest() - lngBuffer;
+    return filteredActivities.filter(
+      (a) => a.latitude >= south && a.latitude <= north && a.longitude >= west && a.longitude <= east
+    );
+  }, [filteredActivities, viewState.latitude, viewState.longitude, viewState.zoom]);
+
+  // Use simplified dot markers at low zoom or when too many visible
+  const simplified = viewState.zoom < 13 || visibleActivities.length > 200;
+
+  const handleMarkerClickCb = useCallback(
+    (activity: Activity) => {
+      if (bulkMode) {
+        toggleBulkSelect(activity.id);
+      } else {
+        handleMarkerClick(activity);
+      }
+    },
+    [bulkMode, toggleBulkSelect, handleMarkerClick]
+  );
+
   if (!MAPBOX_TOKEN) {
     return (
       <AppLayout fullHeight>
@@ -430,52 +461,18 @@ export default function MapView() {
       <NavigationControl position="bottom-right" style={{ marginBottom: "20px" }} />
       <GeolocateControl position="bottom-right" style={{ marginBottom: "80px" }} trackUserLocation showUserHeading />
 
-      {filteredActivities.map((activity) => {
-        const meta = getCategoryMeta(activity.category);
-        const IconComponent = meta.icon;
-        const colorClass = meta.bg;
-        const textColor = meta.text;
-        const isSelected = selectedActivity?.id === activity.id;
-        const isFoursquare = activity.id.startsWith("fs-");
-        const isGoogle = activity.id.startsWith("g-");
-        const isBulkSelected = bulkSelected.has(activity.id);
-        const sourceBadgeColor = isGoogle ? "bg-blue-500" : isFoursquare ? "bg-orange-500" : "bg-green-600";
-        const sourceBadgeLabel = isGoogle ? "G" : isFoursquare ? "F" : "DB";
-        return (
-          <Marker key={activity.id} latitude={activity.latitude} longitude={activity.longitude} anchor="bottom"
-            onClick={(e) => {
-              e.originalEvent.stopPropagation();
-              if (bulkMode) {
-                toggleBulkSelect(activity.id);
-              } else {
-                handleMarkerClick(activity);
-              }
-            }}
-          >
-            <div className="flex flex-col items-center" style={{ transform: 'translateY(0)' }}>
-              <span
-                className={`${textColor} text-[11px] font-bold leading-tight max-w-[100px] truncate px-1 py-0.5 rounded bg-white/80 backdrop-blur-sm mb-0.5 text-center`}
-              >
-                {activity.name}
-              </span>
-              <div className="relative">
-                <div className={`rounded-full ${colorClass} flex items-center justify-center shadow-lg cursor-pointer transform transition-transform hover:scale-110 ${isBulkSelected ? "w-12 h-12 ring-3 ring-destructive scale-110" : isSelected ? "w-12 h-12 ring-2 ring-white scale-110" : "w-10 h-10"}`}>
-                  {bulkMode ? (
-                    isBulkSelected ? <CheckSquare className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} /> : <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
-                  ) : (
-                    <IconComponent className={`text-white ${isSelected ? "w-6 h-6" : "w-5 h-5"}`} />
-                  )}
-                </div>
-                {isAdmin && !bulkMode && (
-                  <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white text-[8px] font-bold ${sourceBadgeColor}`}>
-                    {sourceBadgeLabel}
-                  </div>
-                )}
-              </div>
-            </div>
-          </Marker>
-        );
-      })}
+      {visibleActivities.map((activity) => (
+        <MapMarker
+          key={activity.id}
+          activity={activity}
+          isSelected={selectedActivity?.id === activity.id}
+          isBulkSelected={bulkSelected.has(activity.id)}
+          bulkMode={bulkMode}
+          isAdmin={isAdmin}
+          simplified={simplified}
+          onClick={handleMarkerClickCb}
+        />
+      ))}
 
       {selectedActivity && !isMobile && (
         <Popup latitude={selectedActivity.latitude} longitude={selectedActivity.longitude} anchor="bottom" onClose={() => setSelectedActivity(null)} closeButton closeOnClick={false} offset={45}>
