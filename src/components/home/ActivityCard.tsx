@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { MapPin, Star, Heart, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake, Sparkles, Loader2, Trash2 } from "lucide-react";
+import { MapPin, Star, Heart, Coffee, Waves, TreePine, Utensils, Wine, Landmark, ShoppingBag, Dumbbell, Cake, Sparkles, Loader2, Trash2, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsActivitySaved, useToggleSavedItem } from "@/hooks/useSavedItems";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { useToggleWhatsOn } from "@/hooks/useWhatsOnToday";
+import { useToggleWhatsOn, useToggleFeatured } from "@/hooks/useWhatsOnToday";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -136,7 +136,7 @@ function WhatsOnButton({
     <button
       onClick={handleClick}
       disabled={toggleWhatsOn.isPending}
-      className={`absolute top-3 left-3 z-10 w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${
+      className={`w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${
         showInWhatsOn
           ? "bg-warning/90 text-white"
           : "bg-white/20 text-white hover:bg-white/40"
@@ -148,6 +148,56 @@ function WhatsOnButton({
         <Loader2 className="w-4 h-4 animate-spin" />
       ) : (
         <Sparkles className="w-4 h-4" />
+      )}
+    </button>
+  );
+}
+
+function FeaturedButton({
+  activityId,
+  name,
+  showInFeatured,
+}: {
+  activityId: string;
+  name: string;
+  showInFeatured?: boolean;
+}) {
+  const toggleFeatured = useToggleFeatured();
+  const newState = !showInFeatured;
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFeatured.mutate(
+      { activityId, show: newState },
+      {
+        onSuccess: () =>
+          toast.success(
+            newState
+              ? `"${name}" added to Featured`
+              : `"${name}" removed from Featured`
+          ),
+        onError: (err) => toast.error(err.message || "Failed"),
+      }
+    );
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={toggleFeatured.isPending}
+      className={`w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${
+        showInFeatured
+          ? "bg-primary/90 text-white"
+          : "bg-white/20 text-white hover:bg-white/40"
+      }`}
+      aria-label={showInFeatured ? "Remove from Featured" : "Add to Featured"}
+      title={showInFeatured ? "Remove from Featured" : "Add to Featured"}
+    >
+      {toggleFeatured.isPending ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : (
+        <Award className="w-4 h-4" />
       )}
     </button>
   );
@@ -244,13 +294,20 @@ export function ActivityCard({ activity, variant = "default" }: ActivityCardProp
         </div>
       )}
 
-      {/* Admin: What's On toggle */}
+      {/* Admin: What's On + Featured toggles */}
       {isAdmin && (
-        <WhatsOnButton
-          activityId={activity.id}
-          name={activity.name}
-          showInWhatsOn={activity.showInWhatsOn}
-        />
+        <div className="absolute top-3 left-3 z-10 flex gap-1">
+          <WhatsOnButton
+            activityId={activity.id}
+            name={activity.name}
+            showInWhatsOn={activity.showInWhatsOn}
+          />
+          <FeaturedButton
+            activityId={activity.id}
+            name={activity.name}
+            showInFeatured={activity.showInFeatured}
+          />
+        </div>
       )}
 
       {/* Heart button — top right */}

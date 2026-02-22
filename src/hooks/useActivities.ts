@@ -21,6 +21,7 @@ export interface ActivityDisplay {
   region?: string;
   address?: string;
   showInWhatsOn?: boolean;
+  showInFeatured?: boolean;
 }
 
 // Sydney CBD as fallback
@@ -53,6 +54,7 @@ export function transformActivity(activity: Activity, lat?: number, lng?: number
     region: activity.region ?? undefined,
     address: activity.address ?? undefined,
     showInWhatsOn: activity.show_in_whats_on,
+    showInFeatured: activity.show_in_featured,
   };
 }
 

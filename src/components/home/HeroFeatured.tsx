@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useWhatsOnToday } from "@/hooks/useWhatsOnToday";
 import { useRecommendedActivities } from "@/hooks/useActivities";
+import { useFeaturedHeroActivities } from "@/hooks/useFeaturedHero";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2, Loader2 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -43,6 +44,7 @@ function HeroCard({ item, isAdmin }: { item: FeaturedItem; isAdmin: boolean }) {
       queryClient.invalidateQueries({ queryKey: ["whats-on-today"] });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       queryClient.invalidateQueries({ queryKey: ["recommended-activities"] });
+      queryClient.invalidateQueries({ queryKey: ["featured-hero"] });
       toast.success("Deleted");
     } catch (err: any) {
       toast.error(err.message || "Delete failed");
@@ -101,17 +103,36 @@ function HeroCard({ item, isAdmin }: { item: FeaturedItem; isAdmin: boolean }) {
 }
 
 export function HeroFeatured() {
+  const { data: featured, isLoading: featuredLoading } = useFeaturedHeroActivities(5);
   const { data: whatsOn, isLoading: whatsOnLoading } = useWhatsOnToday(5);
   const { data: recommended, isLoading: recLoading } = useRecommendedActivities(5);
   const isAdmin = useIsAdmin();
 
-  const isLoading = whatsOnLoading && recLoading;
+  const isLoading = featuredLoading && whatsOnLoading && recLoading;
 
   const items: FeaturedItem[] = [];
 
-  if (whatsOn?.length) {
-    whatsOn.slice(0, 3).forEach((item) => {
-      if (item.imageUrl) {
+  // 1. Featured activities first
+  if (featured?.length) {
+    featured.forEach((a) => {
+      if (a.image) {
+        items.push({
+          id: a.id,
+          name: a.name,
+          imageUrl: a.image,
+          category: a.category,
+          address: a.address?.split(",").slice(-2).join(",").trim(),
+          linkTo: a.isEvent ? `/event/${a.id}` : `/activity/${a.id}`,
+          activityId: a.id,
+        });
+      }
+    });
+  }
+
+  // 2. Fill with What's On
+  if (whatsOn?.length && items.length < 5) {
+    whatsOn.slice(0, 5 - items.length).forEach((item) => {
+      if (item.imageUrl && !items.some(i => i.activityId === item.activityId)) {
         items.push({
           id: item.id,
           name: item.title,
@@ -125,9 +146,10 @@ export function HeroFeatured() {
     });
   }
 
-  if (recommended?.length) {
+  // 3. Fill with recommended
+  if (recommended?.length && items.length < 5) {
     recommended.slice(0, 5 - items.length).forEach((a) => {
-      if (a.image) {
+      if (a.image && !items.some(i => i.activityId === a.id)) {
         items.push({
           id: a.id,
           name: a.name,

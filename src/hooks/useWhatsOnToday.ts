@@ -94,3 +94,22 @@ export function useToggleWhatsOn() {
     },
   });
 }
+
+/** Toggle show_in_featured for an activity */
+export function useToggleFeatured() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ activityId, show }: { activityId: string; show: boolean }) => {
+      const { error } = await supabase.rpc("admin_update_activity", {
+        p_activity_id: activityId,
+        p_updates: { show_in_featured: show } as any,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recommended-activities"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+    },
+  });
+}
