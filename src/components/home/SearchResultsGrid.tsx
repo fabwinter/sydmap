@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { ArrowDownAZ, ArrowUpZA, Star, Grid3X3, MapPin, Navigation } from "lucide-react";
+import { ArrowDownAZ, ArrowUpZA, Star, Grid3X3, MapPin, Navigation, MapIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { ActivityCard } from "./ActivityCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchFilters, type SortOption } from "@/hooks/useSearchFilters";
@@ -62,6 +63,7 @@ function groupActivities(activities: ActivityDisplay[], sortBy: SortOption): Gro
 
 export function SearchResultsGrid({ activities, isLoading }: SearchResultsGridProps) {
   const { filters, setSortBy } = useSearchFilters();
+  const navigate = useNavigate();
 
   const grouped = useMemo(() => {
     if (!activities) return [];
@@ -124,6 +126,17 @@ export function SearchResultsGrid({ activities, isLoading }: SearchResultsGridPr
               </div>
             </div>
           ))}
+
+          {/* View on Map button */}
+          <div className="flex justify-center pt-2 pb-4">
+            <button
+              onClick={() => navigate("/map")}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-sm shadow-md hover:opacity-90 transition-opacity"
+            >
+              <MapIcon className="w-4 h-4" />
+              View on Map
+            </button>
+          </div>
         </div>
       )}
     </section>
