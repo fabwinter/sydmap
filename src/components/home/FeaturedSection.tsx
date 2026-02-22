@@ -1,5 +1,5 @@
-import { Sparkles, RefreshCw, EyeOff, Trash2, Loader2, Heart } from "lucide-react";
-import { useWhatsOnToday, useToggleWhatsOn, type WhatsOnItem } from "@/hooks/useWhatsOnToday";
+import { Sparkles, RefreshCw, EyeOff, Trash2, Loader2, Heart, Award } from "lucide-react";
+import { useWhatsOnToday, useToggleWhatsOn, useToggleFeatured, type WhatsOnItem } from "@/hooks/useWhatsOnToday";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
@@ -38,6 +38,20 @@ function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean })
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
   const toggleWhatsOn = useToggleWhatsOn();
+  const toggleFeatured = useToggleFeatured();
+
+  const handleToggleFeatured = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!item.activityId) return;
+    toggleFeatured.mutate(
+      { activityId: item.activityId, show: true },
+      {
+        onSuccess: () => toast.success(`Added to Featured`),
+        onError: (err) => toast.error(err.message || "Failed"),
+      }
+    );
+  };
   const categoryColor = categoryColors[item.category || ""] || "bg-primary";
 
   const handleRemove = (e: React.MouseEvent) => {
@@ -113,22 +127,8 @@ function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean })
         <Heart className="w-4 h-4 text-white" />
       </button>
 
-      {/* Admin delete button — bottom right (always visible for admins) */}
-      {isAdmin && item.activityId && (
-        <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="absolute bottom-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-destructive/80 backdrop-blur-sm hover:bg-destructive transition-colors shadow-sm"
-          aria-label="Delete"
-          title="Delete event"
-        >
-          {deleting ? (
-            <Loader2 className="w-4 h-4 text-white animate-spin" />
-          ) : (
-            <Trash2 className="w-4 h-4 text-white" />
-          )}
-        </button>
-      )}
+
+
 
       {/* Admin buttons */}
       {isAdmin && item.activityId && (
@@ -143,6 +143,18 @@ function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean })
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             ) : (
               <EyeOff className="w-3.5 h-3.5" />
+            )}
+          </button>
+          <button
+            onClick={handleToggleFeatured}
+            disabled={toggleFeatured.isPending}
+            className="p-1.5 rounded-full bg-primary/90 text-white hover:bg-primary transition-colors shadow-sm"
+            title="Add to Featured"
+          >
+            {toggleFeatured.isPending ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Award className="w-3.5 h-3.5" />
             )}
           </button>
           <button
@@ -162,12 +174,12 @@ function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean })
 
       {/* Info overlay — bottom */}
       <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
-        <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
+        <h3 className="font-bold text-sm text-white leading-tight line-clamp-2">
           {item.title}
         </h3>
         <div className="flex items-center gap-2 flex-wrap">
           {item.date && (
-            <span className="text-white/80 text-xs font-medium">{item.date}</span>
+            <span className="text-white/80 text-xs font-medium line-clamp-1">{item.date}</span>
           )}
           {item.excerpt && !item.date && (
             <span className="text-white/70 text-xs line-clamp-1">{item.excerpt}</span>
