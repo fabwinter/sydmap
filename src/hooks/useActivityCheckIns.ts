@@ -21,7 +21,7 @@ export function useActivityCheckIns(activityId: string) {
 
       const { data, error } = await supabase
         .from("check_ins")
-        .select("*")
+        .select("*, photo_urls")
         .eq("user_id", profile.id)
         .eq("activity_id", activityId)
         .order("created_at", { ascending: false });
