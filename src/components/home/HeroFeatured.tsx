@@ -113,15 +113,11 @@ function HeroCard({ item, isAdmin }: { item: FeaturedItem; isAdmin: boolean }) {
         </div>
       )}
 
-      {/* Featured badge */}
-      <div className="absolute bottom-28 sm:bottom-24 left-4 z-10">
-        <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
-          Featured
-        </span>
-      </div>
-
       {/* Title & details */}
       <div className="absolute bottom-4 left-4 right-4 z-10 space-y-1">
+        <span className="inline-block px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold mb-1">
+          Featured
+        </span>
         <h2 className="text-white text-2xl sm:text-3xl font-bold leading-tight line-clamp-2">
           {item.name}
         </h2>

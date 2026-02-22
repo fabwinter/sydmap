@@ -320,7 +320,7 @@ export function ActivityCard({ activity, variant = "default" }: ActivityCardProp
 
       {/* Info overlay — bottom */}
       <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
-        <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
+        <h3 className="font-bold text-sm text-white leading-tight line-clamp-2">
           {activity.name}
         </h3>
         <div className="flex items-center gap-2">
