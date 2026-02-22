@@ -346,7 +346,13 @@ export default function ActivityDetails() {
             </div>
             <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4">
               {allPhotos.map((photo, i) => (
-                <img key={i} src={photo} alt={`${activity.name} ${i + 1}`} className="w-32 h-24 rounded-xl object-cover shrink-0" />
+                <img
+                  key={i}
+                  src={photo}
+                  alt={`${activity.name} ${i + 1}`}
+                  className="w-32 h-24 rounded-xl object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setLightboxOpen({ urls: allPhotos, index: i })}
+                />
               ))}
             </div>
           </section>
