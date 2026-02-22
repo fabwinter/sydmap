@@ -196,7 +196,10 @@ export default function Timeline() {
                             minute: "2-digit",
                             hour12: true,
                           });
-                          const heroImg = checkIn.photo_url || checkIn.activities?.hero_image_url;
+                          const checkInPhotos = (checkIn as any).photo_urls?.length > 0
+                            ? (checkIn as any).photo_urls as string[]
+                            : checkIn.photo_url ? [checkIn.photo_url] : [];
+                          const heroImg = checkInPhotos[0] || checkIn.activities?.hero_image_url;
 
                           return (
                             <div key={checkIn.id} className="relative pl-8">
@@ -244,6 +247,14 @@ export default function Timeline() {
                                   )}
                                 </div>
                               </Link>
+                              {/* Photo thumbnails if multiple */}
+                              {checkInPhotos.length > 1 && (
+                                <div className="flex gap-1.5 mt-2 overflow-x-auto scrollbar-hide">
+                                  {checkInPhotos.map((url: string, i: number) => (
+                                    <img key={i} src={url} alt={`Photo ${i + 1}`} className="w-16 h-12 rounded-lg object-cover shrink-0" />
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           );
                         })}

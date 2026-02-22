@@ -246,7 +246,10 @@ export default function ActivityDetails() {
         )}
       </div>
       
-      <div className="px-4 py-4 space-y-6 max-w-2xl mx-auto">
+      <div className="px-4 py-4 space-y-6 max-w-2xl md:max-w-6xl mx-auto">
+        <div className="md:flex md:gap-8">
+          {/* Left column */}
+          <div className="md:flex-1 space-y-6">
         {/* Title Block */}
         <div>
           <h1 className="text-2xl font-bold text-foreground">{activity.name}</h1>
@@ -346,72 +349,6 @@ export default function ActivityDetails() {
             </div>
           </section>
         )}
-        
-        {/* Location Map */}
-        <section>
-          <h2 className="section-header">Location</h2>
-          <LocationMap latitude={activity.latitude} longitude={activity.longitude} name={activity.name} />
-          {activity.latitude && activity.longitude && (
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${activity.latitude},${activity.longitude}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-border bg-card hover:border-primary/40 transition-colors text-sm font-medium text-foreground"
-            >
-              <MapPin className="w-4 h-4 text-primary" />
-              Get Directions
-            </a>
-          )}
-        </section>
-        
-        {/* Reviews */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="section-header mb-0">Reviews</h2>
-            <button className="text-sm text-primary font-medium flex items-center gap-1">
-              View all <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="space-y-4">
-            {reviewsLoading ? (
-              Array.from({ length: 2 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 rounded-xl" />
-              ))
-            ) : reviews && reviews.length > 0 ? (
-              reviews.slice(0, 3).map((review) => (
-                <div key={review.id} className="bg-card rounded-xl p-4 border border-border">
-                  <div className="flex items-start gap-3">
-                    <img
-                      src={review.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${review.user_id}`}
-                      alt={review.profiles?.name || "User"}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-sm">{review.profiles?.name || "Anonymous"}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(review.created_at), "d MMM yyyy")}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-0.5 mt-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-3 h-3 ${i < review.rating ? "fill-warning text-warning" : "text-muted"}`} />
-                        ))}
-                      </div>
-                      {review.review_text && (
-                        <p className="text-sm text-muted-foreground mt-2">{review.review_text}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-6 text-muted-foreground">
-                <p className="text-sm">No reviews yet. Be the first to review!</p>
-              </div>
-            )}
-          </div>
-        </section>
 
         {/* Visits (Check-in History) */}
         {visitCount > 0 && (
@@ -423,7 +360,6 @@ export default function ActivityDetails() {
               </Button>
             </div>
 
-            {/* Visit navigator */}
             {visitCount > 1 && (
               <div className="flex items-center justify-center gap-3 mb-3">
                 <button
@@ -462,7 +398,6 @@ export default function ActivityDetails() {
                   rows={2}
                   className="w-full bg-muted rounded-xl px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                 />
-                {/* Photo upload/preview for edit */}
                 <input
                   ref={editFileInputRef}
                   type="file"
@@ -519,7 +454,6 @@ export default function ActivityDetails() {
                     disabled={updateCheckIn.isPending || isUploadingEditPhoto || editRating === 0}
                     onClick={async () => {
                       let photoUrl: string | null | undefined = undefined;
-                      // Upload new photo if selected
                       if (editPhotoFile) {
                         setIsUploadingEditPhoto(true);
                         try {
@@ -538,7 +472,6 @@ export default function ActivityDetails() {
                         }
                         setIsUploadingEditPhoto(false);
                       } else if (!editExistingPhoto && currentVisit.photo_url) {
-                        // Photo was removed
                         photoUrl = null;
                       }
                       updateCheckIn.mutate({ checkInId: currentVisit.id, rating: editRating, comment: editComment, photoUrl });
@@ -566,13 +499,23 @@ export default function ActivityDetails() {
                 {currentVisit.comment && (
                   <p className="text-sm text-muted-foreground italic">"{currentVisit.comment}"</p>
                 )}
-                {currentVisit.photo_url && (
-                  <img
-                    src={currentVisit.photo_url}
-                    alt="Check-in photo"
-                    className="w-full h-32 rounded-lg object-cover"
-                  />
-                )}
+                {/* Check-in photos - show carousel if multiple */}
+                {(() => {
+                  const urls = (currentVisit as any).photo_urls?.length > 0
+                    ? (currentVisit as any).photo_urls as string[]
+                    : currentVisit.photo_url ? [currentVisit.photo_url] : [];
+                  if (urls.length === 0) return null;
+                  if (urls.length === 1) return (
+                    <img src={urls[0]} alt="Check-in photo" className="w-full h-32 rounded-lg object-cover" />
+                  );
+                  return (
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
+                      {urls.map((url: string, i: number) => (
+                        <img key={i} src={url} alt={`Check-in ${i + 1}`} className="w-32 h-24 rounded-lg object-cover shrink-0" />
+                      ))}
+                    </div>
+                  );
+                })()}
                 <div className="flex gap-2 pt-1">
                   <button
                     onClick={() => {
@@ -603,6 +546,76 @@ export default function ActivityDetails() {
             ) : null}
           </section>
         )}
+
+          </div>
+
+          {/* Right column (desktop): Map + Reviews */}
+          <div className="md:w-[40%] lg:w-[35%] space-y-6 mt-6 md:mt-0 md:sticky md:top-4 md:self-start">
+            <section>
+              <h2 className="section-header">Location</h2>
+              <LocationMap latitude={activity.latitude} longitude={activity.longitude} name={activity.name} />
+              {activity.latitude && activity.longitude && (
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${activity.latitude},${activity.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-border bg-card hover:border-primary/40 transition-colors text-sm font-medium text-foreground"
+                >
+                  <MapPin className="w-4 h-4 text-primary" />
+                  Get Directions
+                </a>
+              )}
+            </section>
+
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="section-header mb-0">Reviews</h2>
+                <button className="text-sm text-primary font-medium flex items-center gap-1">
+                  View all <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                {reviewsLoading ? (
+                  Array.from({ length: 2 }).map((_, i) => (
+                    <Skeleton key={i} className="h-24 rounded-xl" />
+                  ))
+                ) : reviews && reviews.length > 0 ? (
+                  reviews.slice(0, 3).map((review) => (
+                    <div key={review.id} className="bg-card rounded-xl p-4 border border-border">
+                      <div className="flex items-start gap-3">
+                        <img
+                          src={review.profiles?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${review.user_id}`}
+                          alt={review.profiles?.name || "User"}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-sm">{review.profiles?.name || "Anonymous"}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(review.created_at), "d MMM yyyy")}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-0.5 mt-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`w-3 h-3 ${i < review.rating ? "fill-warning text-warning" : "text-muted"}`} />
+                            ))}
+                          </div>
+                          {review.review_text && (
+                            <p className="text-sm text-muted-foreground mt-2">{review.review_text}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <p className="text-sm">No reviews yet. Be the first to review!</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
       
       {/* Sticky Bottom Actions */}

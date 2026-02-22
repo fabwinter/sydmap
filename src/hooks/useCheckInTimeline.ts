@@ -26,7 +26,7 @@ export function useCheckInTimeline(search?: string, category?: string) {
       let query = supabase
         .from("check_ins")
         .select(`
-          id, activity_id, rating, comment, photo_url, created_at,
+          id, activity_id, rating, comment, photo_url, photo_urls, created_at,
           activities!inner ( id, name, category, address, hero_image_url, latitude, longitude, rating )
         `)
         .eq("user_id", profileId)

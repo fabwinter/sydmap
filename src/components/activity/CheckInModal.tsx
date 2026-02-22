@@ -17,8 +17,8 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [shareWithFriends, setShareWithFriends] = useState(true);
   const [addToPublic, setAddToPublic] = useState(false);
   const { toast } = useToast();
@@ -27,24 +27,40 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Please select a photo under 5MB", variant: "destructive" });
-      return;
+  const handleFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const validFiles: File[] = [];
+    const previews: string[] = [];
+
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast({ title: "File too large", description: `${file.name} exceeds 10MB limit`, variant: "destructive" });
+        continue;
+      }
+      if (photoFiles.length + validFiles.length >= 10) {
+        toast({ title: "Max 10 files", description: "You can upload up to 10 photos/videos", variant: "destructive" });
+        break;
+      }
+      validFiles.push(file);
     }
-    setPhotoFile(file);
-    const reader = new FileReader();
-    reader.onload = (ev) => setPhotoPreview(ev.target?.result as string);
-    reader.readAsDataURL(file);
+
+    // Generate previews
+    validFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setPhotoPreviews((prev) => [...prev, ev.target?.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    setPhotoFiles((prev) => [...prev, ...validFiles]);
   };
 
-  const removePhoto = () => {
-    setPhotoFile(null);
-    setPhotoPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    if (cameraInputRef.current) cameraInputRef.current.value = "";
+  const removePhoto = (index: number) => {
+    setPhotoFiles((prev) => prev.filter((_, i) => i !== index));
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const checkInMutation = useMutation({
@@ -57,15 +73,15 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
 
       if (!profile) throw new Error("Profile not found");
 
-      let photoUrl: string | null = null;
+      const photoUrls: string[] = [];
 
-      // Upload photo if selected
-      if (photoFile) {
-        const ext = photoFile.name.split(".").pop() || "jpg";
-        const path = `${profile.id}/${Date.now()}.${ext}`;
+      // Upload all photos
+      for (const file of photoFiles) {
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${profile.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("check-in-photos")
-          .upload(path, photoFile, { contentType: photoFile.type });
+          .upload(path, file, { contentType: file.type });
 
         if (uploadError) throw new Error("Photo upload failed: " + uploadError.message);
 
@@ -73,7 +89,7 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
           .from("check-in-photos")
           .getPublicUrl(path);
 
-        photoUrl = urlData.publicUrl;
+        photoUrls.push(urlData.publicUrl);
       }
 
       const { error } = await supabase
@@ -83,10 +99,11 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
           activity_id: activityId,
           rating,
           comment: comment.trim() || null,
-          photo_url: photoUrl,
+          photo_url: photoUrls[0] || null,
+          photo_urls: photoUrls,
           share_with_friends: shareWithFriends,
           add_to_public_feed: addToPublic,
-        });
+        } as any);
 
       if (error) throw error;
     },
@@ -172,35 +189,56 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
             </div>
           </div>
 
-          {/* Photo Upload */}
+          {/* Photo Upload - Multiple */}
           <div className="space-y-2">
-            <p className="text-sm font-medium">Add a photo</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">Add photos & videos</p>
+              <span className="text-xs text-muted-foreground">{photoFiles.length}/10</span>
+            </div>
             <input
               ref={cameraInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/*"
               capture="environment"
               className="hidden"
-              onChange={handleFileSelect}
+              onChange={handleFilesSelect}
             />
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/*"
+              multiple
               className="hidden"
-              onChange={handleFileSelect}
+              onChange={handleFilesSelect}
             />
-            {photoPreview ? (
-              <div className="relative w-full aspect-video rounded-xl overflow-hidden">
-                <img src={photoPreview} alt="Check-in photo" className="w-full h-full object-cover" />
-                <button
-                  onClick={removePhoto}
-                  className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+            {photoPreviews.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                {photoPreviews.map((preview, i) => (
+                  <div key={i} className="relative shrink-0 w-24 h-24 rounded-xl overflow-hidden">
+                    {photoFiles[i]?.type.startsWith("video/") ? (
+                      <video src={preview} className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={preview} alt={`Upload ${i + 1}`} className="w-full h-full object-cover" />
+                    )}
+                    <button
+                      onClick={() => removePhoto(i)}
+                      className="absolute top-1 right-1 p-1 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+                {photoFiles.length < 10 && (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="shrink-0 w-24 h-24 rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 transition-colors flex items-center justify-center"
+                  >
+                    <ImagePlus className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                )}
               </div>
-            ) : (
+            )}
+            {photoPreviews.length === 0 && (
               <div className="flex gap-3">
                 <button
                   onClick={() => cameraInputRef.current?.click()}
