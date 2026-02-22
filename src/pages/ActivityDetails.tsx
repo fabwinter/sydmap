@@ -72,6 +72,7 @@ export default function ActivityDetails() {
   const editFileInputRef = useRef<HTMLInputElement>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPosition, setHeroPosition] = useState("center");
+  const [lightboxOpen, setLightboxOpen] = useState<{ urls: string[]; index: number } | null>(null);
   const queryClient = useQueryClient();
 
   const { data: activity, isLoading: activityLoading, error } = useActivityById(id || "");
@@ -506,13 +507,16 @@ export default function ActivityDetails() {
                     ? (currentVisit as any).photo_urls as string[]
                     : currentVisit.photo_url ? [currentVisit.photo_url] : [];
                   if (urls.length === 0) return null;
-                  if (urls.length === 1) return (
-                    <img src={urls[0]} alt="Check-in photo" className="w-full h-32 rounded-lg object-cover" />
-                  );
                   return (
                     <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
                       {urls.map((url: string, i: number) => (
-                        <img key={i} src={url} alt={`Check-in ${i + 1}`} className="w-32 h-24 rounded-lg object-cover shrink-0" />
+                        <img
+                          key={i}
+                          src={url}
+                          alt={`Check-in ${i + 1}`}
+                          className="w-32 h-24 rounded-lg object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => setLightboxOpen({ urls, index: i })}
+                        />
                       ))}
                     </div>
                   );
