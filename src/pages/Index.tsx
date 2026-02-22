@@ -1,11 +1,13 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ControlPanel } from "@/components/home/ControlPanel";
+import { HeroFeatured } from "@/components/home/HeroFeatured";
 import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { RecommendedSection } from "@/components/home/RecommendedSection";
 import { CuratedSections } from "@/components/home/CuratedSections";
 import { FoursquareSection } from "@/components/home/FoursquareSection";
 import { GoogleSection } from "@/components/home/GoogleSection";
 import { SearchResultsGrid } from "@/components/home/SearchResultsGrid";
+import { LocationPrompt } from "@/components/home/LocationPrompt";
 import { useSearchFilters } from "@/hooks/useSearchFilters";
 import { useRecommendedActivities } from "@/hooks/useActivities";
 
@@ -16,25 +18,31 @@ const Index = () => {
 
   return (
     <AppLayout>
+      <LocationPrompt />
       <div className="bg-background">
+        {/* Hero Featured section with floating search */}
+        {!isFiltering && (
+          <div className="relative">
+            <HeroFeatured />
+            {/* Floating search bar overlaid on hero */}
+            <div className="absolute top-4 left-4 right-4 z-20">
+              <ControlPanel />
+            </div>
+          </div>
+        )}
+
         <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8">
-          <ControlPanel />
+          {isFiltering && <ControlPanel />}
           
           {isFiltering ? (
-            /* Search/filter mode: only show grid results */
             <SearchResultsGrid activities={activities} isLoading={isLoading} />
           ) : (
-            /* Browse mode: show curated sections */
             <>
               <div id="featured-section">
                 <FeaturedSection />
               </div>
-              
               <RecommendedSection />
-              
               <CuratedSections />
-              
-              {/* External sources below DB - admin only */}
               <FoursquareSection />
               <GoogleSection />
             </>

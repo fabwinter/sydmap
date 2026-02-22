@@ -38,6 +38,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CheckInModal } from "@/components/activity/CheckInModal";
 import { ShareMenu } from "@/components/activity/ShareMenu";
 import { AddToPlaylistModal } from "@/components/activity/AddToPlaylistModal";
+import { AddToCalendarModal } from "@/components/activity/AddToCalendarModal";
 import { LocationMap } from "@/components/activity/LocationMap";
 import { useActivityById } from "@/hooks/useActivities";
 import { useActivityReviews, useActivityPhotos } from "@/hooks/useReviews";
@@ -58,6 +59,7 @@ export default function ActivityDetails() {
   const isAdmin = useIsAdmin();
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [visitIndex, setVisitIndex] = useState(0);
   const [editingCheckIn, setEditingCheckIn] = useState<string | null>(null);
   const [editRating, setEditRating] = useState(0);
@@ -620,6 +622,17 @@ export default function ActivityDetails() {
           >
             <ListPlus className="w-5 h-5" />
           </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              if (!user) { toast.error("Please sign in to add to calendar"); navigate("/login"); return; }
+              setShowCalendarModal(true);
+            }}
+            className="shrink-0"
+          >
+            <CalendarCheck className="w-5 h-5" />
+          </Button>
           <ShareMenu activityName={activity.name} activityId={id!} />
           <Button className="flex-1 bg-primary hover:bg-primary/90" onClick={handleCheckIn}>
             <Check className="w-5 h-5 mr-2" />
@@ -633,6 +646,9 @@ export default function ActivityDetails() {
       )}
       {showPlaylistModal && (
         <AddToPlaylistModal activityId={id!} activityName={activity.name} onClose={() => setShowPlaylistModal(false)} />
+      )}
+      {showCalendarModal && (
+        <AddToCalendarModal activityId={id!} activityName={activity.name} onClose={() => setShowCalendarModal(false)} />
       )}
     </div>
   );

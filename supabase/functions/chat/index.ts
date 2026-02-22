@@ -47,6 +47,9 @@ serve(async (req) => {
       if (userContext.recentCheckIns?.length) {
         userContextSection += `\nUSER'S RECENT CHECK-INS (places they've visited):\n${userContext.recentCheckIns.map((c: any) => `- ${c.activity_name} (${c.category}) — rated ${c.rating}/5 on ${c.date}`).join("\n")}\n`;
       }
+      if (userContext.calendarEvents?.length) {
+        userContextSection += `\nUSER'S UPCOMING CALENDAR/PLANNED ACTIVITIES:\n${userContext.calendarEvents.map((e: any) => `- ${e.title} (${e.category || "N/A"}) on ${e.date}${e.time ? ` at ${e.time}` : ""}`).join("\n")}\n`;
+      }
       if (userContext.userName) {
         userContextSection += `\nUSER'S NAME: ${userContext.userName}\n`;
       }

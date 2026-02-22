@@ -152,6 +152,47 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_events: {
+        Row: {
+          activity_id: string | null
+          created_at: string
+          event_date: string
+          event_time: string | null
+          id: string
+          notes: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          activity_id?: string | null
+          created_at?: string
+          event_date: string
+          event_time?: string | null
+          id?: string
+          notes?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string | null
+          created_at?: string
+          event_date?: string
+          event_time?: string | null
+          id?: string
+          notes?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           content: string
