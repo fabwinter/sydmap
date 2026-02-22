@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Settings, MapPin, Users, Coffee, Award, ChevronRight, ChevronDown, Loader2, Heart, Bookmark, Plus, Trash2, Star, MessageSquare, Image as ImageIcon } from "lucide-react";
+import { Settings, MapPin, Users, Coffee, Award, ChevronRight, ChevronDown, Loader2, Heart, Bookmark, Plus, Trash2, Star, MessageSquare, Image as ImageIcon, CalendarDays } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useSavedItems, useToggleSavedItem } from "@/hooks/useSavedItems";
 import { usePlaylists, useCreatePlaylist, useDeletePlaylist } from "@/hooks/usePlaylists";
+import { useCalendarEvents, useDeleteCalendarEvent } from "@/hooks/useCalendarEvents";
+import { format, isSameDay, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +35,9 @@ export default function Profile() {
   const toggleSaved = useToggleSavedItem();
   const createPlaylist = useCreatePlaylist();
   const deletePlaylist = useDeletePlaylist();
+  const { data: calendarEvents } = useCalendarEvents();
+  const deleteCalendarEvent = useDeleteCalendarEvent();
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistEmoji, setNewPlaylistEmoji] = useState("📍");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -264,9 +269,10 @@ export default function Profile() {
         
         {/* Tabs */}
         <Tabs defaultValue="overview" className="px-4 py-4">
-          <TabsList className="w-full grid grid-cols-5 mb-4">
+          <TabsList className="w-full grid grid-cols-6 mb-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="checkins">Check-Ins</TabsTrigger>
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="saved">Saved</TabsTrigger>
             <TabsTrigger value="playlists">Playlists</TabsTrigger>
             <TabsTrigger value="friends">Friends</TabsTrigger>
@@ -422,6 +428,17 @@ export default function Profile() {
                 <p>No check-ins yet</p>
               </div>
             )}
+          </TabsContent>
+
+          {/* Calendar Tab */}
+          <TabsContent value="calendar" className="space-y-4 mt-0">
+            <ProfileCalendar
+              calendarEvents={calendarEvents || []}
+              checkIns={recentCheckIns}
+              month={calendarMonth}
+              onMonthChange={setCalendarMonth}
+              onDeleteEvent={(id) => deleteCalendarEvent.mutate(id)}
+            />
           </TabsContent>
 
           {/* Saved Tab */}
@@ -635,5 +652,148 @@ function CheckInCard({ checkIn }: { checkIn: any }) {
         )}
       </div>
     </Link>
+  );
+}
+
+function ProfileCalendar({
+  calendarEvents,
+  checkIns,
+  month,
+  onMonthChange,
+  onDeleteEvent,
+}: {
+  calendarEvents: any[];
+  checkIns: any[];
+  month: Date;
+  onMonthChange: (d: Date) => void;
+  onDeleteEvent: (id: string) => void;
+}) {
+  const daysInMonth = eachDayOfInterval({
+    start: startOfMonth(month),
+    end: endOfMonth(month),
+  });
+  const firstDayOfWeek = getDay(startOfMonth(month));
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const eventsByDate = new Map<string, { type: "planned" | "checkin"; title: string; id?: string }[]>();
+  
+  calendarEvents.forEach((ev: any) => {
+    const key = ev.event_date;
+    if (!eventsByDate.has(key)) eventsByDate.set(key, []);
+    eventsByDate.get(key)!.push({ type: "planned", title: ev.title || ev.activities?.name || "Event", id: ev.id });
+  });
+  
+  checkIns.forEach((ci: any) => {
+    const key = format(new Date(ci.created_at), "yyyy-MM-dd");
+    if (!eventsByDate.has(key)) eventsByDate.set(key, []);
+    eventsByDate.get(key)!.push({ type: "checkin", title: ci.activities?.name || "Check-in" });
+  });
+
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const selectedEvents = selectedDate ? eventsByDate.get(selectedDate) || [] : [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <button onClick={() => onMonthChange(subMonths(month, 1))} className="p-2 rounded-lg hover:bg-muted">
+          <ChevronDown className="w-5 h-5 rotate-90" />
+        </button>
+        <h3 className="font-bold text-lg">{format(month, "MMMM yyyy")}</h3>
+        <button onClick={() => onMonthChange(addMonths(month, 1))} className="p-2 rounded-lg hover:bg-muted">
+          <ChevronDown className="w-5 h-5 -rotate-90" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {dayNames.map((d) => (
+          <div key={d} className="text-center text-xs font-medium text-muted-foreground py-1">{d}</div>
+        ))}
+        {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+          <div key={`empty-${i}`} />
+        ))}
+        {daysInMonth.map((day) => {
+          const key = format(day, "yyyy-MM-dd");
+          const events = eventsByDate.get(key);
+          const isToday = isSameDay(day, new Date());
+          const isSelected = selectedDate === key;
+
+          return (
+            <button
+              key={key}
+              onClick={() => setSelectedDate(isSelected ? null : key)}
+              className={`relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-colors ${
+                isSelected ? "bg-primary text-primary-foreground" :
+                isToday ? "bg-primary/10 font-bold" :
+                "hover:bg-muted"
+              }`}
+            >
+              {format(day, "d")}
+              {events && (
+                <div className="flex gap-0.5 mt-0.5">
+                  {events.some(e => e.type === "planned") && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                  {events.some(e => e.type === "checkin") && <span className="w-1.5 h-1.5 rounded-full bg-warning" />}
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex gap-4 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary" /> Planned</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-warning" /> Check-in</span>
+      </div>
+
+      {selectedDate && (
+        <div className="space-y-2">
+          <h4 className="font-semibold text-sm">{format(parseISO(selectedDate), "EEEE, d MMMM")}</h4>
+          {selectedEvents.length > 0 ? (
+            selectedEvents.map((ev, i) => (
+              <div key={i} className="flex items-center justify-between bg-card rounded-xl border border-border p-3">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${ev.type === "planned" ? "bg-primary" : "bg-warning"}`} />
+                  <span className="text-sm">{ev.title}</span>
+                  <span className="text-xs text-muted-foreground">{ev.type === "planned" ? "Planned" : "Visited"}</span>
+                </div>
+                {ev.type === "planned" && ev.id && (
+                  <button onClick={() => onDeleteEvent(ev.id!)} className="p-1 text-muted-foreground hover:text-destructive">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground">No events on this day</p>
+          )}
+        </div>
+      )}
+
+      {calendarEvents.filter((e: any) => e.event_date >= format(new Date(), "yyyy-MM-dd")).length > 0 && (
+        <div>
+          <h4 className="font-semibold text-sm mb-2">Upcoming</h4>
+          <div className="space-y-2">
+            {calendarEvents
+              .filter((e: any) => e.event_date >= format(new Date(), "yyyy-MM-dd"))
+              .slice(0, 5)
+              .map((ev: any) => (
+                <Link
+                  key={ev.id}
+                  to={ev.activity_id ? `/activity/${ev.activity_id}` : "#"}
+                  className="flex items-center justify-between bg-card rounded-xl border border-border p-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{ev.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(parseISO(ev.event_date), "EEE d MMM")}
+                      {ev.event_time && ` at ${ev.event_time.slice(0, 5)}`}
+                    </p>
+                  </div>
+                  <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                </Link>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

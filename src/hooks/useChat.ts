@@ -108,6 +108,23 @@ export function useChat() {
             date: new Date(c.created_at).toLocaleDateString(),
           })).filter((c: any) => c.activity_name);
         }
+
+        // Fetch calendar events
+        const { data: calEvents } = await supabase
+          .from("calendar_events")
+          .select("title, event_date, event_time, activities(name, category)")
+          .eq("user_id", session.user.id)
+          .order("event_date", { ascending: true })
+          .limit(20);
+
+        if (calEvents?.length) {
+          userContext.calendarEvents = calEvents.map((e: any) => ({
+            title: e.title || e.activities?.name,
+            date: e.event_date,
+            time: e.event_time,
+            category: e.activities?.category,
+          }));
+        }
       }
 
       // Build conversation history
