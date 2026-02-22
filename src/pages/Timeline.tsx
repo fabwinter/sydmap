@@ -196,7 +196,10 @@ export default function Timeline() {
                             minute: "2-digit",
                             hour12: true,
                           });
-                          const heroImg = checkIn.photo_url || checkIn.activities?.hero_image_url;
+                          const checkInPhotos = (checkIn as any).photo_urls?.length > 0
+                            ? (checkIn as any).photo_urls as string[]
+                            : checkIn.photo_url ? [checkIn.photo_url] : [];
+                          const heroImg = checkInPhotos[0] || checkIn.activities?.hero_image_url;
 
                           return (
                             <div key={checkIn.id} className="relative pl-8">
