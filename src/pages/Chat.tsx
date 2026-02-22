@@ -36,7 +36,7 @@ export default function Chat() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col h-[calc(100vh-8rem)] max-w-lg mx-auto">
+      <div className="flex flex-col h-[calc(100vh-8rem)] max-w-lg lg:max-w-2xl mx-auto">
         {/* Header */}
         <div className="px-4 py-4 border-b border-border bg-card">
           <div className="flex items-center justify-between">

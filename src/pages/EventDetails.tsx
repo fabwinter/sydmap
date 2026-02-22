@@ -318,8 +318,8 @@ export default function EventDetails() {
           </section>
         )}
 
-        {/* Source link */}
-        {activity.source_url && (
+        {/* Source link - admin only */}
+        {isAdmin && activity.source_url && (
           <a
             href={activity.source_url}
             target="_blank"

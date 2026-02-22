@@ -73,7 +73,7 @@ export default function Timeline() {
 
   return (
     <AppLayout>
-      <div className="px-4 py-4 space-y-4 max-w-lg mx-auto">
+      <div className="px-4 py-4 space-y-4 max-w-lg lg:max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -167,7 +167,7 @@ export default function Timeline() {
             <TimelineMap groups={filteredGroups || []} />
           </div>
         ) : (
-        <div className="space-y-8 pb-4">
+        <div className="space-y-8 pb-4 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="space-y-3">
