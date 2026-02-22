@@ -389,20 +389,7 @@ export default function Profile() {
               {recentCheckIns.length > 0 ? (
                 <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
                   {recentCheckIns.slice(0, 6).map((checkIn) => (
-                    <Link key={checkIn.id} to={`/activity/${checkIn.activities?.id}`} className="block relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group">
-                      <img
-                        src={checkIn.photo_url || checkIn.activities?.hero_image_url || "/placeholder.svg"}
-                        alt={checkIn.activities?.name || "Check-in"}
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
-                        <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
-                          {checkIn.activities?.name || "Activity"}
-                        </h3>
-                        <p className="text-xs text-white/70">{checkIn.activities?.category}</p>
-                      </div>
-                    </Link>
+                    <ProfileCheckInCard key={checkIn.id} checkIn={checkIn} />
                   ))}
                 </div>
               ) : (
