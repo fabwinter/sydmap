@@ -247,6 +247,14 @@ export default function Timeline() {
                                   )}
                                 </div>
                               </Link>
+                              {/* Photo thumbnails if multiple */}
+                              {checkInPhotos.length > 1 && (
+                                <div className="flex gap-1.5 mt-2 overflow-x-auto scrollbar-hide">
+                                  {checkInPhotos.map((url: string, i: number) => (
+                                    <img key={i} src={url} alt={`Photo ${i + 1}`} className="w-16 h-12 rounded-lg object-cover shrink-0" />
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
