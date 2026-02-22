@@ -110,6 +110,7 @@ export function useToggleFeatured() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["recommended-activities"] });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
+      queryClient.invalidateQueries({ queryKey: ["featured-hero"] });
     },
   });
 }
