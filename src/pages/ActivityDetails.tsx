@@ -101,9 +101,10 @@ export default function ActivityDetails() {
   });
 
   const updateCheckIn = useMutation({
-    mutationFn: async ({ checkInId, rating, comment, photoUrl }: { checkInId: string; rating: number; comment: string; photoUrl?: string | null }) => {
+    mutationFn: async ({ checkInId, rating, comment, photoUrl, photoUrls }: { checkInId: string; rating: number; comment: string; photoUrl?: string | null; photoUrls?: string[] }) => {
       const updateData: any = { rating, comment: comment.trim() || null };
       if (photoUrl !== undefined) updateData.photo_url = photoUrl;
+      if (photoUrls !== undefined) updateData.photo_urls = photoUrls;
       const { error } = await supabase
         .from("check_ins")
         .update(updateData)
