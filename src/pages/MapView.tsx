@@ -416,7 +416,7 @@ export default function MapView() {
   }, [filteredActivities, viewState.latitude, viewState.longitude, viewState.zoom]);
 
   // Use simplified dot markers at low zoom or when too many visible
-  const simplified = viewState.zoom < 13 || visibleActivities.length > 200;
+  const simplified = viewState.zoom < 11 || visibleActivities.length > 200;
 
   const handleMarkerClickCb = useCallback(
     (activity: Activity) => {
