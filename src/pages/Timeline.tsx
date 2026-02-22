@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Map, Clock, Star, MapPin, Filter, CalendarDays, X, LayoutList } from "lucide-react";
+import { Search, Map, Clock, Star, MapPin, Filter, CalendarDays, X, LayoutList, ChevronLeft as ChevLeft, ChevronRight as ChevRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Input } from "@/components/ui/input";
