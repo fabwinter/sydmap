@@ -215,67 +215,66 @@ export default function Profile() {
   return (
     <AppLayout>
       <div className="max-w-lg mx-auto">
-        {/* Header Section */}
-        <div className="px-4 py-6 text-center border-b border-border">
-          <div className="relative inline-block">
-            <Avatar className="w-24 h-24 ring-4 ring-primary/20">
-              <AvatarImage src={avatarUrl} />
-              <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                {getInitials()}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-          
-          <h1 className="text-xl font-bold mt-4">{displayName}</h1>
-          <p className="text-muted-foreground text-sm mt-1">{bio}</p>
-          
-          {badges.length > 0 && (
-            <div className="flex justify-center gap-2 mt-4 flex-wrap">
-              {badges.slice(0, 4).map((badge) => (
-                <div
-                  key={badge.id}
-                  className="px-3 py-1.5 bg-primary/10 rounded-full text-sm flex items-center gap-1.5"
-                  title={badge.description || ""}
-                >
-                  <span>{badgeEmojis[badge.badge_name] || "🏅"}</span>
-                  <span className="font-medium text-primary">{badge.badge_name}</span>
-                </div>
-              ))}
+        {/* Profile Header — modern gradient hero */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-primary/5 to-background" />
+          <div className="relative px-4 pt-8 pb-6 text-center">
+            <div className="relative inline-block">
+              <Avatar className="w-20 h-20 ring-4 ring-background shadow-xl">
+                <AvatarImage src={avatarUrl} />
+                <AvatarFallback className="text-xl bg-primary text-primary-foreground font-bold">
+                  {getInitials()}
+                </AvatarFallback>
+              </Avatar>
             </div>
-          )}
-
-          {/* Coin count inspired by reference */}
-          <div className="flex items-center justify-center gap-1 mt-3">
-            <span className="text-lg">🪙</span>
-            <span className="font-bold text-foreground">{stats?.checkIns || 0}</span>
-          </div>
-          
-          <div className="flex gap-3 mt-4">
-            <Button variant="outline" className="flex-1" onClick={() => navigate("/settings")}>
-              Edit Profile
-            </Button>
-            <Button variant="outline" size="icon" onClick={() => setShowPremium(true)} title="Premium">
-              <Award className="w-5 h-5" />
-            </Button>
+            
+            <h1 className="text-xl font-bold mt-3">{displayName}</h1>
+            <p className="text-muted-foreground text-sm mt-0.5">{bio}</p>
+            
+            {badges.length > 0 && (
+              <div className="flex justify-center gap-1.5 mt-3 flex-wrap">
+                {badges.slice(0, 4).map((badge) => (
+                  <span
+                    key={badge.id}
+                    className="px-2.5 py-1 bg-primary/10 rounded-full text-xs font-medium text-primary"
+                    title={badge.description || ""}
+                  >
+                    {badgeEmojis[badge.badge_name] || "🏅"} {badge.badge_name}
+                  </span>
+                ))}
+              </div>
+            )}
+            
+            <div className="flex gap-2.5 mt-4 max-w-xs mx-auto">
+              <Button variant="outline" className="flex-1 h-9 rounded-full text-sm" onClick={() => navigate("/settings")}>
+                Edit Profile
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9 rounded-full" onClick={() => setShowPremium(true)} title="Premium">
+                <Award className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
         
-        {/* Stats */}
-        <div className="grid grid-cols-3 border-b border-border">
+        {/* Stats row */}
+        <div className="grid grid-cols-3 mx-4 rounded-2xl bg-card border border-border shadow-sm -mt-1 mb-2">
           <StatItem icon={MapPin} value={stats?.checkIns || 0} label="Check-ins" />
           <StatItem icon={Users} value={stats?.friends || 0} label="Friends" />
           <StatItem icon={Coffee} value={stats?.topCategory?.count || 0} label={stats?.topCategory?.name || "Activities"} />
         </div>
         
         {/* Tabs */}
-        <Tabs defaultValue="overview" className="px-4 py-4">
-          <TabsList className="w-full grid grid-cols-6 mb-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="checkins">Check-Ins</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar</TabsTrigger>
-            <TabsTrigger value="saved">Saved</TabsTrigger>
-            <TabsTrigger value="playlists">Playlists</TabsTrigger>
-            <TabsTrigger value="friends">Friends</TabsTrigger>
+        <Tabs defaultValue="overview" className="px-4 pt-3 pb-4">
+          <TabsList className="w-full overflow-x-auto flex gap-1 bg-transparent p-0 mb-4 scrollbar-hide">
+            {["overview", "checkins", "calendar", "saved", "playlists", "friends"].map((tab) => (
+              <TabsTrigger
+                key={tab}
+                value={tab}
+                className="px-3 py-1.5 rounded-full text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-muted whitespace-nowrap"
+              >
+                {tab === "checkins" ? "Check-Ins" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </TabsTrigger>
+            ))}
           </TabsList>
           
           {/* Overview Tab */}
@@ -605,10 +604,10 @@ function StatItem({
   label: string;
 }) {
   return (
-    <div className="flex flex-col items-center py-4">
-      <Icon className="w-5 h-5 text-primary mb-1" />
-      <span className="text-xl font-bold">{value}</span>
-      <span className="text-xs text-muted-foreground">{label}</span>
+    <div className="flex flex-col items-center py-3">
+      <Icon className="w-4 h-4 text-primary mb-0.5" />
+      <span className="text-lg font-bold">{value}</span>
+      <span className="text-[11px] text-muted-foreground">{label}</span>
     </div>
   );
 }
@@ -675,18 +674,18 @@ function ProfileCalendar({
   const firstDayOfWeek = getDay(startOfMonth(month));
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  const eventsByDate = new Map<string, { type: "planned" | "checkin"; title: string; id?: string }[]>();
+  const eventsByDate = new Map<string, { type: "planned" | "checkin"; title: string; id?: string; activityId?: string; isEvent?: boolean }[]>();
   
   calendarEvents.forEach((ev: any) => {
     const key = ev.event_date;
     if (!eventsByDate.has(key)) eventsByDate.set(key, []);
-    eventsByDate.get(key)!.push({ type: "planned", title: ev.title || ev.activities?.name || "Event", id: ev.id });
+    eventsByDate.get(key)!.push({ type: "planned", title: ev.title || ev.activities?.name || "Event", id: ev.id, activityId: ev.activity_id || undefined });
   });
   
   checkIns.forEach((ci: any) => {
     const key = format(new Date(ci.created_at), "yyyy-MM-dd");
     if (!eventsByDate.has(key)) eventsByDate.set(key, []);
-    eventsByDate.get(key)!.push({ type: "checkin", title: ci.activities?.name || "Check-in" });
+    eventsByDate.get(key)!.push({ type: "checkin", title: ci.activities?.name || "Check-in", activityId: ci.activities?.id, isEvent: ci.activities?.is_event });
   });
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -748,20 +747,30 @@ function ProfileCalendar({
         <div className="space-y-2">
           <h4 className="font-semibold text-sm">{format(parseISO(selectedDate), "EEEE, d MMMM")}</h4>
           {selectedEvents.length > 0 ? (
-            selectedEvents.map((ev, i) => (
-              <div key={i} className="flex items-center justify-between bg-card rounded-xl border border-border p-3">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${ev.type === "planned" ? "bg-primary" : "bg-warning"}`} />
-                  <span className="text-sm">{ev.title}</span>
-                  <span className="text-xs text-muted-foreground">{ev.type === "planned" ? "Planned" : "Visited"}</span>
+            selectedEvents.map((ev, i) => {
+              const linkTo = ev.activityId
+                ? (ev.isEvent ? `/event/${ev.activityId}` : `/activity/${ev.activityId}`)
+                : null;
+              const content = (
+                <div className="flex items-center justify-between bg-card rounded-xl border border-border p-3 hover:border-primary/50 transition-colors">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${ev.type === "planned" ? "bg-primary" : "bg-warning"}`} />
+                    <span className="text-sm font-medium truncate">{ev.title}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">{ev.type === "planned" ? "Planned" : "Visited"}</span>
+                  </div>
+                  {ev.type === "planned" && ev.id && (
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteEvent(ev.id!); }} className="p-1 text-muted-foreground hover:text-destructive shrink-0">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
-                {ev.type === "planned" && ev.id && (
-                  <button onClick={() => onDeleteEvent(ev.id!)} className="p-1 text-muted-foreground hover:text-destructive">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            ))
+              );
+              return linkTo ? (
+                <Link key={i} to={linkTo}>{content}</Link>
+              ) : (
+                <div key={i}>{content}</div>
+              );
+            })
           ) : (
             <p className="text-sm text-muted-foreground">No events on this day</p>
           )}
