@@ -409,80 +409,91 @@ export default function ActivityDetails() {
                 <input
                   ref={editFileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,video/*"
+                  multiple
                   className="hidden"
                   onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    if (file.size > 5 * 1024 * 1024) { toast.error("Photo must be under 5MB"); return; }
-                    setEditPhotoFile(file);
-                    const reader = new FileReader();
-                    reader.onload = (ev) => setEditPhotoPreview(ev.target?.result as string);
-                    reader.readAsDataURL(file);
-                    setEditExistingPhoto(null);
+                    const files = Array.from(e.target.files || []);
+                    const validFiles = files.filter(f => f.size <= 10 * 1024 * 1024);
+                    if (validFiles.length < files.length) toast.error("Some files exceed 10MB limit");
+                    const newFiles = [...editNewFiles, ...validFiles];
+                    setEditNewFiles(newFiles);
+                    validFiles.forEach(f => {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => setEditNewPreviews(prev => [...prev, ev.target?.result as string]);
+                      reader.readAsDataURL(f);
+                    });
                   }}
                 />
-                {(editPhotoPreview || editExistingPhoto) ? (
-                  <div className="relative">
-                    <img
-                      src={editPhotoPreview || editExistingPhoto!}
-                      alt="Check-in photo"
-                      className="w-full h-32 rounded-lg object-cover"
-                    />
-                    <div className="absolute top-1 right-1 flex gap-1">
-                      <button
-                        onClick={() => editFileInputRef.current?.click()}
-                        className="p-1 rounded-full bg-black/50 text-white hover:bg-black/70"
-                        title="Change photo"
-                      >
-                        <Camera className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => { setEditPhotoFile(null); setEditPhotoPreview(null); setEditExistingPhoto(null); }}
-                        className="p-1 rounded-full bg-black/50 text-white hover:bg-black/70"
-                        title="Remove photo"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
+                {/* Existing + new photos grid */}
+                {(editPhotoUrls.length > 0 || editNewPreviews.length > 0) && (
+                  <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                    {editPhotoUrls.map((url, i) => (
+                      <div key={`existing-${i}`} className="relative shrink-0">
+                        <img src={url} alt={`Photo ${i + 1}`} className="w-20 h-16 rounded-lg object-cover" />
+                        <button
+                          onClick={() => setEditPhotoUrls(editPhotoUrls.filter((_, j) => j !== i))}
+                          className="absolute -top-1 -right-1 p-0.5 rounded-full bg-destructive text-destructive-foreground"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {editNewPreviews.map((url, i) => (
+                      <div key={`new-${i}`} className="relative shrink-0">
+                        <img src={url} alt={`New ${i + 1}`} className="w-20 h-16 rounded-lg object-cover" />
+                        <button
+                          onClick={() => {
+                            setEditNewFiles(editNewFiles.filter((_, j) => j !== i));
+                            setEditNewPreviews(editNewPreviews.filter((_, j) => j !== i));
+                          }}
+                          className="absolute -top-1 -right-1 p-0.5 rounded-full bg-destructive text-destructive-foreground"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ) : (
-                  <button
-                    onClick={() => editFileInputRef.current?.click()}
-                    className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-border rounded-xl hover:border-primary hover:bg-primary/5 transition-colors text-sm text-muted-foreground"
-                  >
-                    <Camera className="w-4 h-4" /> Add photo
-                  </button>
                 )}
+                <button
+                  onClick={() => editFileInputRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-border rounded-xl hover:border-primary hover:bg-primary/5 transition-colors text-sm text-muted-foreground"
+                >
+                  <Camera className="w-4 h-4" /> Add photos
+                </button>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1" onClick={() => { setEditingCheckIn(null); setEditPhotoFile(null); setEditPhotoPreview(null); setEditExistingPhoto(null); }}>Cancel</Button>
+                  <Button size="sm" variant="outline" className="flex-1" onClick={() => { setEditingCheckIn(null); setEditNewFiles([]); setEditNewPreviews([]); }}>Cancel</Button>
                   <Button
                     size="sm"
                     className="flex-1"
                     disabled={updateCheckIn.isPending || isUploadingEditPhoto || editRating === 0}
                     onClick={async () => {
-                      let photoUrl: string | null | undefined = undefined;
-                      if (editPhotoFile) {
-                        setIsUploadingEditPhoto(true);
-                        try {
+                      setIsUploadingEditPhoto(true);
+                      try {
+                        let finalUrls = [...editPhotoUrls];
+                        if (editNewFiles.length > 0) {
                           const { data: profile } = await supabase.from("profiles").select("id").eq("user_id", user!.id).single();
                           if (!profile) throw new Error("Profile not found");
-                          const ext = editPhotoFile.name.split(".").pop() || "jpg";
-                          const path = `${profile.id}/${Date.now()}.${ext}`;
-                          const { error: uploadError } = await supabase.storage.from("check-in-photos").upload(path, editPhotoFile, { contentType: editPhotoFile.type });
-                          if (uploadError) throw uploadError;
-                          const { data: urlData } = supabase.storage.from("check-in-photos").getPublicUrl(path);
-                          photoUrl = urlData.publicUrl;
-                        } catch (err: any) {
-                          toast.error(err.message || "Photo upload failed");
-                          setIsUploadingEditPhoto(false);
-                          return;
+                          for (const file of editNewFiles) {
+                            const ext = file.name.split(".").pop() || "jpg";
+                            const path = `${profile.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+                            const { error: uploadError } = await supabase.storage.from("check-in-photos").upload(path, file, { contentType: file.type });
+                            if (uploadError) throw uploadError;
+                            const { data: urlData } = supabase.storage.from("check-in-photos").getPublicUrl(path);
+                            finalUrls.push(urlData.publicUrl);
+                          }
                         }
-                        setIsUploadingEditPhoto(false);
-                      } else if (!editExistingPhoto && currentVisit.photo_url) {
-                        photoUrl = null;
+                        updateCheckIn.mutate({
+                          checkInId: currentVisit.id,
+                          rating: editRating,
+                          comment: editComment,
+                          photoUrl: finalUrls[0] || null,
+                          photoUrls: finalUrls,
+                        });
+                      } catch (err: any) {
+                        toast.error(err.message || "Photo upload failed");
                       }
-                      updateCheckIn.mutate({ checkInId: currentVisit.id, rating: editRating, comment: editComment, photoUrl });
+                      setIsUploadingEditPhoto(false);
                     }}
                   >
                     {(updateCheckIn.isPending || isUploadingEditPhoto) ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
@@ -507,7 +518,6 @@ export default function ActivityDetails() {
                 {currentVisit.comment && (
                   <p className="text-sm text-muted-foreground italic">"{currentVisit.comment}"</p>
                 )}
-                {/* Check-in photos - show carousel if multiple */}
                 {(() => {
                   const urls = (currentVisit as any).photo_urls?.length > 0
                     ? (currentVisit as any).photo_urls as string[]
@@ -530,12 +540,15 @@ export default function ActivityDetails() {
                 <div className="flex gap-2 pt-1">
                   <button
                     onClick={() => {
+                      const urls = (currentVisit as any).photo_urls?.length > 0
+                        ? [...(currentVisit as any).photo_urls] as string[]
+                        : currentVisit.photo_url ? [currentVisit.photo_url] : [];
                       setEditingCheckIn(currentVisit.id);
                       setEditRating(currentVisit.rating);
                       setEditComment(currentVisit.comment || "");
-                      setEditExistingPhoto(currentVisit.photo_url || null);
-                      setEditPhotoFile(null);
-                      setEditPhotoPreview(null);
+                      setEditPhotoUrls(urls);
+                      setEditNewFiles([]);
+                      setEditNewPreviews([]);
                     }}
                     className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
