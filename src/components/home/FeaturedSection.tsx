@@ -1,5 +1,4 @@
-import { Sparkles, RefreshCw, EyeOff, Trash2, Loader2 } from "lucide-react";
-import { MapPin, Star, Heart } from "lucide-react";
+import { Sparkles, RefreshCw, EyeOff, Trash2, Loader2, Heart } from "lucide-react";
 import { useWhatsOnToday, useToggleWhatsOn, type WhatsOnItem } from "@/hooks/useWhatsOnToday";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -105,7 +104,7 @@ function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean })
         </div>
       )}
 
-      {/* Heart (placeholder for events) */}
+      {/* Heart button */}
       <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
         className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-colors shadow-sm"
@@ -113,6 +112,23 @@ function WhatsOnCard({ item, isAdmin }: { item: WhatsOnItem; isAdmin: boolean })
       >
         <Heart className="w-4 h-4 text-white" />
       </button>
+
+      {/* Admin delete button — bottom right (always visible for admins) */}
+      {isAdmin && item.activityId && (
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="absolute bottom-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-destructive/80 backdrop-blur-sm hover:bg-destructive transition-colors shadow-sm"
+          aria-label="Delete"
+          title="Delete event"
+        >
+          {deleting ? (
+            <Loader2 className="w-4 h-4 text-white animate-spin" />
+          ) : (
+            <Trash2 className="w-4 h-4 text-white" />
+          )}
+        </button>
+      )}
 
       {/* Admin buttons */}
       {isAdmin && item.activityId && (
