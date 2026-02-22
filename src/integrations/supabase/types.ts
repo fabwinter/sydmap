@@ -51,6 +51,7 @@ export type Database = {
           region: string | null
           review_count: number
           shade: boolean
+          show_in_featured: boolean
           show_in_whats_on: boolean
           showers: boolean
           source_url: string | null
@@ -96,6 +97,7 @@ export type Database = {
           region?: string | null
           review_count?: number
           shade?: boolean
+          show_in_featured?: boolean
           show_in_whats_on?: boolean
           showers?: boolean
           source_url?: string | null
@@ -141,6 +143,7 @@ export type Database = {
           region?: string | null
           review_count?: number
           shade?: boolean
+          show_in_featured?: boolean
           show_in_whats_on?: boolean
           showers?: boolean
           source_url?: string | null
