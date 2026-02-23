@@ -13,8 +13,8 @@ interface HeroSlideshowProps {
   onCtaClick?: () => void;
 }
 
-export function HeroSlideshow({ 
-  images, 
+export function HeroSlideshow({
+  images,
   title = "Discover Sydney",
   subtitle = "Join thousands exploring the best spots in Australia's most vibrant city.",
   interval = 6000,
@@ -44,16 +44,16 @@ export function HeroSlideshow({
             alt="Sydney"
             className="w-full h-full object-cover"
             initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ 
+            animate={{
               opacity: 1,
-              scale: 1.15,
+              scale: 1.15
             }}
             exit={{ opacity: 0 }}
             transition={{
               opacity: { duration: 1.2, ease: "easeInOut" },
-              scale: { duration: 12, ease: "easeOut" },
-            }}
-          />
+              scale: { duration: 12, ease: "easeOut" }
+            }} />
+
         </AnimatePresence>
       </div>
 
@@ -71,11 +71,11 @@ export function HeroSlideshow({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
             className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold italic leading-tight drop-shadow-2xl"
-            style={{ 
+            style={{
               textShadow: '0 4px 30px rgba(0,0,0,0.5)',
               fontFamily: 'Georgia, serif'
-            }}
-          >
+            }}>
+
             {title}
           </motion.h1>
           
@@ -84,8 +84,8 @@ export function HeroSlideshow({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.6 }}
-            className="text-lg md:text-xl lg:text-2xl text-white/90 max-w-2xl mx-auto font-light drop-shadow-lg"
-          >
+            className="text-lg md:text-xl lg:text-2xl text-white/90 max-w-2xl mx-auto font-light drop-shadow-lg">
+
             {subtitle}
           </motion.p>
 
@@ -94,13 +94,13 @@ export function HeroSlideshow({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9, duration: 0.6 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6"
-          >
-            <Button 
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
+
+            <Button
               size="lg"
-              onClick={() => { triggerHaptic("medium"); onCtaClick?.(); }}
-              className="bg-white text-foreground hover:bg-white/90 font-semibold px-8 py-6 text-base rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
-            >
+              onClick={() => {triggerHaptic("medium");onCtaClick?.();}}
+              className="bg-white text-foreground hover:bg-white/90 font-semibold px-8 py-6 text-base rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+
               <MapPin className="w-5 h-5 mr-2 text-primary" />
               {ctaText}
             </Button>
@@ -108,9 +108,9 @@ export function HeroSlideshow({
             {/* Rating badge */}
             <div className="flex items-center gap-2">
               <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
-                ))}
+                {[...Array(5)].map((_, i) =>
+                <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
+                )}
               </div>
               <span className="text-white/90 text-sm font-medium">4.8 (140K RATINGS)</span>
             </div>
@@ -119,38 +119,38 @@ export function HeroSlideshow({
       </div>
 
       {/* Slide indicators - bottom */}
-      {images.length > 1 && (
-        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-          {images.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                index === currentIndex 
-                  ? "bg-white w-8" 
-                  : "bg-white/40 w-2 hover:bg-white/60"
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
+      {images.length > 1 &&
+      <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+          {images.map((_, index) =>
+        <button
+          key={index}
+          onClick={() => setCurrentIndex(index)}
+          className={`h-2 rounded-full transition-all duration-300 ${
+          index === currentIndex ?
+          "bg-white w-8" :
+          "bg-white/40 w-2 hover:bg-white/60"}`
+          }
+          aria-label={`Go to slide ${index + 1}`} />
+
+        )}
         </div>
-      )}
+      }
 
       {/* Scroll indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.4, duration: 0.6 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2"
-      >
-        <span className="text-white/70 text-xs uppercase tracking-widest">Explore</span>
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+
+        
         <motion.div
           animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-        >
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}>
+
           <ChevronDown className="w-6 h-6 text-white/70" />
         </motion.div>
       </motion.div>
-    </section>
-  );
+    </section>);
+
 }
