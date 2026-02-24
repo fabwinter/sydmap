@@ -323,14 +323,21 @@ export default function MapView() {
     if (filterKey === prevFilterKey.current) return;
     prevFilterKey.current = filterKey;
     if (urlLat && urlLng) return;
-    if (!mapRef.current || filteredActivities.length === 0) return;
 
-    const bounds = new LngLatBounds();
-    filteredActivities.forEach((a) => bounds.extend([a.longitude, a.latitude]));
-    mapRef.current.fitBounds(bounds, { padding: 80, maxZoom: 15, duration: 1000 });
-    // Clear map bounds when other filters change
+    // When filters change, clear previous map bounds so all matching results show,
+    // then fit the map to the filtered results automatically
     setMapBounds(null);
     setShowSearchHere(false);
+
+    // Wait a tick for filteredActivities to update with cleared mapBounds
+    requestAnimationFrame(() => {
+      if (!mapRef.current) return;
+      const allFiltered = filteredActivities;
+      if (allFiltered.length === 0) return;
+      const bounds = new LngLatBounds();
+      allFiltered.forEach((a) => bounds.extend([a.longitude, a.latitude]));
+      mapRef.current.fitBounds(bounds, { padding: 80, maxZoom: 15, duration: 1000 });
+    });
   }, [filterKey, filteredActivities, urlLat, urlLng, setMapBounds]);
 
   const handleMarkerClick = useCallback((activity: Activity) => {
