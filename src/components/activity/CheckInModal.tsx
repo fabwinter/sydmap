@@ -29,6 +29,8 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const { data: limits } = useFreemiumLimits();
+  const atCheckInLimit = limits && !limits.isPremium && limits.checkInsToday >= limits.checkInLimit;
 
   const handleFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
