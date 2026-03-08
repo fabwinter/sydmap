@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { MediaLightbox } from "@/components/ui/MediaLightbox";
 import { useNavigate, Link } from "react-router-dom";
 import { Settings, MapPin, Users, Coffee, Award, ChevronRight, ChevronDown, Loader2, Heart, Bookmark, Plus, Trash2, Star, MessageSquare, Image as ImageIcon, CalendarDays, Flame, Share2, BookmarkPlus, Trophy, Sparkles, Crown, Zap, Camera } from "lucide-react";
+import { FriendsList } from "@/components/profile/FriendsList";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -821,12 +822,15 @@ export default function Profile() {
 
           {/* Friends Tab */}
           <TabsContent value="friends">
-            <EmptyState
-              icon={<Users className="w-10 h-10" />}
-              title="Connect with friends"
-              subtitle="Find friends who explore Sydney and share adventures together"
-              action={<Button variant="default" className="rounded-full min-h-[44px] px-6">Find Friends</Button>}
-            />
+            {profile?.id ? (
+              <FriendsList profileId={profile.id} />
+            ) : (
+              <EmptyState
+                icon={<Users className="w-10 h-10" />}
+                title="Connect with friends"
+                subtitle="Sign in to find friends who explore Sydney"
+              />
+            )}
           </TabsContent>
         </Tabs>
       </div>

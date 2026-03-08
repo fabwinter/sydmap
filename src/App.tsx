@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -16,6 +17,7 @@ import CategoryView from "./pages/CategoryView";
 import WhatsOn from "./pages/WhatsOn";
 import EventDetails from "./pages/EventDetails";
 import Discounts from "./pages/Discounts";
+import Feed from "./pages/Feed";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,23 +28,26 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/home" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/map" element={<MapView />} />
-          <Route path="/timeline" element={<Timeline />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/activity/:id" element={<ActivityDetails />} />
-          <Route path="/explore" element={<CategoryView />} />
-          <Route path="/whats-on" element={<WhatsOn />} />
-          <Route path="/event/:id" element={<EventDetails />} />
-          <Route path="/discounts" element={<Discounts />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/home" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/map" element={<MapView />} />
+            <Route path="/timeline" element={<Timeline />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/activity/:id" element={<ActivityDetails />} />
+            <Route path="/explore" element={<CategoryView />} />
+            <Route path="/whats-on" element={<WhatsOn />} />
+            <Route path="/event/:id" element={<EventDetails />} />
+            <Route path="/discounts" element={<Discounts />} />
+            <Route path="/feed" element={<Feed />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </ErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
