@@ -28,23 +28,26 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/home" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/map" element={<MapView />} />
-          <Route path="/timeline" element={<Timeline />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/activity/:id" element={<ActivityDetails />} />
-          <Route path="/explore" element={<CategoryView />} />
-          <Route path="/whats-on" element={<WhatsOn />} />
-          <Route path="/event/:id" element={<EventDetails />} />
-          <Route path="/discounts" element={<Discounts />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/home" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/map" element={<MapView />} />
+            <Route path="/timeline" element={<Timeline />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/activity/:id" element={<ActivityDetails />} />
+            <Route path="/explore" element={<CategoryView />} />
+            <Route path="/whats-on" element={<WhatsOn />} />
+            <Route path="/event/:id" element={<EventDetails />} />
+            <Route path="/discounts" element={<Discounts />} />
+            <Route path="/feed" element={<Feed />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </ErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
