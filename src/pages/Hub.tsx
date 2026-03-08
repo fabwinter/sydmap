@@ -12,6 +12,7 @@ import {
   Flame,
   CloudSun,
   ChevronRight,
+  Trophy,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStreak } from "@/hooks/useStreak";
