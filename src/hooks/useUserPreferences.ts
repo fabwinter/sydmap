@@ -9,6 +9,12 @@ export interface UserPreferences {
   explore_with: string;
   max_distance: number;
   onboarding_completed: boolean;
+  personalization_enabled: boolean;
+  cuisines: string[];
+  budget: string;
+  time_of_day: string[];
+  accessibility_needs: string[];
+  vibe: string[];
 }
 
 export function useUserPreferences() {
