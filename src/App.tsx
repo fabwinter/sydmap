@@ -15,6 +15,7 @@ import ActivityDetails from "./pages/ActivityDetails";
 import CategoryView from "./pages/CategoryView";
 import WhatsOn from "./pages/WhatsOn";
 import EventDetails from "./pages/EventDetails";
+import Discounts from "./pages/Discounts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
