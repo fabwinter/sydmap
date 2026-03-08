@@ -6,6 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
+import { UpgradePrompt } from "@/components/premium/UpgradePrompt";
+import { UsageBadge } from "@/components/premium/UsageBadge";
 
 interface CheckInModalProps {
   activityId: string;
