@@ -10,6 +10,9 @@ import ReactMarkdown from "react-markdown";
 import { ChatVenueCards } from "@/components/chat/ChatVenueCards";
 import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { UsageBadge } from "@/components/premium/UsageBadge";
+import { UpgradePrompt } from "@/components/premium/UpgradePrompt";
+import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
 
 const starterPrompts = [
   "🍳 Best brunch spots nearby",
