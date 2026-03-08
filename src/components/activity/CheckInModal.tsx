@@ -169,6 +169,17 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
           <p className="text-center text-muted-foreground">
             Share your experience at <span className="font-semibold text-foreground">{activityName}</span>
           </p>
+          {limits && (
+            <div className="flex justify-center">
+              <UsageBadge used={limits.checkInsToday} limit={limits.checkInLimit} label="check-ins left" />
+            </div>
+          )}
+          {atCheckInLimit && (
+            <UpgradePrompt
+              title="Daily check-in limit reached"
+              description="Free users can check in 3 times per day. Upgrade for unlimited check-ins!"
+            />
+          )}
 
           {/* Rating */}
           <div className="text-center space-y-2">
