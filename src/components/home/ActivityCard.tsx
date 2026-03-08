@@ -136,7 +136,7 @@ function WhatsOnButton({
     <button
       onClick={handleClick}
       disabled={toggleWhatsOn.isPending}
-      className={`w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${
+      className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${
         showInWhatsOn
           ? "bg-warning/90 text-white"
           : "bg-white/20 text-white hover:bg-white/40"
@@ -186,7 +186,7 @@ function FeaturedButton({
     <button
       onClick={handleClick}
       disabled={toggleFeatured.isPending}
-      className={`w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${
+      className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${
         showInFeatured
           ? "bg-primary/90 text-white"
           : "bg-white/20 text-white hover:bg-white/40"
@@ -218,7 +218,7 @@ function HeartButton({ activityId }: { activityId: string }) {
   return (
     <button
       onClick={handleClick}
-      className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-colors shadow-sm"
+      className="absolute top-3 right-3 z-10 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-colors shadow-sm"
       aria-label={isSaved ? "Remove from saved" : "Save"}
     >
       <Heart

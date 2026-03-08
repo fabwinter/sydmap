@@ -14,8 +14,8 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [newsletterOptIn, setNewsletterOptIn] = useState(true);
-  const [marketingOptIn, setMarketingOptIn] = useState(true);
+  const [newsletterOptIn, setNewsletterOptIn] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
