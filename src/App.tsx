@@ -33,6 +33,7 @@ const App = () => (
         <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/hub" element={<Hub />} />
             <Route path="/home" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
