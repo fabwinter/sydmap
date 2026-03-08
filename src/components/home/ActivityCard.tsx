@@ -136,7 +136,7 @@ function WhatsOnButton({
     <button
       onClick={handleClick}
       disabled={toggleWhatsOn.isPending}
-      className={`w-8 h-8 flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${
+      className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full backdrop-blur-sm transition-colors shadow-sm ${
         showInWhatsOn
           ? "bg-warning/90 text-white"
           : "bg-white/20 text-white hover:bg-white/40"
