@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
