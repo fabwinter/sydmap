@@ -822,12 +822,15 @@ export default function Profile() {
 
           {/* Friends Tab */}
           <TabsContent value="friends">
-            <EmptyState
-              icon={<Users className="w-10 h-10" />}
-              title="Connect with friends"
-              subtitle="Find friends who explore Sydney and share adventures together"
-              action={<Button variant="default" className="rounded-full min-h-[44px] px-6">Find Friends</Button>}
-            />
+            {profile?.id ? (
+              <FriendsList profileId={profile.id} />
+            ) : (
+              <EmptyState
+                icon={<Users className="w-10 h-10" />}
+                title="Connect with friends"
+                subtitle="Sign in to find friends who explore Sydney"
+              />
+            )}
           </TabsContent>
         </Tabs>
       </div>
