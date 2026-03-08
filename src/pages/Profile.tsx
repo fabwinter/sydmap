@@ -265,6 +265,42 @@ export default function Profile() {
     toggleSaved.mutate({ activityId, isSaved: true });
   };
 
+  const coverPhotoUrl = (profile as any)?.cover_photo_url || DEFAULT_COVER;
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+    
+    setUploadingCover(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/cover.${ext}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('cover-photos')
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('cover-photos')
+        .getPublicUrl(path);
+
+      const url = `${publicUrl}?t=${Date.now()}`;
+      
+      await supabase
+        .from('profiles')
+        .update({ cover_photo_url: url } as any)
+        .eq('user_id', user.id);
+
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      toast.success("Cover photo updated!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload cover photo");
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="max-w-lg lg:max-w-4xl mx-auto pb-8">
