@@ -79,6 +79,20 @@ export function useChat() {
         userContext.userName = profile.name;
       }
 
+      // Inject user preferences
+      if (userPrefs?.personalization_enabled) {
+        userContext.preferences = {
+          categories: userPrefs.categories,
+          cuisines: userPrefs.cuisines,
+          vibe: userPrefs.vibe,
+          budget: userPrefs.budget,
+          timeOfDay: userPrefs.time_of_day,
+          accessibilityNeeds: userPrefs.accessibility_needs,
+          exploreWith: userPrefs.explore_with,
+          maxDistance: userPrefs.max_distance,
+        };
+      }
+
       // Fetch saved items if authenticated
       if (session?.user) {
         const { data: savedItems } = await supabase
