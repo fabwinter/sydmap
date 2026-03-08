@@ -1,11 +1,11 @@
-import { Home, Map, Bookmark, MessageCircle, User } from "lucide-react";
+import { Home, Map, Clock, MessageCircle, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { triggerHaptic } from "@/lib/haptics";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/home" },
   { icon: Map, label: "Map", path: "/map" },
-  { icon: Bookmark, label: "Saved", path: "/saved" },
+  { icon: Clock, label: "Timeline", path: "/timeline" },
   { icon: MessageCircle, label: "Chat", path: "/chat" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
