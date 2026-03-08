@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HeroSlideshow } from "@/components/ui/HeroSlideshow";
 import { triggerHaptic } from "@/lib/haptics";
@@ -13,23 +13,22 @@ const heroImages = [
 
 export default function Landing() {
   const navigate = useNavigate();
+  const [ready, setReady] = useState(false);
 
-  // Redirect authenticated users to home
   useEffect(() => {
-    // Set up listener FIRST to catch incoming auth events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("[Landing] onAuthStateChange:", event, !!session);
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
-        if (session) {
-          console.log("[Landing] Redirecting to /home from event:", event);
-          navigate("/home", { replace: true });
-        }
+    // Check existing session FIRST
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("[Landing] getSession:", !!session);
+      if (session) {
+        navigate("/home", { replace: true });
+        return;
       }
+      setReady(true);
     });
 
-    // THEN check existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("[Landing] getSession result:", !!session);
+    // Listen for auth changes (e.g. OAuth redirect completing)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("[Landing] onAuthStateChange:", event, !!session);
       if (session) {
         navigate("/home", { replace: true });
       }
@@ -42,6 +41,15 @@ export default function Landing() {
     triggerHaptic("medium");
     navigate("/home");
   };
+
+  // Don't render landing UI until we've confirmed no session exists
+  if (!ready) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="w-10 h-10 rounded-xl bg-primary/20 animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen overflow-hidden">

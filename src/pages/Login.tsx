@@ -91,11 +91,14 @@ export default function Login() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/home",
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
       });
       
-      if (error) throw error;
+      console.log("[Login] Google OAuth result:", result);
+      
+      if (result?.error) throw result.error;
+      // If redirected, browser navigates away — no further action needed
     } catch (error: any) {
       toast({
         variant: "destructive",
