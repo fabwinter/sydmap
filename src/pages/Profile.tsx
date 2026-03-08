@@ -306,28 +306,33 @@ export default function Profile() {
       <div className="max-w-lg lg:max-w-4xl mx-auto pb-8">
         {/* ── Profile Header: Immersive Gradient Hero ────────────── */}
         <div className="relative overflow-hidden rounded-b-[2rem]">
-          {/* Animated gradient background */}
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: "linear-gradient(135deg, hsl(210 80% 25%) 0%, hsl(195 85% 35%) 30%, hsl(175 60% 40%) 60%, hsl(160 50% 45%) 100%)",
-              backgroundSize: "300% 300%",
-              animation: "gradientShift 12s ease infinite",
-            }}
+          {/* Cover photo background */}
+          <img
+            src={coverPhotoUrl}
+            alt="Profile cover"
+            className="absolute inset-0 w-full h-full object-cover"
           />
-          {/* Decorative circles for depth */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/[0.06] blur-sm" />
-            <div className="absolute top-10 -left-10 w-40 h-40 rounded-full bg-white/[0.04] blur-sm" />
-            <div className="absolute bottom-8 right-10 w-24 h-24 rounded-full bg-white/[0.05]" />
-          </div>
-          {/* Subtle dot pattern */}
-          <div className="absolute inset-0 opacity-[0.03]" style={{
-            backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
-          }} />
-          {/* Bottom fade */}
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/60" />
+          {/* Bottom fade to background */}
           <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent" />
+
+          {/* Change cover button */}
+          <input
+            ref={coverInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleCoverUpload}
+          />
+          <button
+            onClick={() => coverInputRef.current?.click()}
+            className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-md text-white/80 hover:text-white hover:bg-black/50 text-xs font-medium transition-all min-h-[44px] min-w-[44px] shadow-lg border border-white/10"
+            disabled={uploadingCover}
+          >
+            {uploadingCover ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">Change Cover</span>
+          </button>
 
           <div className="relative px-5 pt-12 pb-14 text-center">
             {/* Avatar with Progress Ring */}
