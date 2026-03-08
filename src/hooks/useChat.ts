@@ -4,6 +4,7 @@ import { useChatStore } from "@/stores/chatStore";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 
 interface ChatMessage {
   id: string;
