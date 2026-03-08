@@ -3,6 +3,7 @@ import { ControlPanel } from "@/components/home/ControlPanel";
 import { HeroFeatured } from "@/components/home/HeroFeatured";
 import { FeaturedSection } from "@/components/home/FeaturedSection";
 import { RecommendedSection } from "@/components/home/RecommendedSection";
+import { SurpriseButton } from "@/components/home/SurpriseButton";
 import { CuratedSections } from "@/components/home/CuratedSections";
 import { FoursquareSection } from "@/components/home/FoursquareSection";
 import { GoogleSection } from "@/components/home/GoogleSection";
