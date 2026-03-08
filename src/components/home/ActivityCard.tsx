@@ -341,7 +341,7 @@ export function ActivityCard({ activity, variant = "default" }: ActivityCardProp
   return (
     <Link
       to={activity.isEvent ? `/event/${activity.id}` : `/activity/${activity.id}`}
-      className="group flex flex-col"
+      className="group flex flex-col active:scale-[0.97] transition-transform duration-150"
     >
       {cardContent}
     </Link>
