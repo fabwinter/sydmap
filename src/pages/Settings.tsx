@@ -250,6 +250,14 @@ export default function Settings() {
           </div>
         </section>
 
+        {/* Appearance Section */}
+        <section className="px-4 py-6 border-b border-border">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+            Appearance
+          </h2>
+          <ThemeSelector />
+        </section>
+
         {/* Account Section */}
         <section className="px-4 py-6 border-b border-border">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
