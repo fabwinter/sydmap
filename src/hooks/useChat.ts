@@ -34,6 +34,7 @@ export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const { location } = useUserLocation();
   const { profile, session } = useAuth();
+  const { data: userPrefs } = useUserPreferences();
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;

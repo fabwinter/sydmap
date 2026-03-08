@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PreferencesSurvey } from "@/components/settings/PreferencesSurvey";
 
 export default function Settings() {
   const navigate = useNavigate();
