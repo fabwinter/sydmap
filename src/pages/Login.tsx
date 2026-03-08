@@ -142,14 +142,19 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Hero Section */}
-      <div className="relative h-48 bg-gradient-to-br from-primary to-secondary overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop')] bg-cover bg-center opacity-30" />
+      <div className="relative h-56 overflow-hidden">
+        <img
+          src="/images/sydney-auth-bg.jpg"
+          alt="Sydney Harbour at twilight"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-background" />
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="w-16 h-16 rounded-2xl bg-background/20 backdrop-blur-sm flex items-center justify-center mb-3">
-            <span className="text-3xl font-bold text-primary-foreground">SP</span>
+          <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center mb-3 shadow-lg border border-white/10">
+            <span className="text-3xl font-bold text-white">S</span>
           </div>
-          <h1 className="text-3xl font-bold text-primary-foreground tracking-tight">Sydney Planner</h1>
-          <p className="text-primary-foreground/80 text-sm mt-1">Discover Sydney</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">SYDMAP</h1>
+          <p className="text-white/70 text-sm mt-1">Discover Sydney</p>
         </div>
       </div>
       
