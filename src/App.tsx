@@ -20,6 +20,7 @@ import WhatsOn from "./pages/WhatsOn";
 import EventDetails from "./pages/EventDetails";
 import Discounts from "./pages/Discounts";
 import Feed from "./pages/Feed";
+import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/event/:id" element={<EventDetails />} />
             <Route path="/discounts" element={<Discounts />} />
             <Route path="/feed" element={<Feed />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

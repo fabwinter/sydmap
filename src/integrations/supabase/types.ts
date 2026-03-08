@@ -789,6 +789,16 @@ export type Database = {
       }
       chat_message_limit_exceeded: { Args: never; Returns: boolean }
       check_in_limit_exceeded: { Args: never; Returns: boolean }
+      get_leaderboard: {
+        Args: { p_limit?: number; p_period?: string }
+        Returns: {
+          avatar_url: string
+          check_in_count: number
+          name: string
+          profile_id: string
+          rank: number
+        }[]
+      }
       get_profile_id_from_auth: { Args: never; Returns: string }
       has_role: {
         Args: {
