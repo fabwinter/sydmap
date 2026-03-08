@@ -166,10 +166,11 @@ export default function Chat() {
             </div>
             <div>
               <h1 className="font-bold">Sydney Planner Assistant</h1>
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                <p className="text-xs text-muted-foreground">Powered by AI</p>
-              </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <p className="text-xs text-muted-foreground">Powered by AI</p>
+                  {limits && <UsageBadge used={limits.chatMessagesToday} limit={limits.chatLimit} label="left" />}
+                </div>
             </div>
           </div>
           <div className="flex items-center gap-1">
