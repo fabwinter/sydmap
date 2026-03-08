@@ -275,6 +275,28 @@ export default function Hub() {
         </div>
       </div>
 
+      {/* Leaderboard Link */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.7 }}
+        className="px-5 pb-2"
+      >
+        <button
+          onClick={() => navigate("/leaderboard")}
+          className="w-full flex items-center gap-3 bg-muted/50 hover:bg-muted rounded-2xl p-4 transition-colors active:scale-[0.98]"
+        >
+          <div className="w-10 h-10 rounded-xl bg-yellow-500/15 flex items-center justify-center">
+            <Trophy className="w-5 h-5 text-yellow-600" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-semibold text-foreground">Top Explorers</p>
+            <p className="text-xs text-muted-foreground">See how you rank</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </button>
+      </motion.div>
+
       {/* Bottom branding */}
       <motion.div
         initial={{ opacity: 0 }}
