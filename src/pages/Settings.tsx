@@ -12,7 +12,10 @@ import {
   Mail,
   Lock,
   Loader2,
-  Check
+  Check,
+  Sun,
+  Moon,
+  Monitor
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -247,6 +250,14 @@ export default function Settings() {
           </div>
         </section>
 
+        {/* Appearance Section */}
+        <section className="px-4 py-6 border-b border-border">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+            Appearance
+          </h2>
+          <ThemeSelector />
+        </section>
+
         {/* Account Section */}
         <section className="px-4 py-6 border-b border-border">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
@@ -294,6 +305,58 @@ export default function Settings() {
         </section>
       </div>
     </AppLayout>
+  );
+}
+
+function ThemeSelector() {
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("theme") || "system";
+    }
+    return "system";
+  });
+
+  const applyTheme = (newTheme: string) => {
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    const root = document.documentElement;
+    if (newTheme === "dark") {
+      root.classList.add("dark");
+    } else if (newTheme === "light") {
+      root.classList.remove("dark");
+    } else {
+      // system
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        root.classList.add("dark");
+      } else {
+        root.classList.remove("dark");
+      }
+    }
+  };
+
+  const options = [
+    { value: "light", icon: Sun, label: "Light" },
+    { value: "dark", icon: Moon, label: "Dark" },
+    { value: "system", icon: Monitor, label: "System" },
+  ];
+
+  return (
+    <div className="flex gap-2">
+      {options.map(({ value, icon: Icon, label }) => (
+        <button
+          key={value}
+          onClick={() => applyTheme(value)}
+          className={`flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all min-h-[44px] ${
+            theme === value
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-border bg-card text-muted-foreground hover:border-primary/30"
+          }`}
+        >
+          <Icon className="w-5 h-5" />
+          <span className="text-xs font-medium">{label}</span>
+        </button>
+      ))}
+    </div>
   );
 }
 
