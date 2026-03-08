@@ -56,6 +56,11 @@ export default function Profile() {
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistEmoji, setNewPlaylistEmoji] = useState("📍");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+
+  const DEFAULT_COVER = "/images/sydney-harbour-default.jpg";
 
   // Redirect to login if not authenticated
   useEffect(() => {
