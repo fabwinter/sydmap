@@ -27,6 +27,7 @@ export default function Chat() {
   const { messages, isLoading, sendMessage, clearMessages } = useChat();
   const { sessions, createSession, deleteSession, updateSessionTitle, loadSessionMessages, saveMessage } = useChatSessions();
   const { profile, isAuthenticated } = useAuth();
+  const { data: limits } = useFreemiumLimits();
   const { setMessages } = useChatStore();
   const [input, setInput] = useState("");
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
