@@ -714,34 +714,52 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          accessibility_needs: Json
+          budget: string
           categories: Json
           created_at: string
+          cuisines: Json
           explore_with: string
           id: string
           max_distance: number
           onboarding_completed: boolean
+          personalization_enabled: boolean
+          time_of_day: Json
           updated_at: string
           user_id: string
+          vibe: Json
         }
         Insert: {
+          accessibility_needs?: Json
+          budget?: string
           categories?: Json
           created_at?: string
+          cuisines?: Json
           explore_with?: string
           id?: string
           max_distance?: number
           onboarding_completed?: boolean
+          personalization_enabled?: boolean
+          time_of_day?: Json
           updated_at?: string
           user_id: string
+          vibe?: Json
         }
         Update: {
+          accessibility_needs?: Json
+          budget?: string
           categories?: Json
           created_at?: string
+          cuisines?: Json
           explore_with?: string
           id?: string
           max_distance?: number
           onboarding_completed?: boolean
+          personalization_enabled?: boolean
+          time_of_day?: Json
           updated_at?: string
           user_id?: string
+          vibe?: Json
         }
         Relationships: [
           {
