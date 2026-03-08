@@ -1,4 +1,4 @@
-import { Home, Map, Bookmark, MessageCircle, User } from "lucide-react";
+import { Home, Map, Clock, MessageCircle, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { triggerHaptic } from "@/lib/haptics";
 
