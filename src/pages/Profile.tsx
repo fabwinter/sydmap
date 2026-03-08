@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { MediaLightbox } from "@/components/ui/MediaLightbox";
 import { useNavigate, Link } from "react-router-dom";
-import { Settings, MapPin, Users, Coffee, Award, ChevronRight, ChevronDown, Loader2, Heart, Bookmark, Plus, Trash2, Star, MessageSquare, Image as ImageIcon, CalendarDays, Flame, Share2, BookmarkPlus, Trophy, Sparkles, Crown, Zap } from "lucide-react";
+import { Settings, MapPin, Users, Coffee, Award, ChevronRight, ChevronDown, Loader2, Heart, Bookmark, Plus, Trash2, Star, MessageSquare, Image as ImageIcon, CalendarDays, Flame, Share2, BookmarkPlus, Trophy, Sparkles, Crown, Zap, Camera } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -10,7 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PremiumModal } from "@/components/premium/PremiumModal";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useSavedItems, useToggleSavedItem } from "@/hooks/useSavedItems";
 import { usePlaylists, useCreatePlaylist, useDeletePlaylist } from "@/hooks/usePlaylists";
 import { useCalendarEvents, useDeleteCalendarEvent } from "@/hooks/useCalendarEvents";
@@ -55,6 +56,11 @@ export default function Profile() {
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newPlaylistEmoji, setNewPlaylistEmoji] = useState("📍");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+
+  const DEFAULT_COVER = "/images/sydney-harbour-default.jpg";
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -259,33 +265,74 @@ export default function Profile() {
     toggleSaved.mutate({ activityId, isSaved: true });
   };
 
+  const coverPhotoUrl = (profile as any)?.cover_photo_url || DEFAULT_COVER;
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+    
+    setUploadingCover(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/cover.${ext}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('cover-photos')
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('cover-photos')
+        .getPublicUrl(path);
+
+      const url = `${publicUrl}?t=${Date.now()}`;
+      
+      await supabase
+        .from('profiles')
+        .update({ cover_photo_url: url } as any)
+        .eq('user_id', user.id);
+
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      toast.success("Cover photo updated!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload cover photo");
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="max-w-lg lg:max-w-4xl mx-auto pb-8">
         {/* ── Profile Header: Immersive Gradient Hero ────────────── */}
         <div className="relative overflow-hidden rounded-b-[2rem]">
-          {/* Animated gradient background */}
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: "linear-gradient(135deg, hsl(210 80% 25%) 0%, hsl(195 85% 35%) 30%, hsl(175 60% 40%) 60%, hsl(160 50% 45%) 100%)",
-              backgroundSize: "300% 300%",
-              animation: "gradientShift 12s ease infinite",
-            }}
+          {/* Cover photo background */}
+          <img
+            src={coverPhotoUrl}
+            alt="Profile cover"
+            className="absolute inset-0 w-full h-full object-cover"
           />
-          {/* Decorative circles for depth */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/[0.06] blur-sm" />
-            <div className="absolute top-10 -left-10 w-40 h-40 rounded-full bg-white/[0.04] blur-sm" />
-            <div className="absolute bottom-8 right-10 w-24 h-24 rounded-full bg-white/[0.05]" />
-          </div>
-          {/* Subtle dot pattern */}
-          <div className="absolute inset-0 opacity-[0.03]" style={{
-            backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
-          }} />
-          {/* Bottom fade */}
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/60" />
+          {/* Bottom fade to background */}
           <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent" />
+
+          {/* Change cover button */}
+          <input
+            ref={coverInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleCoverUpload}
+          />
+          <button
+            onClick={() => coverInputRef.current?.click()}
+            className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-md text-white/80 hover:text-white hover:bg-black/50 text-xs font-medium transition-all min-h-[44px] min-w-[44px] shadow-lg border border-white/10"
+            disabled={uploadingCover}
+          >
+            {uploadingCover ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">Change Cover</span>
+          </button>
 
           <div className="relative px-5 pt-12 pb-14 text-center">
             {/* Avatar with Progress Ring */}
