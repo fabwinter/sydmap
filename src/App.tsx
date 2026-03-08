@@ -21,6 +21,7 @@ import EventDetails from "./pages/EventDetails";
 import Discounts from "./pages/Discounts";
 import Feed from "./pages/Feed";
 import Leaderboard from "./pages/Leaderboard";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
