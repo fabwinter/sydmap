@@ -6,6 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
+import { UpgradePrompt } from "@/components/premium/UpgradePrompt";
+import { UsageBadge } from "@/components/premium/UsageBadge";
 
 interface CheckInModalProps {
   activityId: string;
@@ -26,6 +29,8 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const { data: limits } = useFreemiumLimits();
+  const atCheckInLimit = limits && !limits.isPremium && limits.checkInsToday >= limits.checkInLimit;
 
   const handleFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -164,6 +169,17 @@ export function CheckInModal({ activityId, activityName, onClose }: CheckInModal
           <p className="text-center text-muted-foreground">
             Share your experience at <span className="font-semibold text-foreground">{activityName}</span>
           </p>
+          {limits && (
+            <div className="flex justify-center">
+              <UsageBadge used={limits.checkInsToday} limit={limits.checkInLimit} label="check-ins left" />
+            </div>
+          )}
+          {atCheckInLimit && (
+            <UpgradePrompt
+              title="Daily check-in limit reached"
+              description="Free users can check in 3 times per day. Upgrade for unlimited check-ins!"
+            />
+          )}
 
           {/* Rating */}
           <div className="text-center space-y-2">

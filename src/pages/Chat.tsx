@@ -10,6 +10,9 @@ import ReactMarkdown from "react-markdown";
 import { ChatVenueCards } from "@/components/chat/ChatVenueCards";
 import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { UsageBadge } from "@/components/premium/UsageBadge";
+import { UpgradePrompt } from "@/components/premium/UpgradePrompt";
+import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
 
 const starterPrompts = [
   "🍳 Best brunch spots nearby",
@@ -24,6 +27,7 @@ export default function Chat() {
   const { messages, isLoading, sendMessage, clearMessages } = useChat();
   const { sessions, createSession, deleteSession, updateSessionTitle, loadSessionMessages, saveMessage } = useChatSessions();
   const { profile, isAuthenticated } = useAuth();
+  const { data: limits } = useFreemiumLimits();
   const { setMessages } = useChatStore();
   const [input, setInput] = useState("");
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -162,10 +166,11 @@ export default function Chat() {
             </div>
             <div>
               <h1 className="font-bold">Sydney Planner Assistant</h1>
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                <p className="text-xs text-muted-foreground">Powered by AI</p>
-              </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <p className="text-xs text-muted-foreground">Powered by AI</p>
+                  {limits && <UsageBadge used={limits.chatMessagesToday} limit={limits.chatLimit} label="left" />}
+                </div>
             </div>
           </div>
           <div className="flex items-center gap-1">

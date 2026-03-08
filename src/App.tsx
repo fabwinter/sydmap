@@ -15,6 +15,7 @@ import ActivityDetails from "./pages/ActivityDetails";
 import CategoryView from "./pages/CategoryView";
 import WhatsOn from "./pages/WhatsOn";
 import EventDetails from "./pages/EventDetails";
+import Discounts from "./pages/Discounts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/explore" element={<CategoryView />} />
           <Route path="/whats-on" element={<WhatsOn />} />
           <Route path="/event/:id" element={<EventDetails />} />
+          <Route path="/discounts" element={<Discounts />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
