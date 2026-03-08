@@ -21,21 +21,38 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if user is already logged in
+  // Check if user is already logged in — redirect to onboarding or home
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("[Login] onAuthStateChange:", event, !!session);
-      if (session) {
-        console.log("[Login] Redirecting to /home");
-        navigate("/home", { replace: true });
+    const checkAndRedirect = async (session: any) => {
+      if (!session) return;
+      // Check if user has completed onboarding
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (profile) {
+        const { data: prefs } = await supabase
+          .from("user_preferences")
+          .select("onboarding_completed")
+          .eq("user_id", profile.id)
+          .maybeSingle();
+
+        if (!prefs?.onboarding_completed) {
+          navigate("/onboarding", { replace: true });
+          return;
+        }
       }
+      navigate("/hub", { replace: true });
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) checkAndRedirect(session);
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("[Login] getSession:", !!session);
-      if (session) {
-        navigate("/home", { replace: true });
-      }
+      if (session) checkAndRedirect(session);
     });
 
     return () => subscription.unsubscribe();
