@@ -8,6 +8,7 @@ import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
+import Saved from "./pages/Saved";
 import Settings from "./pages/Settings";
 import MapView from "./pages/MapView";
 import Timeline from "./pages/Timeline";
