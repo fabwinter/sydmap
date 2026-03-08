@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { MediaLightbox } from "@/components/ui/MediaLightbox";
 import { useNavigate, Link } from "react-router-dom";
 import { Settings, MapPin, Users, Coffee, Award, ChevronRight, ChevronDown, Loader2, Heart, Bookmark, Plus, Trash2, Star, MessageSquare, Image as ImageIcon, CalendarDays, Flame, Share2, BookmarkPlus, Trophy, Sparkles, Crown, Zap, Camera } from "lucide-react";
+import { FriendsList } from "@/components/profile/FriendsList";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
