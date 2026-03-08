@@ -117,10 +117,27 @@ export default function Profile() {
         .or(`user_id.eq.${profile.id},friend_id.eq.${profile.id}`)
         .eq("status", "accepted");
 
+      // Compute real top category from check-in data
+      let topCategory = { name: "None", count: 0 };
+      const { data: checkInCategories } = await supabase
+        .from("check_ins")
+        .select("activity_id, activities(category)")
+        .eq("user_id", profile.id);
+      
+      if (checkInCategories && checkInCategories.length > 0) {
+        const categoryCounts: Record<string, number> = {};
+        for (const ci of checkInCategories) {
+          const cat = (ci as any).activities?.category;
+          if (cat) categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+        }
+        const topEntry = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0];
+        if (topEntry) topCategory = { name: topEntry[0], count: topEntry[1] };
+      }
+
       return {
         checkIns: checkInCount || 0,
         friends: friendCount || 0,
-        topCategory: { name: "Activities", count: checkInCount || 0 },
+        topCategory,
       };
     },
     enabled: !!profile?.id,

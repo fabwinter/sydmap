@@ -42,6 +42,7 @@ const Index = () => {
                 <FeaturedSection />
               </div>
               <RecommendedSection />
+              <SurpriseButton />
               <CuratedSections />
               <FoursquareSection />
               <GoogleSection />
