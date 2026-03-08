@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { MediaLightbox } from "@/components/ui/MediaLightbox";
 import { useNavigate, Link } from "react-router-dom";
-import { Settings, MapPin, Users, Coffee, Award, ChevronRight, ChevronDown, Loader2, Heart, Bookmark, Plus, Trash2, Star, MessageSquare, Image as ImageIcon, CalendarDays, Flame, Share2, BookmarkPlus, Trophy } from "lucide-react";
+import { Settings, MapPin, Users, Coffee, Award, ChevronRight, ChevronDown, Loader2, Heart, Bookmark, Plus, Trash2, Star, MessageSquare, Image as ImageIcon, CalendarDays, Flame, Share2, BookmarkPlus, Trophy, Sparkles, Crown, Zap } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -162,7 +162,7 @@ export default function Profile() {
     }, {} as Record<string, number>);
   }, [recentCheckIns]);
 
-  // Streak calculation: consecutive days with check-ins ending today or yesterday
+  // Streak calculation
   const streak = useMemo(() => {
     if (recentCheckIns.length === 0) return 0;
     const uniqueDays = [...new Set(
@@ -200,6 +200,7 @@ export default function Profile() {
   const progressPercent = recentCheckIns.length > 0 
     ? Math.min(100, Math.round((recentCheckIns.length / 20) * 100))
     : 0;
+  const level = Math.floor(recentCheckIns.length / 5) + 1;
 
   // Loading state
   if (authLoading || !isAuthenticated) {
@@ -261,82 +262,130 @@ export default function Profile() {
   return (
     <AppLayout>
       <div className="max-w-lg lg:max-w-4xl mx-auto pb-8">
-        {/* ── Profile Header: Animated Gradient Hero ─────────────── */}
-        <div className="relative overflow-hidden">
+        {/* ── Profile Header: Immersive Gradient Hero ────────────── */}
+        <div className="relative overflow-hidden rounded-b-[2rem]">
           {/* Animated gradient background */}
           <div 
             className="absolute inset-0"
             style={{
-              background: "var(--gradient-profile)",
-              backgroundSize: "200% 200%",
-              animation: "gradientShift 8s ease infinite",
+              background: "linear-gradient(135deg, hsl(210 80% 25%) 0%, hsl(195 85% 35%) 30%, hsl(175 60% 40%) 60%, hsl(160 50% 45%) 100%)",
+              backgroundSize: "300% 300%",
+              animation: "gradientShift 12s ease infinite",
             }}
           />
-          {/* Overlay pattern for depth */}
-          <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: "radial-gradient(circle at 30% 50%, rgba(255,255,255,0.2) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.15) 0%, transparent 40%)",
+          {/* Decorative circles for depth */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/[0.06] blur-sm" />
+            <div className="absolute top-10 -left-10 w-40 h-40 rounded-full bg-white/[0.04] blur-sm" />
+            <div className="absolute bottom-8 right-10 w-24 h-24 rounded-full bg-white/[0.05]" />
+          </div>
+          {/* Subtle dot pattern */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{
+            backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
           }} />
-          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
+          {/* Bottom fade */}
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent" />
 
-          <div className="relative px-4 pt-10 pb-8 text-center">
+          <div className="relative px-5 pt-12 pb-14 text-center">
             {/* Avatar with Progress Ring */}
-            <div className="relative inline-block mb-3">
-              <svg className="w-24 h-24" viewBox="0 0 96 96">
+            <motion.div 
+              className="relative inline-block mb-4"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              <svg className="w-28 h-28" viewBox="0 0 112 112">
                 {/* Background ring */}
-                <circle cx="48" cy="48" r="44" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="3" />
+                <circle cx="56" cy="56" r="52" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
                 {/* Progress ring */}
                 <circle
-                  cx="48" cy="48" r="44"
+                  cx="56" cy="56" r="52"
                   fill="none"
-                  stroke="white"
-                  strokeWidth="3"
+                  stroke="url(#progressGradient)"
+                  strokeWidth="4"
                   strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 44}`}
-                  strokeDashoffset={`${2 * Math.PI * 44 * (1 - progressPercent / 100)}`}
-                  transform="rotate(-90 48 48)"
+                  strokeDasharray={`${2 * Math.PI * 52}`}
+                  strokeDashoffset={`${2 * Math.PI * 52 * (1 - progressPercent / 100)}`}
+                  transform="rotate(-90 56 56)"
                   className="transition-all duration-1000"
-                  style={{ filter: "drop-shadow(0 0 4px rgba(255,255,255,0.5))" }}
+                  style={{ filter: "drop-shadow(0 0 6px rgba(255,255,255,0.4))" }}
                 />
+                <defs>
+                  <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="hsl(160, 60%, 65%)" />
+                    <stop offset="100%" stopColor="hsl(210, 80%, 75%)" />
+                  </linearGradient>
+                </defs>
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <Avatar className="w-[76px] h-[76px] ring-2 ring-white/30 shadow-xl">
+                <Avatar className="w-[88px] h-[88px] ring-[3px] ring-white/20 shadow-2xl">
                   <AvatarImage src={avatarUrl} />
-                  <AvatarFallback className="text-xl bg-white/20 text-white font-bold backdrop-blur-sm">
+                  <AvatarFallback className="text-2xl bg-white/15 text-white font-bold backdrop-blur-md">
                     {getInitials()}
                   </AvatarFallback>
                 </Avatar>
               </div>
               {/* Level badge */}
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white text-xs font-bold text-primary shadow-md">
-                Lv.{Math.floor(recentCheckIns.length / 5) + 1}
-              </div>
-            </div>
+              <motion.div 
+                className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-white shadow-lg flex items-center gap-1"
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Zap className="w-3 h-3 text-primary" />
+                <span className="text-xs font-bold text-primary">Lv.{level}</span>
+              </motion.div>
+            </motion.div>
 
-            <h1 className="text-xl font-bold text-white drop-shadow-md">{displayName}</h1>
-            <p className="text-white/80 text-sm mt-0.5">{bio}</p>
+            <motion.h1 
+              className="text-2xl font-extrabold text-white drop-shadow-lg tracking-tight"
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.15 }}
+            >
+              {displayName}
+            </motion.h1>
+            <motion.p 
+              className="text-white/70 text-sm mt-1 max-w-[240px] mx-auto"
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.25 }}
+            >
+              {bio}
+            </motion.p>
 
             {/* Streak & Coins row */}
-            <div className="flex items-center justify-center gap-3 mt-3">
+            <motion.div 
+              className="flex items-center justify-center gap-2.5 mt-4"
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.35 }}
+            >
               {streak > 0 && (
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm font-semibold"
-                >
-                  <Flame className="w-4 h-4 text-orange-300" />
-                  {streak} day streak
-                </motion.div>
+                <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/10 text-white text-sm font-semibold shadow-lg">
+                  <Flame className="w-4 h-4 text-orange-300 drop-shadow" />
+                  <span>{streak}</span>
+                  <span className="text-white/60 text-xs font-normal">day streak</span>
+                </div>
               )}
-              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm font-semibold">
-                🪙 {recentCheckIns.length}
+              <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/10 text-white text-sm font-semibold shadow-lg">
+                <Sparkles className="w-4 h-4 text-yellow-300 drop-shadow" />
+                <span>{recentCheckIns.length}</span>
+                <span className="text-white/60 text-xs font-normal">XP</span>
               </div>
-            </div>
+            </motion.div>
 
             {/* Action buttons */}
-            <div className="flex gap-2 mt-4 max-w-xs mx-auto">
+            <motion.div 
+              className="flex gap-2.5 mt-5 max-w-xs mx-auto"
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.45 }}
+            >
               <Button 
                 variant="outline" 
-                className="flex-1 h-10 rounded-full text-sm border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm"
+                className="flex-1 h-11 rounded-full text-sm font-semibold border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-md shadow-lg"
                 onClick={() => navigate("/settings")}
               >
                 Edit Profile
@@ -344,31 +393,40 @@ export default function Profile() {
               <Button 
                 variant="outline" 
                 size="icon" 
-                className="h-10 w-10 rounded-full border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm" 
+                className="h-11 w-11 rounded-full border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-md shadow-lg" 
                 onClick={() => setShowPremium(true)} 
                 title="Premium"
               >
-                <Award className="w-4 h-4" />
+                <Crown className="w-4 h-4" />
               </Button>
-            </div>
+            </motion.div>
           </div>
         </div>
 
         {/* ── Stats Cards ─────────────────────────────────────────── */}
-        <div className="grid grid-cols-3 mx-4 rounded-2xl bg-card border border-border shadow-sm -mt-6 relative z-10">
-          <StatItem icon={MapPin} value={stats?.checkIns || 0} label="Check-ins" />
-          <StatItem icon={Users} value={stats?.friends || 0} label="Friends" />
-          <StatItem icon={Trophy} value={totalProgress} label="Unlocked" />
-        </div>
+        <motion.div 
+          className="grid grid-cols-3 mx-4 rounded-2xl bg-card border border-border shadow-lg -mt-8 relative z-10 overflow-hidden"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <StatItem icon={MapPin} value={stats?.checkIns || 0} label="Check-ins" color="text-primary" />
+          <div className="relative">
+            <div className="absolute top-4 bottom-4 left-0 w-px bg-border" />
+            <div className="absolute top-4 bottom-4 right-0 w-px bg-border" />
+            <StatItem icon={Users} value={stats?.friends || 0} label="Friends" color="text-secondary" />
+          </div>
+          <StatItem icon={Trophy} value={totalProgress} label="Unlocked" color="text-accent" />
+        </motion.div>
 
         {/* ── Tabs ────────────────────────────────────────────────── */}
-        <Tabs defaultValue="overview" className="px-4 pt-4 pb-4">
-          <TabsList className="w-full overflow-x-auto flex gap-1 bg-transparent p-0 mb-4 scrollbar-hide">
+        <Tabs defaultValue="overview" className="px-4 pt-5 pb-4">
+          <TabsList className="w-full overflow-x-auto flex gap-1.5 bg-transparent p-0 mb-5 scrollbar-hide">
             {["overview", "checkins", "calendar", "saved", "playlists", "friends"].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="px-3 py-1.5 rounded-full text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-muted whitespace-nowrap min-h-[36px]"
+                className="px-4 py-2 rounded-full text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:bg-muted/80 data-[state=inactive]:text-muted-foreground whitespace-nowrap min-h-[40px] transition-all duration-200"
               >
                 {tab === "checkins" ? "Check-Ins" : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </TabsTrigger>
@@ -376,79 +434,86 @@ export default function Profile() {
           </TabsList>
 
           {/* ── Overview Tab ─────────────────────────────────────── */}
-          <TabsContent value="overview" className="space-y-6 mt-0">
+          <TabsContent value="overview" className="space-y-7 mt-0">
             {/* Lists Section */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-lg">Lists <span className="text-muted-foreground font-normal text-sm">{(playlists?.length || 0) + 1}</span></h3>
-                <button className="text-sm text-primary font-medium flex items-center gap-1">
+                <h3 className="font-bold text-lg text-foreground">Lists <span className="text-muted-foreground font-normal text-sm ml-1">{(playlists?.length || 0) + 1}</span></h3>
+                <button className="text-sm text-primary font-semibold flex items-center gap-0.5 hover:underline">
                   See all
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="rounded-2xl bg-muted/60 p-6 flex flex-col items-center justify-center min-h-[120px]">
-                  <Bookmark className="w-8 h-8 text-muted-foreground mb-2" />
-                  <p className="font-semibold text-sm">Saved places</p>
-                  <p className="text-xs text-muted-foreground">{savedItems?.length || 0} places</p>
+                <div className="rounded-2xl bg-gradient-to-br from-muted/80 to-muted/40 p-5 flex flex-col items-center justify-center min-h-[130px] border border-border/50 hover:border-primary/30 transition-colors">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2.5">
+                    <Bookmark className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="font-semibold text-sm text-foreground">Saved places</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{savedItems?.length || 0} places</p>
                 </div>
                 {playlists?.slice(0, 1).map((playlist) => (
-                  <div key={playlist.id} className="rounded-2xl bg-primary/5 p-6 flex flex-col items-center justify-center min-h-[120px]">
+                  <div key={playlist.id} className="rounded-2xl bg-gradient-to-br from-primary/8 to-primary/3 p-5 flex flex-col items-center justify-center min-h-[130px] border border-primary/15 hover:border-primary/30 transition-colors">
                     <span className="text-3xl mb-2">{playlist.emoji || "📍"}</span>
-                    <p className="font-semibold text-sm">{playlist.name}</p>
-                    <p className="text-xs text-muted-foreground">{playlist.item_count || 0} places</p>
+                    <p className="font-semibold text-sm text-foreground">{playlist.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{playlist.item_count || 0} places</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* ── Achievements Carousel with Progress ────────────── */}
+            {/* ── Achievements Carousel ───────────────────────────── */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-lg">Achievements</h3>
-                <span className="text-xs text-muted-foreground font-medium">{totalProgress}/{ACHIEVEMENT_DEFS.length} unlocked</span>
+                <h3 className="font-bold text-lg text-foreground">Achievements</h3>
+                <span className="text-xs text-muted-foreground font-semibold bg-muted px-2.5 py-1 rounded-full">{totalProgress}/{ACHIEVEMENT_DEFS.length}</span>
               </div>
               <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
-                {achievementProgress.map((ach) => (
+                {achievementProgress.map((ach, i) => (
                   <motion.div
                     key={ach.key}
-                    className={`shrink-0 w-[140px] rounded-2xl border p-4 flex flex-col items-center text-center transition-all ${
+                    className={`shrink-0 w-[150px] rounded-2xl p-4 flex flex-col items-center text-center transition-all ${
                       ach.unlocked 
-                        ? "bg-gradient-to-b from-primary/10 to-primary/5 border-primary/30 shadow-sm" 
-                        : "bg-card border-border"
+                        ? "bg-gradient-to-b from-primary/12 to-primary/4 border-2 border-primary/25 shadow-md" 
+                        : "bg-card border border-border/80 shadow-sm"
                     }`}
-                    whileHover={{ scale: 1.03 }}
-                    {...(ach.unlocked ? {
-                      initial: { scale: 0.9 },
-                      animate: { scale: 1 },
-                      transition: { type: "spring", stiffness: 300, damping: 20 }
-                    } : {})}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 + 0.3 }}
+                    whileHover={{ y: -2 }}
                   >
-                    <div className="relative mb-2">
-                      <span className={`text-3xl ${ach.unlocked ? "" : "grayscale opacity-40"}`}>{ach.emoji}</span>
+                    <div className="relative mb-2.5">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl ${
+                        ach.unlocked 
+                          ? "bg-gradient-to-br from-primary/20 to-secondary/20 shadow-inner" 
+                          : "bg-muted"
+                      }`}>
+                        <span className={ach.unlocked ? "" : "grayscale opacity-40"}>{ach.emoji}</span>
+                      </div>
                       {ach.unlocked && (
                         <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.2, type: "spring" }}
-                          className="absolute -top-1 -right-2 w-5 h-5 rounded-full bg-success flex items-center justify-center"
+                          initial={{ scale: 0, rotate: -45 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ delay: 0.3, type: "spring", stiffness: 400 }}
+                          className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-success flex items-center justify-center shadow-md ring-2 ring-card"
                         >
-                          <span className="text-[10px] text-white">✓</span>
+                          <span className="text-[11px] text-white font-bold">✓</span>
                         </motion.div>
                       )}
                     </div>
-                    <p className="text-xs font-semibold line-clamp-1">{ach.name}</p>
+                    <p className="text-xs font-bold line-clamp-1 text-foreground">{ach.name}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{ach.description}</p>
                     {/* Progress bar */}
-                    <div className="w-full mt-2">
-                      <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div className="w-full mt-2.5">
+                      <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
                         <motion.div
-                          className={`h-full rounded-full ${ach.unlocked ? "bg-primary" : "bg-muted-foreground/40"}`}
+                          className={`h-full rounded-full ${ach.unlocked ? "bg-gradient-to-r from-primary to-secondary" : "bg-muted-foreground/30"}`}
                           initial={{ width: 0 }}
                           animate={{ width: `${(ach.current / ach.target) * 100}%` }}
-                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          transition={{ duration: 1, ease: "easeOut", delay: i * 0.05 + 0.5 }}
                         />
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-1">{ach.current}/{ach.target}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1 font-medium">{ach.current}/{ach.target}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -458,18 +523,23 @@ export default function Profile() {
             {/* ── Category Stickers ──────────────────────────────── */}
             {Object.keys(categoryCounts).length > 0 && (
               <div>
-                <h3 className="font-bold text-lg mb-3">Category Stickers</h3>
-                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
+                <h3 className="font-bold text-lg mb-3 text-foreground">Categories</h3>
+                <div className="flex gap-3.5 overflow-x-auto scrollbar-hide pb-1">
                   {Object.entries(categoryCounts).map(([cat, count]) => {
                     const sticker = categoryStickers[cat] || { emoji: "📍", color: "from-slate-400 to-slate-500" };
                     return (
-                      <div key={cat} className="flex flex-col items-center shrink-0 min-w-[72px]">
-                        <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${sticker.color} flex items-center justify-center text-3xl shadow-md`}>
+                      <motion.div 
+                        key={cat} 
+                        className="flex flex-col items-center shrink-0 min-w-[76px]"
+                        whileHover={{ y: -3 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${sticker.color} flex items-center justify-center text-3xl shadow-lg ring-2 ring-white/20`}>
                           {sticker.emoji}
                         </div>
-                        <p className="text-xs font-medium mt-1.5 text-center capitalize line-clamp-1">{cat}</p>
-                        <p className="text-[10px] text-muted-foreground">{count}×</p>
-                      </div>
+                        <p className="text-xs font-semibold mt-2 text-center capitalize line-clamp-1 text-foreground">{cat}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">{count}×</p>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -479,22 +549,29 @@ export default function Profile() {
             {/* ── Recent Check-Ins ───────────────────────────────── */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-lg">Recent Check-Ins</h3>
+                <h3 className="font-bold text-lg text-foreground">Recent Check-Ins</h3>
               </div>
               
               {recentCheckIns.length > 0 ? (
                 <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-                  {recentCheckIns.slice(0, 6).map((checkIn) => (
-                    <ProfileCheckInCard key={checkIn.id} checkIn={checkIn} categoryStickers={categoryStickers} />
+                  {recentCheckIns.slice(0, 6).map((checkIn, i) => (
+                    <motion.div
+                      key={checkIn.id}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.06 }}
+                    >
+                      <ProfileCheckInCard checkIn={checkIn} categoryStickers={categoryStickers} />
+                    </motion.div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No check-ins yet</p>
-                  <Button variant="link" className="mt-2 text-primary" onClick={() => navigate("/")}>
-                    Start exploring
-                  </Button>
-                </div>
+                <EmptyState
+                  icon={<MapPin className="w-10 h-10" />}
+                  title="No check-ins yet"
+                  subtitle="Start exploring Sydney and share your adventures"
+                  action={<Button variant="default" className="rounded-full min-h-[44px] px-6" onClick={() => navigate("/")}>Explore Now</Button>}
+                />
               )}
             </div>
           </TabsContent>
@@ -503,14 +580,23 @@ export default function Profile() {
           <TabsContent value="checkins">
             {recentCheckIns.length > 0 ? (
               <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-                {recentCheckIns.map((checkIn) => (
-                  <ProfileCheckInCard key={checkIn.id} checkIn={checkIn} categoryStickers={categoryStickers} />
+                {recentCheckIns.map((checkIn, i) => (
+                  <motion.div
+                    key={checkIn.id}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                  >
+                    <ProfileCheckInCard checkIn={checkIn} categoryStickers={categoryStickers} />
+                  </motion.div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No check-ins yet</p>
-              </div>
+              <EmptyState
+                icon={<MapPin className="w-10 h-10" />}
+                title="No check-ins yet"
+                subtitle="Visit places and check in to build your travel diary"
+              />
             )}
           </TabsContent>
 
@@ -533,58 +619,65 @@ export default function Profile() {
               ))
             ) : savedItems && savedItems.length > 0 ? (
               <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-                {savedItems.map((item) => (
-                  <Link
+                {savedItems.map((item, i) => (
+                  <motion.div
                     key={item.id}
-                    to={`/activity/${item.activity_id}`}
-                    className="block relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
                   >
-                    <img
-                      src={item.activities.hero_image_url || "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&h=300&fit=crop"}
-                      alt={item.activities.name}
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleRemoveSaved(item.activity_id);
-                      }}
-                      className="absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-colors shadow-sm min-w-[44px] min-h-[44px]"
+                    <Link
+                      to={`/activity/${item.activity_id}`}
+                      className="block relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group shadow-sm hover:shadow-lg transition-shadow"
                     >
-                      <Heart className="w-4 h-4 fill-white text-white" />
-                    </button>
-                    <div className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
-                      <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
-                        {item.activities.name}
-                      </h3>
-                      <p className="text-xs text-white/70">{item.activities.category}</p>
-                      <p className="text-xs text-white/60 flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {item.activities.address || "Sydney, NSW"}
-                      </p>
-                    </div>
-                  </Link>
+                      <img
+                        src={item.activities.hero_image_url || "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&h=300&fit=crop"}
+                        alt={item.activities.name}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent" />
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemoveSaved(item.activity_id);
+                        }}
+                        className="absolute top-3 right-3 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/15 backdrop-blur-md hover:bg-white/30 transition-colors shadow-sm min-w-[44px] min-h-[44px]"
+                      >
+                        <Heart className="w-4 h-4 fill-white text-white" />
+                      </button>
+                      <div className="absolute bottom-0 left-0 right-0 z-10 p-4 space-y-1">
+                        <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
+                          {item.activities.name}
+                        </h3>
+                        <p className="text-xs text-white/70 font-medium">{item.activities.category}</p>
+                        <p className="text-xs text-white/50 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {item.activities.address || "Sydney, NSW"}
+                        </p>
+                      </div>
+                    </Link>
+                  </motion.div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Bookmark className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No saved places yet</p>
-                <p className="text-sm">Start exploring and save your favorite spots!</p>
-              </div>
+              <EmptyState
+                icon={<Heart className="w-10 h-10" />}
+                title="No saved places yet"
+                subtitle="Tap the heart on places you love to save them here"
+                action={<Button variant="default" className="rounded-full min-h-[44px] px-6" onClick={() => navigate("/")}>Browse Places</Button>}
+              />
             )}
           </TabsContent>
 
           {/* Playlists Tab */}
           <TabsContent value="playlists" className="space-y-4 mt-0">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm">Your Playlists</h3>
+              <h3 className="font-semibold text-sm text-foreground">Your Playlists</h3>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="outline" className="gap-1 h-8 min-h-[44px]">
-                    <Plus className="w-3 h-3" />
+                  <Button size="sm" variant="outline" className="gap-1.5 h-10 rounded-full min-h-[44px] font-semibold">
+                    <Plus className="w-3.5 h-3.5" />
                     New
                   </Button>
                 </DialogTrigger>
@@ -614,7 +707,7 @@ export default function Profile() {
                     </div>
                     <Button
                       onClick={handleCreatePlaylist}
-                      className="w-full min-h-[44px]"
+                      className="w-full min-h-[44px] rounded-xl"
                       disabled={!newPlaylistName.trim() || createPlaylist.isPending}
                     >
                       {createPlaylist.isPending ? "Creating..." : "Create Playlist"}
@@ -627,7 +720,7 @@ export default function Profile() {
             {playlistsLoading ? (
               <div className="grid grid-cols-2 gap-3">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-24 rounded-xl" />
+                  <Skeleton key={i} className="h-28 rounded-2xl" />
                 ))}
               </div>
             ) : playlists && playlists.length > 0 ? (
@@ -635,7 +728,7 @@ export default function Profile() {
                 {playlists.map((playlist) => (
                   <div
                     key={playlist.id}
-                    className="bg-card rounded-xl p-4 border border-border hover:border-primary transition-colors cursor-pointer relative group"
+                    className="bg-card rounded-2xl p-4 border border-border hover:border-primary/30 hover:shadow-md transition-all cursor-pointer relative group"
                   >
                     <button
                       onClick={(e) => {
@@ -647,29 +740,29 @@ export default function Profile() {
                       <Trash2 className="w-3 h-3" />
                     </button>
                     <span className="text-3xl">{playlist.emoji || "📍"}</span>
-                    <h3 className="font-semibold text-sm mt-2 line-clamp-1">{playlist.name}</h3>
+                    <h3 className="font-semibold text-sm mt-2 line-clamp-1 text-foreground">{playlist.name}</h3>
                     <p className="text-xs text-muted-foreground">{playlist.item_count || 0} places</p>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>No playlists yet</p>
-                <Button variant="link" className="mt-2 text-primary" onClick={() => setIsDialogOpen(true)}>
-                  Create your first playlist
-                </Button>
-              </div>
+              <EmptyState
+                icon={<Bookmark className="w-10 h-10" />}
+                title="No playlists yet"
+                subtitle="Create collections of your favorite spots"
+                action={<Button variant="default" className="rounded-full min-h-[44px] px-6" onClick={() => setIsDialogOpen(true)}>Create Playlist</Button>}
+              />
             )}
           </TabsContent>
 
           {/* Friends Tab */}
           <TabsContent value="friends">
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Connect with friends</p>
-              <Button variant="link" className="mt-2 text-primary">
-                Find friends
-              </Button>
-            </div>
+            <EmptyState
+              icon={<Users className="w-10 h-10" />}
+              title="Connect with friends"
+              subtitle="Find friends who explore Sydney and share adventures together"
+              action={<Button variant="default" className="rounded-full min-h-[44px] px-6">Find Friends</Button>}
+            />
           </TabsContent>
         </Tabs>
       </div>
@@ -681,20 +774,48 @@ export default function Profile() {
 
 // ── Sub-components ──────────────────────────────────────────────────
 
+function EmptyState({ icon, title, subtitle, action }: { icon: React.ReactNode; title: string; subtitle: string; action?: React.ReactNode }) {
+  return (
+    <motion.div 
+      className="text-center py-12 px-6"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <div className="w-16 h-16 rounded-2xl bg-muted/80 flex items-center justify-center mx-auto mb-4 text-muted-foreground/60">
+        {icon}
+      </div>
+      <p className="font-semibold text-foreground">{title}</p>
+      <p className="text-sm text-muted-foreground mt-1 max-w-[260px] mx-auto">{subtitle}</p>
+      {action && <div className="mt-4">{action}</div>}
+    </motion.div>
+  );
+}
+
 function StatItem({
   icon: Icon,
   value,
   label,
+  color = "text-primary",
 }: {
   icon: any;
   value: number;
   label: string;
+  color?: string;
 }) {
   return (
-    <div className="flex flex-col items-center py-3">
-      <Icon className="w-4 h-4 text-primary mb-0.5" />
-      <span className="text-lg font-bold">{value}</span>
-      <span className="text-[11px] text-muted-foreground">{label}</span>
+    <div className="flex flex-col items-center py-4">
+      <div className={`w-8 h-8 rounded-lg bg-muted/60 flex items-center justify-center mb-1.5`}>
+        <Icon className={`w-4 h-4 ${color}`} />
+      </div>
+      <motion.span 
+        className="text-xl font-extrabold text-foreground"
+        initial={{ scale: 0.5 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
+        {value}
+      </motion.span>
+      <span className="text-[11px] text-muted-foreground font-medium">{label}</span>
     </div>
   );
 }
@@ -713,25 +834,25 @@ function ProfileCheckInCard({ checkIn, categoryStickers }: { checkIn: any; categ
   const sticker = categoryStickers[cat];
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group">
+    <div className="relative w-full overflow-hidden rounded-2xl bg-muted aspect-[4/3] group shadow-sm hover:shadow-lg transition-shadow">
       <img
         src={displayImg}
         alt={checkIn.activities?.name || "Check-in"}
-        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500"
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         onClick={() => photos.length > 0 ? setLightbox(photoIndex) : undefined}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent pointer-events-none" />
 
       {/* Category badge top-left */}
       {sticker && (
-        <div className={`absolute top-3 left-3 z-10 px-2 py-1 rounded-full bg-gradient-to-r ${sticker.color} text-white text-xs font-medium shadow-md flex items-center gap-1`}>
+        <div className={`absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full bg-gradient-to-r ${sticker.color} text-white text-[11px] font-semibold shadow-lg flex items-center gap-1 backdrop-blur-sm`}>
           {sticker.emoji} {checkIn.activities?.category}
         </div>
       )}
 
       {/* Quick actions top-right */}
       <div className="absolute top-3 right-3 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 min-w-[44px] min-h-[44px]">
+        <button className="w-9 h-9 rounded-full bg-black/30 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/50 min-w-[44px] min-h-[44px] shadow-md">
           <Share2 className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -740,13 +861,13 @@ function ProfileCheckInCard({ checkIn, categoryStickers }: { checkIn: any; categ
         <>
           <button
             onClick={(e) => { e.preventDefault(); setPhotoIndex((photoIndex - 1 + allImages.length) % allImages.length); }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 text-white hover:bg-black/60 z-10 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 z-10 min-w-[44px] min-h-[44px] flex items-center justify-center shadow-md"
           >
             <ChevronRight className="w-4 h-4 rotate-180" />
           </button>
           <button
             onClick={(e) => { e.preventDefault(); setPhotoIndex((photoIndex + 1) % allImages.length); }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 text-white hover:bg-black/60 z-10 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/30 backdrop-blur-sm text-white hover:bg-black/50 z-10 min-w-[44px] min-h-[44px] flex items-center justify-center shadow-md"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -754,15 +875,15 @@ function ProfileCheckInCard({ checkIn, categoryStickers }: { checkIn: any; categ
       )}
 
       {hasMultiple && allImages.length <= 8 && (
-        <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+        <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
           {allImages.map((_, i) => (
-            <span key={i} className={`w-1.5 h-1.5 rounded-full transition-colors ${i === photoIndex ? "bg-white" : "bg-white/40"}`} />
+            <span key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i === photoIndex ? "bg-white w-3" : "bg-white/40"}`} />
           ))}
         </div>
       )}
 
-      <Link to={`/activity/${checkIn.activities?.id}`} className="absolute bottom-0 left-0 right-0 z-10 p-3 space-y-0.5">
-        <h3 className="font-bold text-sm text-white leading-tight line-clamp-1">
+      <Link to={`/activity/${checkIn.activities?.id}`} className="absolute bottom-0 left-0 right-0 z-10 p-4 space-y-1">
+        <h3 className="font-bold text-sm text-white leading-tight line-clamp-1 drop-shadow">
           {checkIn.activities?.name || "Activity"}
         </h3>
         <div className="flex items-center gap-3 pt-0.5">
@@ -770,16 +891,16 @@ function ProfileCheckInCard({ checkIn, categoryStickers }: { checkIn: any; categ
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
-                className={`w-3 h-3 ${i < checkIn.rating ? "fill-warning text-warning" : "text-white/30"}`}
+                className={`w-3 h-3 ${i < checkIn.rating ? "fill-warning text-warning" : "text-white/25"}`}
               />
             ))}
           </span>
-          <span className="text-xs text-white/60">
+          <span className="text-xs text-white/50 font-medium">
             {new Date(checkIn.created_at).toLocaleDateString("en-AU", { day: "numeric", month: "short" })}
           </span>
         </div>
         {checkIn.comment && (
-          <p className="text-xs text-white/70 italic line-clamp-1 mt-0.5">"{checkIn.comment}"</p>
+          <p className="text-xs text-white/60 italic line-clamp-1 mt-0.5">"{checkIn.comment}"</p>
         )}
       </Link>
 
@@ -833,7 +954,7 @@ function ProfileCalendar({
         <button onClick={() => onMonthChange(subMonths(month, 1))} className="p-2 rounded-lg hover:bg-muted min-w-[44px] min-h-[44px] flex items-center justify-center">
           <ChevronDown className="w-5 h-5 rotate-90" />
         </button>
-        <h3 className="font-bold text-lg">{format(month, "MMMM yyyy")}</h3>
+        <h3 className="font-bold text-lg text-foreground">{format(month, "MMMM yyyy")}</h3>
         <button onClick={() => onMonthChange(addMonths(month, 1))} className="p-2 rounded-lg hover:bg-muted min-w-[44px] min-h-[44px] flex items-center justify-center">
           <ChevronDown className="w-5 h-5 -rotate-90" />
         </button>
@@ -841,7 +962,7 @@ function ProfileCalendar({
 
       <div className="grid grid-cols-7 gap-1">
         {dayNames.map((d) => (
-          <div key={d} className="text-center text-xs font-medium text-muted-foreground py-1">{d}</div>
+          <div key={d} className="text-center text-xs font-semibold text-muted-foreground py-1.5">{d}</div>
         ))}
         {Array.from({ length: firstDayOfWeek }).map((_, i) => (
           <div key={`empty-${i}`} />
@@ -856,9 +977,9 @@ function ProfileCalendar({
             <button
               key={key}
               onClick={() => setSelectedDate(isSelected ? null : key)}
-              className={`relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-colors min-w-[44px] ${
-                isSelected ? "bg-primary text-primary-foreground" :
-                isToday ? "bg-primary/10 font-bold" :
+              className={`relative aspect-square flex flex-col items-center justify-center rounded-xl text-sm transition-all min-w-[44px] ${
+                isSelected ? "bg-primary text-primary-foreground shadow-md" :
+                isToday ? "bg-primary/10 font-bold ring-1 ring-primary/30" :
                 "hover:bg-muted"
               }`}
             >
@@ -874,48 +995,55 @@ function ProfileCalendar({
         })}
       </div>
 
-      <div className="flex gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary" /> Planned</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-warning" /> Check-in</span>
+      <div className="flex gap-4 text-xs text-muted-foreground font-medium">
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary" /> Planned</span>
+        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-warning" /> Check-in</span>
       </div>
 
-      {selectedDate && (
-        <div className="space-y-2">
-          <h4 className="font-semibold text-sm">{format(parseISO(selectedDate), "EEEE, d MMMM")}</h4>
-          {selectedEvents.length > 0 ? (
-            selectedEvents.map((ev, i) => {
-              const linkTo = ev.activityId
-                ? (ev.isEvent ? `/event/${ev.activityId}` : `/activity/${ev.activityId}`)
-                : null;
-              const content = (
-                <div className="flex items-center justify-between bg-card rounded-xl border border-border p-3 hover:border-primary/50 transition-colors">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${ev.type === "planned" ? "bg-primary" : "bg-warning"}`} />
-                    <span className="text-sm font-medium truncate">{ev.title}</span>
-                    <span className="text-xs text-muted-foreground shrink-0">{ev.type === "planned" ? "Planned" : "Visited"}</span>
+      <AnimatePresence>
+        {selectedDate && (
+          <motion.div 
+            className="space-y-2"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            <h4 className="font-semibold text-sm text-foreground">{format(parseISO(selectedDate), "EEEE, d MMMM")}</h4>
+            {selectedEvents.length > 0 ? (
+              selectedEvents.map((ev, i) => {
+                const linkTo = ev.activityId
+                  ? (ev.isEvent ? `/event/${ev.activityId}` : `/activity/${ev.activityId}`)
+                  : null;
+                const content = (
+                  <div className="flex items-center justify-between bg-card rounded-xl border border-border p-3.5 hover:border-primary/40 hover:shadow-sm transition-all">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${ev.type === "planned" ? "bg-primary" : "bg-warning"}`} />
+                      <span className="text-sm font-medium truncate text-foreground">{ev.title}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0 bg-muted px-2 py-0.5 rounded-full font-medium">{ev.type === "planned" ? "Planned" : "Visited"}</span>
+                    </div>
+                    {ev.type === "planned" && ev.id && (
+                      <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteEvent(ev.id!); }} className="p-1 text-muted-foreground hover:text-destructive shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
-                  {ev.type === "planned" && ev.id && (
-                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteEvent(ev.id!); }} className="p-1 text-muted-foreground hover:text-destructive shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-              );
-              return linkTo ? (
-                <Link key={i} to={linkTo}>{content}</Link>
-              ) : (
-                <div key={i}>{content}</div>
-              );
-            })
-          ) : (
-            <p className="text-sm text-muted-foreground">No events on this day</p>
-          )}
-        </div>
-      )}
+                );
+                return linkTo ? (
+                  <Link key={i} to={linkTo}>{content}</Link>
+                ) : (
+                  <div key={i}>{content}</div>
+                );
+              })
+            ) : (
+              <p className="text-sm text-muted-foreground">No events on this day</p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {calendarEvents.filter((e: any) => e.event_date >= format(new Date(), "yyyy-MM-dd")).length > 0 && (
         <div>
-          <h4 className="font-semibold text-sm mb-2">Upcoming</h4>
+          <h4 className="font-semibold text-sm mb-2 text-foreground">Upcoming</h4>
           <div className="space-y-2">
             {calendarEvents
               .filter((e: any) => e.event_date >= format(new Date(), "yyyy-MM-dd"))
@@ -924,10 +1052,10 @@ function ProfileCalendar({
                 <Link
                   key={ev.id}
                   to={ev.activity_id ? `/activity/${ev.activity_id}` : "#"}
-                  className="flex items-center justify-between bg-card rounded-xl border border-border p-3"
+                  className="flex items-center justify-between bg-card rounded-xl border border-border p-3.5 hover:border-primary/40 hover:shadow-sm transition-all"
                 >
                   <div>
-                    <p className="text-sm font-medium">{ev.title}</p>
+                    <p className="text-sm font-medium text-foreground">{ev.title}</p>
                     <p className="text-xs text-muted-foreground">
                       {format(parseISO(ev.event_date), "EEE d MMM")}
                       {ev.event_time && ` at ${ev.event_time.slice(0, 5)}`}
