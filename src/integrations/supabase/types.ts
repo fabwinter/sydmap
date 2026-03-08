@@ -712,6 +712,47 @@ export type Database = {
           },
         ]
       }
+      user_preferences: {
+        Row: {
+          categories: Json
+          created_at: string
+          explore_with: string
+          id: string
+          max_distance: number
+          onboarding_completed: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          categories?: Json
+          created_at?: string
+          explore_with?: string
+          id?: string
+          max_distance?: number
+          onboarding_completed?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          categories?: Json
+          created_at?: string
+          explore_with?: string
+          id?: string
+          max_distance?: number
+          onboarding_completed?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string

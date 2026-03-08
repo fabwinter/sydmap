@@ -21,6 +21,7 @@ import EventDetails from "./pages/EventDetails";
 import Discounts from "./pages/Discounts";
 import Feed from "./pages/Feed";
 import Leaderboard from "./pages/Leaderboard";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/discounts" element={<Discounts />} />
             <Route path="/feed" element={<Feed />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
