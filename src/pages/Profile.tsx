@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { MediaLightbox } from "@/components/ui/MediaLightbox";
+import { EmptyState, StatItem } from "@/components/profile/ProfileWidgets";
+import { ProfileCheckInCard } from "@/components/profile/ProfileCheckInCard";
+import { ProfileCalendar } from "@/components/profile/ProfileCalendar";
 import { useNavigate, Link } from "react-router-dom";
 import { Settings, MapPin, Users, Coffee, Award, ChevronRight, ChevronDown, Loader2, Heart, Bookmark, Plus, Trash2, Star, MessageSquare, Image as ImageIcon, CalendarDays, Flame, Share2, BookmarkPlus, Trophy, Sparkles, Crown, Zap, Camera } from "lucide-react";
 import { FriendsList } from "@/components/profile/FriendsList";
