@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Landing from "./pages/Landing";
+import Hub from "./pages/Hub";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
@@ -32,6 +33,7 @@ const App = () => (
         <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/hub" element={<Hub />} />
             <Route path="/home" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
