@@ -8,6 +8,7 @@ import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
+import Saved from "./pages/Saved";
 import Settings from "./pages/Settings";
 import MapView from "./pages/MapView";
 import Timeline from "./pages/Timeline";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/saved" element={<Saved />} />
             <Route path="/map" element={<MapView />} />
             <Route path="/timeline" element={<Timeline />} />
             <Route path="/chat" element={<Chat />} />

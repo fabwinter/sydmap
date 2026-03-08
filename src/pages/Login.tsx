@@ -326,7 +326,7 @@ export default function Login() {
           
           {/* Guest Mode */}
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/home")}
             className="w-full mt-4 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
             disabled={isLoading}
           >

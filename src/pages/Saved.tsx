@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bookmark, Plus, Heart, MapPin, Trash2 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -31,10 +31,11 @@ export default function Saved() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Redirect if not logged in
-  if (!authLoading && !user) {
-    navigate("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/login");
+    }
+  }, [authLoading, user, navigate]);
 
   const handleCreatePlaylist = () => {
     if (!newPlaylistName.trim()) return;
