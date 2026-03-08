@@ -4,6 +4,7 @@ import { useChatStore } from "@/stores/chatStore";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 
 interface ChatMessage {
   id: string;
@@ -33,6 +34,7 @@ export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const { location } = useUserLocation();
   const { profile, session } = useAuth();
+  const { data: userPrefs } = useUserPreferences();
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -75,6 +77,20 @@ export function useChat() {
       }
       if (profile?.name) {
         userContext.userName = profile.name;
+      }
+
+      // Inject user preferences
+      if (userPrefs?.personalization_enabled) {
+        userContext.preferences = {
+          categories: userPrefs.categories,
+          cuisines: userPrefs.cuisines,
+          vibe: userPrefs.vibe,
+          budget: userPrefs.budget,
+          timeOfDay: userPrefs.time_of_day,
+          accessibilityNeeds: userPrefs.accessibility_needs,
+          exploreWith: userPrefs.explore_with,
+          maxDistance: userPrefs.max_distance,
+        };
       }
 
       // Fetch saved items if authenticated

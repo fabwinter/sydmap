@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PreferencesSurvey } from "@/components/settings/PreferencesSurvey";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -248,6 +249,14 @@ export default function Settings() {
               />
             </div>
           </div>
+        </section>
+
+        {/* Discovery Preferences */}
+        <section className="px-4 py-6 border-b border-border">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">
+            Discovery Preferences
+          </h2>
+          <PreferencesSurvey />
         </section>
 
         {/* Appearance Section */}

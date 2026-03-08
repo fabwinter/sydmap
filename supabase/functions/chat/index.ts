@@ -53,6 +53,19 @@ serve(async (req) => {
       if (userContext.userName) {
         userContextSection += `\nUSER'S NAME: ${userContext.userName}\n`;
       }
+      if (userContext.preferences) {
+        const p = userContext.preferences;
+        userContextSection += `\nUSER'S PREFERENCES (use these to personalise recommendations):`;
+        if (p.categories?.length) userContextSection += `\n- Favourite categories: ${p.categories.join(", ")}`;
+        if (p.cuisines?.length) userContextSection += `\n- Favourite cuisines: ${p.cuisines.join(", ")}`;
+        if (p.vibe?.length) userContextSection += `\n- Preferred vibe: ${p.vibe.join(", ")}`;
+        if (p.budget && p.budget !== "any") userContextSection += `\n- Budget: ${p.budget}`;
+        if (p.timeOfDay?.length) userContextSection += `\n- Preferred time: ${p.timeOfDay.join(", ")}`;
+        if (p.accessibilityNeeds?.length) userContextSection += `\n- Accessibility needs: ${p.accessibilityNeeds.join(", ")}`;
+        if (p.exploreWith) userContextSection += `\n- Usually explores: ${p.exploreWith}`;
+        if (p.maxDistance) userContextSection += `\n- Max travel distance: ${p.maxDistance}km`;
+        userContextSection += `\n`;
+      }
     }
 
     const systemPrompt = `You are the Sydney Planner AI Assistant — a warm, conversational guide to Sydney, Australia. You help users discover venues, activities, and experiences in Sydney.
