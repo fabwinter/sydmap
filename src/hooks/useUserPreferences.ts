@@ -63,3 +63,36 @@ export function useSavePreferences() {
     },
   });
 }
+
+export function useSaveExpandedPreferences() {
+  const queryClient = useQueryClient();
+  const { profile } = useAuth();
+
+  return useMutation({
+    mutationFn: async (prefs: {
+      personalization_enabled: boolean;
+      cuisines: string[];
+      budget: string;
+      time_of_day: string[];
+      accessibility_needs: string[];
+      vibe: string[];
+    }) => {
+      const { error } = await supabase.from("user_preferences").upsert(
+        {
+          user_id: profile!.id,
+          personalization_enabled: prefs.personalization_enabled,
+          cuisines: prefs.cuisines as any,
+          budget: prefs.budget,
+          time_of_day: prefs.time_of_day as any,
+          accessibility_needs: prefs.accessibility_needs as any,
+          vibe: prefs.vibe as any,
+        },
+        { onConflict: "user_id" }
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-preferences"] });
+    },
+  });
+}
