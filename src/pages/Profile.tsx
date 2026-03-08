@@ -840,7 +840,3 @@ export default function Profile() {
   );
 }
 
-// Sub-components extracted to src/components/profile/
-export { EmptyState, StatItem } from "@/components/profile/ProfileWidgets";
-export { ProfileCheckInCard } from "@/components/profile/ProfileCheckInCard";
-export { ProfileCalendar } from "@/components/profile/ProfileCalendar";
