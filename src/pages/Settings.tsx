@@ -12,7 +12,10 @@ import {
   Mail,
   Lock,
   Loader2,
-  Check
+  Check,
+  Sun,
+  Moon,
+  Monitor
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
