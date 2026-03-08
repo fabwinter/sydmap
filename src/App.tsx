@@ -20,6 +20,7 @@ import WhatsOn from "./pages/WhatsOn";
 import EventDetails from "./pages/EventDetails";
 import Discounts from "./pages/Discounts";
 import Feed from "./pages/Feed";
+import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
